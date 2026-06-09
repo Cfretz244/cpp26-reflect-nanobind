@@ -1,0 +1,7 @@
+# Built example binaries / objects
+examples/refl
+examples/serialize_poc
+*.o
+*.so
+*.dylib
+.DS_Store

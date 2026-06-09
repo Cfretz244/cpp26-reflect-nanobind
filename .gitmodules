@@ -1,0 +1,8 @@
+[submodule "nanobind"]
+	path = nanobind
+	url = /Users/christopherfretz/git/nanobind
+	branch = mk-reflect
+[submodule "llvm-project"]
+	path = llvm-project
+	url = /Users/christopherfretz/git/llvm-project
+	branch = reflection-p2996
