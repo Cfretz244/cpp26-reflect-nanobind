@@ -6,3 +6,6 @@
 	path = llvm-project
 	url = git@github.com:Cfretz244/llvm-project.git
 	branch = reflection-p2996
+[submodule "corpus/libs/linalg"]
+	path = corpus/libs/linalg
+	url = https://github.com/sgorsten/linalg.git

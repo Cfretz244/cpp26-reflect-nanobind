@@ -1,0 +1,15 @@
+# Per-run descriptor. Consumed by corpus/lib/run_gates.py.
+slug         = "_fixture_pod"
+tier         = 0
+header_only  = true
+url          = ""                      # hand-written fixture (no upstream submodule)
+pin          = ""
+include_root = "src"                   # relative to this run dir; added as -I
+main_headers = ["pod_fixture.h"]
+module_name  = "pod_fixture_ext"       # must match NB_MODULE(...) in binding/binding.cpp
+strategy     = "single_stage"          # single_stage | two_stage
+
+# Gate 2 record: what was bound and why.
+reflect_args     = ["^^podfix"]
+subset_rationale = "Whole namespace; trivial POD fixture to prove the pipeline."
+skipped_features = []

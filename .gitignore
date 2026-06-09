@@ -14,3 +14,11 @@ build/
 toolchain/
 toolchain-build/
 toolchain-build.log
+
+# corpus campaign scratch (reconstructible from submodule pins + binding sources)
+corpus/runs/*/binding/build/
+corpus/runs/*/binding/*.o
+corpus/runs/*/tests/build/
+corpus/runs/*/logs/
+corpus/runs/*/.pytest_cache/
+**/__pycache__/

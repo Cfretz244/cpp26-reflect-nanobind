@@ -1,0 +1,14 @@
+# Per-run descriptor for the two-stage codegen virtual-override fixture.
+slug         = "_fixture_virtual"
+tier         = 4
+header_only  = true
+url          = ""
+pin          = ""
+include_root = "src"
+main_headers = ["shapes.h"]
+module_name  = "shapes_ext"
+strategy     = "two_stage"             # generator emits trampolines.gen.h, then module builds
+
+reflect_args     = ["^^shapes"]
+subset_rationale = "Whole namespace; abstract Shape + concrete Circle to prove codegen trampolines and Python-overrides-C++-virtual dispatch."
+skipped_features = []

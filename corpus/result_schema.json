@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "corpus per-run result",
+  "type": "object",
+  "required": ["schema_version", "slug", "outcome", "furthest_gate", "gate_results"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "slug": { "type": "string" },
+    "url": { "type": "string" },
+    "pinned_commit": { "type": "string" },
+    "tier": { "type": "integer" },
+    "header_only": { "type": "boolean" },
+    "run_id": { "type": "string" },
+    "toolchain_commit": { "type": "string" },
+    "binder_commit": { "type": "string" },
+    "outcome": { "enum": ["A", "B", "C", "D", "E", "E-weak"] },
+    "furthest_gate": { "type": "integer", "minimum": 0, "maximum": 6 },
+    "gate_results": {
+      "type": "object",
+      "properties": {
+        "1_probe":   { "enum": ["pass", "fail", "skip"] },
+        "3_strategy":{ "enum": ["single_stage", "two_stage"] },
+        "4_compile": { "enum": ["pass", "fail", "skip"] },
+        "5_import":  { "enum": ["pass", "fail", "skip"] },
+        "6_correct": { "enum": ["pass", "fail", "skip"] }
+      }
+    },
+    "subset": {
+      "type": "object",
+      "properties": {
+        "reflect_args": { "type": "array", "items": { "type": "string" } },
+        "rationale": { "type": "string" },
+        "skipped_features": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "properties": {
+        "layers_used": { "type": "array", "items": { "type": "string" } },
+        "assertions_total": { "type": "integer" },
+        "assertions_passed": { "type": "integer" },
+        "ground_truth_source": { "type": "string" }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "properties": {
+        "code": { "type": ["string", "null"] },
+        "first_diagnostics": { "type": "array", "items": { "type": "string" } },
+        "signal": { "type": ["string", "null"] }
+      }
+    },
+    "toolchain_bug": {
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["none", "suspected", "confirmed"] },
+        "kind": { "type": "string" },
+        "signature": { "type": "string" },
+        "repro": { "type": "string" },
+        "finding": { "type": "string" }
+      }
+    },
+    "metrics": { "type": "object" },
+    "artifacts": { "type": "object" },
+    "notes": { "type": "string" }
+  }
+}

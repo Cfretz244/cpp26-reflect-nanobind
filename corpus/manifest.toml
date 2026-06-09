@@ -1,0 +1,36 @@
+# Corpus manifest: the list of libraries under test + per-run status ledger.
+# status is managed by the driver: pending | done | error.
+# Fixtures (slug starting with "_") are hand-written, have no submodule, and bank the
+# trivial/virtual paths; external entries pin a real upstream as a git submodule.
+
+[[repo]]
+slug        = "_fixture_pod"
+tier        = 0
+header_only = true
+url         = ""
+pin         = ""
+status      = "done"          # outcome E (single-stage pipeline proof)
+
+[[repo]]
+slug        = "_fixture_virtual"
+tier        = 4
+header_only = true
+url         = ""
+pin         = ""
+status      = "done"          # outcome E (two-stage codegen / virtual override proof)
+
+[[repo]]
+slug         = "linalg"
+tier         = 0
+header_only  = true
+url          = "https://github.com/sgorsten/linalg"
+pin          = "v2.2"
+include_root = "../../libs/linalg"
+status       = "done"         # outcome E after BINDER-0001 fix (was B)
+
+# --- ramp backlog (not yet scaffolded) ---
+# [[repo]] slug="glm"          tier=1  url="https://github.com/g-truc/glm"
+# [[repo]] slug="nlohmann-json" tier=1 url="https://github.com/nlohmann/json"
+# [[repo]] slug="fmt"          tier=2  url="https://github.com/fmtlib/fmt"
+# [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
+# [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"

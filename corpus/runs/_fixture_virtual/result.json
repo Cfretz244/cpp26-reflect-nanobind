@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "slug": "_fixture_virtual",
+  "url": "",
+  "pinned_commit": "",
+  "tier": 4,
+  "header_only": true,
+  "toolchain_commit": "d4ae403",
+  "binder_commit": "159d6e5",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "two_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^shapes"
+    ],
+    "rationale": "Whole namespace; abstract Shape + concrete Circle to prove codegen trampolines and Python-overrides-C++-virtual dispatch.",
+    "skipped_features": []
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "3 passed in 0.01s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 0.32,
+    "binding_compile_seconds": 2.59
+  },
+  "artifacts": {},
+  "notes": ""
+}
