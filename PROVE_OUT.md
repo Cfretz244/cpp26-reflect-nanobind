@@ -48,19 +48,19 @@ A tier is "ramped past" only when **≥1 library in it reaches `E`** (not `E-wea
 |---|---|---|---|
 | 0 | pipeline bring-up; data/ctors/by-value/free-ops | `_fixture_pod`, `_fixture_recursive`, **linalg** v2.2 | ✅ E |
 | 1 | value types + operators + enums + STL casters | **glm** 1.0.1, **nlohmann/json** v3.11.3 | ✅ E |
-| 2 | free-function / format-heavy; kwargs; member-fn-template gap | **fmt** (`FMT_HEADER_ONLY`) | ⏭️ **next** |
-| 3 | inheritance; shared_ptr; log-level enums | **spdlog**; (`tl::expected`) | ⬜ queued |
+| 2 | free-function / format-heavy; kwargs; member-fn-template gap | **fmt** 11.2.0 (`FMT_HEADER_ONLY`) | ✅ E |
+| 3 | inheritance; shared_ptr; log-level enums | **spdlog**; (`tl::expected`) | ⏭️ **next** |
 | 4 | virtual override → two-stage codegen | `_fixture_virtual` | ✅ E |
 | 5 | stress ceiling; expression templates | **Eigen** (`Matrix<double,3,3>`); a header-only Boost piece | ⬜ frontier |
 
-Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (fmt → spdlog → eigen).
+Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (spdlog → eigen).
 
 ## Phasing (and where fan-out begins)
 
 | Phase | What | Advance criteria | Status |
 |---|---|---|---|
 | **0** | manual single repo by hand (linalg), prove both CMake templates | one external lib at E + both templates proven | ✅ done |
-| **1** | templatize machinery; run Tiers 0–2 human-in-loop | schema stable across ≥5 repos, aggregate renders, ≥1 A / ≥1 B / ≥2 E captured | ✅ met (only **fmt** left to hand-run) |
+| **1** | templatize machinery; run Tiers 0–2 human-in-loop | schema stable across ≥5 repos, aggregate renders, ≥1 A / ≥1 B / ≥2 E captured | ✅ **done** (fmt landed at E; Tiers 0–2 all banked) |
 | **2** | **first subagent fan-out** — one dispatched agent does subset+tests on one repo, then 3–5 **serially** | ≥80% of agents produce schema-valid `result.json` unaided AND spot-checks confirm tests assert behavior (no import-only E masquerading) | 🟡 doorstep |
 | **3** | **full fan-out** — long-tail manifest, tested concurrency pool, run by tier | continuous aggregation; A/B clusters fed back to the binder; `--rerun-failures` on each binder commit | ⬜ |
 
@@ -82,34 +82,40 @@ standalone `repro.cpp`, fingerprinted (so N repos hitting one ICE dedup to one
 item), and fixed at the source via the `llvm-project` submodule (re-pinned).
 `corpus/aggregate/toolchain_bugs.md` is the impact-ranked upstreaming queue.
 
-## Status snapshot (as of json reaching E)
+## Status snapshot (as of fmt reaching E)
 
-6 corpus runs, **all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
-`json`, `_fixture_virtual`. Fixes landed and pinned along the way:
+7 corpus runs, **all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
+`json`, `_fixture_virtual`, **`fmt`**. Fixes landed and pinned along the way:
 
 - **BINDER-0001** templated members → skipped · **BINDER-0002** anonymous-union
-  members → skipped · **BINDER-0003** spec-name enum NTTP (open, cosmetic) ·
-  **BINDER-0004** heavy-type perf de-dup · **BINDER-0005** `concat()` ADL-hijack →
-  fold rewrite + ADL-suppression · codegen trampoline dedup · `[[=reflect::skip]]`
-  honored in transitive discovery.
+  members → skipped · **BINDER-0003** spec-name enum NTTP (open, cosmetic; visible on
+  fmt's `to_string<int>`→`to_stringInt0`) · **BINDER-0004** heavy-type perf de-dup ·
+  **BINDER-0005** `concat()` ADL-hijack → fold rewrite + ADL-suppression · codegen
+  trampoline dedup · `[[=reflect::skip]]` honored in transitive discovery.
 - **TC-0001** Apple type-aware-allocation operators missing from from-source
   libc++abi → vendor shim compiled + exported (**fixed**).
 - **TC-0002** clang Sema use-after-free under heavy reflection (the real cause of
   the apparent "raise-the-budget ICE"; originally misdiagnosed as an SLoc ceiling) →
   re-acquire the eval-context record across reentrant consteval (**fixed**).
+- **LIB-0001** (new, fmt) fmt's `detail::allocator<T>` calls unqualified global
+  `malloc`/`free` without `<cstdlib>`; strict two-phase lookup rejects it. Triage
+  `library` (latent fmt bug, not toolchain/binder) → consumer-side `<cstdlib>`-first
+  workaround, no fmt edit. fmt's all-template `format()`/`print()` front-ends are
+  intrinsically not directly bindable (consteval `format_string<Args...>` first
+  param); the real bindable formatting surface — enums, `format_int`, and
+  `to_string<T>` instantiations — binds and is differentially checked.
 
 Submodule pins carry these: `nanobind @ mk-reflect`, `llvm-project @
-reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`.
+reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
+`corpus/libs/fmt @ 11.2.0`.
 
 ## Immediate next steps
 
-1. **Hand-run `fmt`** (Tier 2) — closes the last Phase-1 manual slot; expected to
-   probe the member-function-template gap and the free-function/kwargs/string-caster
-   path, with a gold doc-derived Layer-2 oracle.
-2. **Enter Phase 2** — dispatch one subagent on `spdlog` end-to-end; if it produces a
-   schema-valid `result.json` unaided and its tests genuinely assert behavior, open a
-   small serial batch.
-3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
+1. **Enter Phase 2** — dispatch one subagent on `spdlog` (Tier 3: inheritance,
+   shared_ptr, log-level enums) end-to-end; if it produces a schema-valid
+   `result.json` unaided and its tests genuinely assert behavior, open a small serial
+   batch. (Phase 1 is closed: fmt landed at E, Tiers 0–2 banked.)
+2. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
 A pending follow-up (independent of the ramp): minimize **TC-0002** (the Sema UAF) to

@@ -16,3 +16,6 @@
 	path = corpus/libs/json
 	url = git@github.com:Cfretz244/json.git
 	branch = corpus-reflect-skip
+[submodule "corpus/libs/fmt"]
+	path = corpus/libs/fmt
+	url = https://github.com/fmtlib/fmt

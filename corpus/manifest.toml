@@ -59,7 +59,19 @@ status       = "done"         # outcome E: real ^^nlohmann::json binds + L1 diff
                               # missing Apple typed-alloc operators in from-source libc++abi.
                               # json's binary internals [[=reflect::skip]]-annotated in the test copy.
 
+[[repo]]
+slug         = "fmt"
+tier         = 2
+header_only  = true
+url          = "https://github.com/fmtlib/fmt"
+pin          = "11.2.0"
+include_root = "../../libs/fmt/include"
+status       = "done"         # outcome E: real fmt enums (color/terminal_color/emphasis) bind +
+                              # L1 differential; fmt's all-template format API exercised via concrete
+                              # fmttest wrappers (kwargs, string/vector casters, fmt::join, member-fn-
+                              # template gap). LIB-0001 (fmt's unqualified malloc/free) worked around
+                              # consumer-side with <cstdlib> first.
+
 # --- ramp backlog (not yet scaffolded) ---
-# [[repo]] slug="fmt"          tier=2  url="https://github.com/fmtlib/fmt"
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"

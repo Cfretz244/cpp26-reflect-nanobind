@@ -1,12 +1,12 @@
 # Corpus report
 
-Total runs: **6**
+Total runs: **7**
 
 ## Outcomes (overall)
 
 | outcome | count | meaning |
 |---|---|---|
-| E | 6 | clean success (behavioral) |
+| E | 7 | clean success (behavioral) |
 
 ## Outcomes by tier
 
@@ -14,6 +14,7 @@ Total runs: **6**
 |---|---|---|---|---|---|---|
 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
 | 1 | 2 | 0 | 0 | 0 | 0 | 0 |
+| 2 | 1 | 0 | 0 | 0 | 0 | 0 |
 | 4 | 1 | 0 | 0 | 0 | 0 | 0 |
 
 ## Per-run
@@ -25,5 +26,6 @@ Total runs: **6**
 | linalg | 0 | E | 6 | single_stage | v2.2 |   |
 | glm | 1 | E | 6 | single_stage | 1.0.1 |   |
 | json | 1 | E | 6 | two_stage | v3.11.3 |   |
+| fmt | 2 | E | 6 | single_stage | 11.2.0 |   |
 | _fixture_virtual | 4 | E | 6 | two_stage |  |   |
 
