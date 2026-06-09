@@ -108,15 +108,30 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
   types used solely by an external base outside the reflected set are not detected.
 - **Effort:** medium; design-heavy (delivered).
 
-### 🧱 6. Templates (class & function)
-- **What:** bind specific instantiations of templated classes/functions.
-- **Why:** real codebases are full of templates; currently skipped (`!is_template`).
-- **Approach:** you cannot bind a template, only instantiations — so this is inherently
-  **opt-in via an explicit instantiation list**, e.g. an annotation
-  `[[=r::instantiate<Foo<int>, Foo<double>>]]` or a registration list passed to `reflect_`.
-  Use `substitute`/`reflect_class` per instantiation; Python names need disambiguation
-  (`Foo_int`, `Foo_double`). Pairs naturally with the annotation layer (#3 above pattern).
-- **Effort:** hard; needs a naming scheme and a registration surface.
+### ✅ 6. Templates (class & function)
+- **What:** bind specific instantiations of templated classes/functions. **Done.**
+- **Why:** real codebases are full of templates; previously skipped (`!is_template`).
+- **How it landed:** a template can't be bound, only its specializations, and the set of
+  instantiations in a TU is *not* reflectable — so binding is driven by **auto-discovery
+  plus an explicit list**. `required_user_specs`/`collect_user_specs_from_type` walk the
+  reflected set's concrete signatures (members, return/param types, bases) collecting every
+  user (non-std) class-template specialization, recursing into template args and into each
+  discovered spec's own members to a worklist fixpoint (so `Wrap<int>` surfaces `Box<int>`);
+  `reflect_user_specs` binds them as a pre-pass in `reflect_` (idempotent via the existing
+  `type<T>().is_valid()` guard). Specs no signature references — and free-function-template
+  specs like `^^identity<int>` — are listed explicitly in the `reflect_<...>` info pack.
+  Python names are **CamelCase** (`spec_camel_name`: `Box<int>`→`BoxInt`,
+  `Pair<int,double>`→`PairIntDouble`, `Array<int,3>`→`ArrayInt3`, `Box<Box<int>>`→`BoxBoxInt`).
+  Mangler-crash rule untouched: a specialization is a concrete `T`, so all binders keep their
+  real template params. The codegen path reached parity — `type_spelling` writes the
+  fully-qualified template-id (`::ns::Processor<int>`) and `emit_spec_classes` emits a
+  trampoline for any spec'd template with virtuals. Tested by `test35`–`test38`
+  (header) and `test04` (codegen).
+- **Not done / by design:** the ROADMAP's `[[=r::instantiate<...>]]` is **infeasible** — a
+  P3394 annotation value must be a valid template argument and can't carry a type or
+  `std::meta::info`; the explicit `reflect_` arg pack replaces it. Member function templates
+  and auto-detection of explicit instantiation *definitions* (not enumerable via reflection)
+  are out of scope.
 
 ### 🧱 7. Trampoline generation hardening
 - **What:** generate trampolines for `final`/ref-qualified virtuals (currently skipped) and
@@ -154,6 +169,6 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 ## Suggested order
 
 `#1 (kwarg names)` ✅ → `#3 (class docstrings)` ✅ → `#2 (free operators)` ✅ →
-`#5 (caster includes)` ✅ → `#4 (properties)` ✅ → then the hard ones (`#6 templates`,
-`#7 trampoline hardening`) as real-codebase needs dictate. The CMake helper and full-codegen
+`#5 (caster includes)` ✅ → `#4 (properties)` ✅ → `#6 (templates)` ✅ → then
+`#7 (trampoline hardening)` as real-codebase needs dictate. The CMake helper and full-codegen
 generalization are worth doing once a second real consumer appears.

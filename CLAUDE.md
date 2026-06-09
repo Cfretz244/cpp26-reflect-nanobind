@@ -135,10 +135,13 @@ multiple inheritance (flattening), virtual overrides (two-tier trampolines), ann
 control (skip/rename/doc/rv_policy/keep_alive; doc covers classes/enums too),
 keyword-argument names (P3096 → nb::arg, incl. constructors; default-argument *values* are a
 C++26 standard gap, not bindable), STL type-caster coverage (codegen emits the needed
-<nanobind/stl/*.h> includes; header-only path static_asserts the missing one), and properties
-(annotated getter/setter pairs → def_prop_rw/ro). Remaining: templates (explicit instantiations,
-annotation-driven), per-arg ownership transfer. The binder's git history
-on `mk-reflect` has one commit per feature; `nanobind/docs/reflection.rst` is the
+<nanobind/stl/*.h> includes; header-only path static_asserts the missing one), properties
+(annotated getter/setter pairs → def_prop_rw/ro), and templates (class-template
+*specializations* auto-discovered from signatures to a fixpoint + listed explicitly in the
+`reflect_<...>` pack; CamelCase Python names like `Box<int>`→`BoxInt`; codegen emits trampolines
+for spec'd templates with virtuals; free-function-template specs supported explicitly). Remaining:
+per-arg ownership transfer, member function templates, trampoline hardening. The binder's git
+history on `mk-reflect` has one commit per feature; `nanobind/docs/reflection.rst` is the
 user-facing reference.
 
 ## Gotchas (carried over; see submodule CLAUDE.md files for detail)
