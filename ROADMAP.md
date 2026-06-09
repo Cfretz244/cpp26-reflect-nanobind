@@ -53,13 +53,18 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
   `nb::arg("x") = value` needs the value, so generic default binding is impossible without a
   new WG21 facility. Left here as blocked-by-standard.
 
-### 🔜 2. Free operators → reversed dunders
-- **What:** namespace-scope `operator@(A,B)` → attach `__add__`/`__radd__` etc. to the
-  relevant class. Currently free operators are skipped (they have no identifier).
-- **Why:** common for value types that define symmetric operators as free functions.
-- **Approach:** in `reflect_dispatch`, detect `is_operator_function` free functions; map to a
-  dunder on the type of the first (or second, for reversed) operand. Reuse `operator_dunder`.
-- **Effort:** medium (deciding which class owns the binding; reversed-arg lambdas).
+### ✅ 2. Free operators → reversed dunders
+- **What:** namespace-scope binary `operator@(A,B)` → attach `__add__`/`__radd__` etc. to the
+  relevant class. **Done.** (Previously free operators were skipped — they have no identifier.)
+- **Why:** common for value types that define symmetric operators as free functions, and
+  required for scalar-on-the-left expressions like `2.0 * vec`.
+- **How it landed:** `bind_free_operators<T>(cls)` runs during `reflect_class<T>` (so the class_
+  object is in hand — no re-registration). It scans `parent_of(^^T)` for binary operator
+  functions and binds the forward dunder when T is the left operand and the reversed dunder
+  (`operator_reversed_dunder`: `__r*__` for arithmetic, swapped name for comparisons) when T is
+  the right operand (skipping the redundant reversed bind for symmetric same-type operators). The
+  forwarding lambdas decompose the free-function type to `Ret(P0,P1)` so their signatures use real
+  template params (mangler-crash rule). Tested by `test32_free_operators`, incl. `2.0 * vec`.
 
 ### ✅ 3. Class/enum docstrings
 - **What:** honor `[[=r::doc{...}]]` on classes and enums. **Done.** The annotation follows the
@@ -136,7 +141,7 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 
 ## Suggested order
 
-`#1 (kwarg names)` ✅ → `#3 (class docstrings)` ✅ → `#2 (free operators)` →
+`#1 (kwarg names)` ✅ → `#3 (class docstrings)` ✅ → `#2 (free operators)` ✅ →
 `#5 (caster includes)` → `#4 (properties)` → then the hard ones (`#6 templates`,
 `#7 trampoline hardening`) as real-codebase needs dictate. The CMake helper and full-codegen
 generalization are worth doing once a second real consumer appears.
