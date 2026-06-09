@@ -9,3 +9,8 @@ examples/serialize_poc
 # Repo-local build state (recreate from scratch via CLAUDE.md)
 build/
 .venv/
+
+# Repo-local LLVM toolchain (built from the llvm-project submodule)
+toolchain/
+toolchain-build/
+toolchain-build.log

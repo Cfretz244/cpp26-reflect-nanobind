@@ -15,8 +15,8 @@ and adds demo programs:
 cpp26-reflect-nanobind/
 ├── llvm-project/      submodule (url: local ~/git/llvm-project)  @ reflection-p2996
 │                      The clang-p2996 fork (the compiler half). Its CLAUDE.md has
-│                      build details. The usable toolchain is already installed at
-│                      ~/llvm-toolchain (you rarely rebuild it).
+│                      build details. Built from here into ./toolchain/ (see
+│                      "Build the toolchain"), making this repo self-contained.
 ├── nanobind/          submodule (url: Cfretz244/nanobind fork)   @ mk-reflect
 │                      The reflection-driven binder (the active development surface).
 │                      include/nanobind/nb_reflect*.h + tests/test_reflect*. See its
@@ -45,9 +45,13 @@ two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst`
 
 ## Environment (this exact laptop)
 
-- **Toolchain**: `~/llvm-toolchain` — the from-source clang-p2996 (clang/clang++/lld + a
-  libc++ that provides `<meta>`/`<experimental/meta>`), built from `llvm-project/`. Already
-  built; use it directly. Native target AArch64.
+- **Toolchain (built into this repo)**: `./toolchain/` — the clang-p2996 compiler
+  (clang/clang++/lld + a libc++ providing `<meta>`/`<experimental/meta>`), **built from the
+  `llvm-project/` submodule** into `./toolchain/` (via `./toolchain-build/`). This is what
+  makes the repo self-contained: nothing here depends on the older `~/llvm-toolchain`
+  anymore. Both `toolchain/` and `toolchain-build/` are git-ignored; rebuild instructions
+  are below. (`~/llvm-toolchain` is the same compiler built earlier and may still exist, but
+  is no longer required.) Native target AArch64.
 - **Reflection flags**: `-std=c++26 -freflection-latest -stdlib=libc++`, plus (mandatory on
   macOS) `-isysroot "$(xcrun --show-sdk-path)"`. A from-source clang does not bake in the
   SDK path. `-freflection-latest` is the umbrella flag enabling P2996 + parameter reflection
@@ -70,14 +74,28 @@ The `llvm-project` submodule URL is the **local** `~/git/llvm-project` checkout 
 its pinned commit (a CLAUDE.md edit atop the bloomberg p2996 branch) is not pushed to any
 remote, so the canonical copy is this laptop. The on-disk submodule working trees here are
 self-contained (hard-linked objects), so they survive even if the sibling repos are removed.
-If `~/llvm-toolchain` is missing, rebuild it per `llvm-project/CLAUDE.md` → "Full reflection
-toolchain"; otherwise skip — it's already there.
+
+## Build the toolchain (once; ~1–2h, ~3 GB installed + ~4 GB build tree) — verified
+
+Builds the compiler from the `llvm-project/` submodule into `./toolchain/`. Bootstrapped
+with Apple Clang; do **not** add `-DLLVM_USE_LINKER=lld` on a clean tree (Apple Clang can't
+find an lld yet — hard error). Skip this whole section if `./toolchain/bin/clang++` exists.
+
+```bash
+cd ~/git/cpp26-reflect-nanobind
+cmake -S llvm-project/llvm -B toolchain-build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_PROJECTS="clang;lld" \
+  -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
+  -DLLVM_TARGETS_TO_BUILD="AArch64" -DLLVM_CCACHE_BUILD=ON -DLLVM_OPTIMIZED_TABLEGEN=ON \
+  -DCMAKE_INSTALL_PREFIX="$PWD/toolchain"
+ninja -C toolchain-build install     # the long part
+```
 
 ## Build & test the binder (the main loop) — verified from scratch
 
 ```bash
 cd ~/git/cpp26-reflect-nanobind
-TC=~/llvm-toolchain
+TC=$PWD/toolchain                                              # the repo-local compiler
 python3.12 -m venv .venv && .venv/bin/pip -q install pytest   # /opt/homebrew/bin/python3.12
 cmake -S nanobind -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=$TC/bin/clang -DCMAKE_CXX_COMPILER=$TC/bin/clang++ \
@@ -99,7 +117,8 @@ includes it.)
 ## Build & run the standalone demos
 
 ```bash
-TC=~/llvm-toolchain
+cd ~/git/cpp26-reflect-nanobind
+TC=$PWD/toolchain
 $TC/bin/clang++ -std=c++26 -freflection-latest -stdlib=libc++ \
   -isysroot "$(xcrun --show-sdk-path)" -nostdinc++ -isystem $TC/include/c++/v1 \
   -L $TC/lib -Wl,-rpath,$TC/lib examples/serialize_poc.cpp -o examples/serialize_poc
@@ -126,7 +145,7 @@ user-facing reference.
 - **Annotation values must be valid template arguments** (no `const char*` members; strings
   use a `fixed_string<N>`).
 - Everything needs the p2996 toolchain; both the generated trampolines and the binder use
-  splices, so even generated code is compiled by `~/llvm-toolchain`.
+  splices, so even generated code is compiled by the repo-local `./toolchain`.
 
 ## Working agreements
 
