@@ -134,9 +134,10 @@ operators→dunders (member + binary free operators, incl. reversed dunders), en
 multiple inheritance (flattening), virtual overrides (two-tier trampolines), annotation-driven
 control (skip/rename/doc/rv_policy/keep_alive; doc covers classes/enums too),
 keyword-argument names (P3096 → nb::arg, incl. constructors; default-argument *values* are a
-C++26 standard gap, not bindable), and STL type-caster coverage (codegen emits the needed
-<nanobind/stl/*.h> includes; header-only path static_asserts the missing one). Remaining:
-templates (explicit instantiations, annotation-driven), per-arg ownership transfer. The binder's git history
+C++26 standard gap, not bindable), STL type-caster coverage (codegen emits the needed
+<nanobind/stl/*.h> includes; header-only path static_asserts the missing one), and properties
+(annotated getter/setter pairs → def_prop_rw/ro). Remaining: templates (explicit instantiations,
+annotation-driven), per-arg ownership transfer. The binder's git history
 on `mk-reflect` has one commit per feature; `nanobind/docs/reflection.rst` is the
 user-facing reference.
 

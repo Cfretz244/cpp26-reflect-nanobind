@@ -76,14 +76,19 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
   `doc...` — no branch multiplication. nanobind treats a bare `const char*` extra as the type's
   docstring. Tested by `test31_class_enum_docstrings`.
 
-### 🧭 4. Properties from getter/setter pairs
-- **What:** recognize `getX()/setX(v)` (or `x()/x(v)`) conventions and bind a Python
-  `@property` (`def_prop_rw`) instead of two methods.
+### ✅ 4. Properties from getter/setter pairs
+- **What:** bind a getter/setter pair as a Python `@property` (`def_prop_rw`/`def_prop_ro`)
+  instead of two methods. **Done — annotation-driven (Design A: group by shared name).**
 - **Why:** idiomatic Python for encapsulated classes that hide fields behind accessors.
-- **Approach:** annotation-driven first (`[[=r::property]]` or `[[=r::property{"name"}]]`),
-  since name-convention sniffing is heuristic and error-prone. Then optionally a
-  convention pass behind a flag.
-- **Effort:** medium.
+- **How it landed:** both accessors carry `[[=r::property{"name"}]]` (the string is the Python
+  name and the grouping key); within a group the 0-arg method is the getter and the 1-arg method
+  the setter (getter-only ⇒ read-only). `find_property_setter` matches by name via an internal
+  `template for` (reading annotation strings needs constexpr reflections); `reflect_bind_property_impl`
+  binds via pointer-to-member `&[:getter:]`/`&[:setter:]` (getter/setter as template params, since
+  `std::meta::info` is consteval-only and can't be captured by the extras lambda), threading the
+  getter's rv_policy/doc via `with_data_extras`. Accessors are skipped from normal method binding.
+  Tested by `test34_properties`.
+- **Deferred:** name-convention sniffing (`getX`/`setX`) — heuristic; left for a later opt-in flag.
 
 ### ✅ 5. STL / type-caster coverage
 - **What:** ensure the right `<nanobind/stl/*.h>` casters are present for the std types in bound
@@ -149,6 +154,6 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 ## Suggested order
 
 `#1 (kwarg names)` ✅ → `#3 (class docstrings)` ✅ → `#2 (free operators)` ✅ →
-`#5 (caster includes)` ✅ → `#4 (properties)` → then the hard ones (`#6 templates`,
+`#5 (caster includes)` ✅ → `#4 (properties)` ✅ → then the hard ones (`#6 templates`,
 `#7 trampoline hardening`) as real-codebase needs dictate. The CMake helper and full-codegen
 generalization are worth doing once a second real consumer appears.
