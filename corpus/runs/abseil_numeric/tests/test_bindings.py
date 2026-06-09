@@ -39,6 +39,19 @@ def test_int128_comparisons_differential():
     assert (b < a) == (E["lt"] == "true")
 
 
+def test_int128_negation_differential():
+    # Free unary operator-(int128) -> __neg__ (binder fix: unary free operators).
+    assert str(-i128(1000000)) == E["neg"]
+
+
+def test_int128_int_conversion():
+    # int128 has a dozen integral conversion operators; only the WIDEST binds
+    # __int__ (binder fix), so values above int32 no longer truncate through a
+    # narrow last-bound conversion (int(i128(1000000)) used to return 64).
+    assert int(i128(1000000)) == 1000000
+    assert int(i128(5_000_000_000)) == 5_000_000_000
+
+
 def test_uint128_full_width_differential():
     # 128-bit results that overflow 64 bits, computed through the bound operators.
     p = u128(1) << 100                       # 2^100
@@ -52,7 +65,8 @@ def test_uint128_full_width_differential():
 
 def test_dunder_surface_bound():
     for d in ("__add__", "__sub__", "__mul__", "__truediv__", "__mod__",
-              "__lshift__", "__rshift__", "__and__", "__or__", "__xor__", "__str__"):
+              "__lshift__", "__rshift__", "__and__", "__or__", "__xor__", "__str__",
+              "__neg__", "__int__"):
         assert hasattr(i128, d), d
 
 
