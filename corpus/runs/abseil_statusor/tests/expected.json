@@ -1,0 +1,1 @@
+{"oi_ok":true,"oi_value":42,"oi_code":0,"ei_ok":false,"ei_raw":5,"ei_msg":"no int here","os_ok":true,"os_value":"hello statusor","es_ok":false,"es_raw":3,"es_msg":"bad string","od_ok":true,"od_value":2.500000,"ed_ok":false,"ed_raw":13,"def_ok":false,"def_raw":2}

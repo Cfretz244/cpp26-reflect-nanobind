@@ -128,6 +128,18 @@ status       = "done"         # outcome E: absl::crc32c_t direct (__int__ via ex
                               # conversion, __str__ hex via namespace operator<<); crctest fixture
                               # wraps compute/extend/concat/remove_* free fns (4 compiled symbols).
 
+[[repo]]
+slug         = "abseil_statusor"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: StatusOr<int/string/double> specs direct (ok/status/
+                              # IgnoreError); sotest factories (ctors are templates) + get_*
+                              # accessors (value() using-redeclared from a PRIVATE base --
+                              # invisible to members_of; real throw path still exercised).
+
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"

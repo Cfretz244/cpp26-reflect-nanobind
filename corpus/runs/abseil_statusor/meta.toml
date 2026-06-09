@@ -1,0 +1,15 @@
+# Per-run descriptor for Abseil (20250814.2) StatusOr<T> specializations. Consumed by run_gates.py.
+slug         = "abseil_statusor"
+tier         = 6                          # Abseil special case (themed: statusor)
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"
+main_headers = ["absl/status/statusor.h"]
+module_name  = "abseil_statusor_ext"
+strategy     = "single_stage"
+link_abseil  = true
+
+reflect_args     = ["^^absl::StatusOr<int>", "^^absl::StatusOr<std::string>", "^^absl::StatusOr<double>", "^^absl::Status", "^^absl::StatusCode", "^^sotest"]
+subset_rationale = "absl::StatusOr<T> bound as three real specializations (int/std::string/double): ok(), status() (returns const Status& so Status+StatusCode are bound in-module), IgnoreError(). All of StatusOr's value/converting CONSTRUCTORS are templates (enable_if'd U&&), which the binder skips by design, so the sotest fixture namespace supplies ok_*/err_* factories (the Duration/Time pattern). FINDING: value()/operator*/operator-> are declared in the PRIVATE base internal_statusor::OperatorBase<T> and re-exported via using-declarations -- invisible to the binder (using-decls are not enumerable members; private bases are correctly not flattened), so value access goes through get_* fixture accessors (which still exercise the real throw-on-error path)."
+skipped_features = ["value()/operator*/operator-> (using-redeclared from a PRIVATE base; not enumerable -- get_* fixtures instead; candidate binder investigation alongside Wave-2 base flattening)", "value construction/assignment from Python literals (all converting ctors are templates; factories instead)", "value_or/emplace/AssignStatus (member templates, skipped by design)", "rvalue-ref-qualified &&-overloads (skipped by design)"]
