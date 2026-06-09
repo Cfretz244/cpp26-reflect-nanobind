@@ -85,16 +85,23 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
   convention pass behind a flag.
 - **Effort:** medium.
 
-### 🧭 5. STL / type-caster coverage (automatic includes)
-- **What:** ensure the right `<nanobind/stl/*.h>` casters are present for the std types that
-  appear in bound signatures (string, vector, map, optional, unique_ptr, shared_ptr, ...).
-- **Why:** today the *test* includes them by hand; a real generated module must pull the
+### ✅ 5. STL / type-caster coverage
+- **What:** ensure the right `<nanobind/stl/*.h>` casters are present for the std types in bound
+  signatures (string, vector, map, optional, unique_ptr, shared_ptr, ...). **Done — both routes.**
+- **Why:** previously the *test* included them by hand; a real generated module must pull the
   correct casters or binding a `std::vector<int>` member fails to compile.
-- **Approach:** walk all bound signatures, detect std container/wrapper types via reflection
-  (`template_of`/`type_of`), and (a) in the header-only path, document the required includes,
-  or (b) in the **codegen path**, emit the needed `#include`s automatically. This is the
-  natural first real use of full source codegen beyond trampolines.
-- **Effort:** medium; design-heavy (mapping C++ std types → caster headers).
+- **How it landed:** a shared reflection core in `nb_reflect.h` (`stl_caster_header`,
+  `collect_stl_types`/`required_stl_types`, recursing into value template args while skipping
+  policy args like allocator/comparator via `is_stl_policy`) detects the std types used and maps
+  each to its caster header. **Codegen route:** `emit_trampolines` now also emits the required
+  `#include <nanobind/stl/...>` lines (truly automatic — a generated module needs no hand-listed
+  casters; proven by `test_reflect_codegen` which drops its manual includes). **Header-only route:**
+  `#include` can't be emitted from template code, a *standard* constraint, so `reflect_`
+  `static_assert`s (P2741 message) naming the exact missing header (`check_stl_casters`); `is_base_caster_v`
+  distinguishes a missing stl caster from a real binding, run only on reflection-identified std types.
+  `nb::detail::required_stl_headers<^^ns>()` exposes the list. Only common std types recognized;
+  types used solely by an external base outside the reflected set are not detected.
+- **Effort:** medium; design-heavy (delivered).
 
 ### 🧱 6. Templates (class & function)
 - **What:** bind specific instantiations of templated classes/functions.
@@ -142,6 +149,6 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 ## Suggested order
 
 `#1 (kwarg names)` ✅ → `#3 (class docstrings)` ✅ → `#2 (free operators)` ✅ →
-`#5 (caster includes)` → `#4 (properties)` → then the hard ones (`#6 templates`,
+`#5 (caster includes)` ✅ → `#4 (properties)` → then the hard ones (`#6 templates`,
 `#7 trampoline hardening`) as real-codebase needs dictate. The CMake helper and full-codegen
 generalization are worth doing once a second real consumer appears.
