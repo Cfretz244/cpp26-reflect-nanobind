@@ -4,5 +4,5 @@
 	branch = mk-reflect
 [submodule "llvm-project"]
 	path = llvm-project
-	url = /Users/christopherfretz/git/llvm-project
+	url = git@github.com:Cfretz244/llvm-project.git
 	branch = reflection-p2996

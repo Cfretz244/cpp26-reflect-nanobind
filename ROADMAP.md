@@ -162,9 +162,10 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 - **Name-collision policy:** define behavior when two entities map to the same Python name
   (across flattened bases, overloaded operators, renamed members). Today nanobind overloads
   or last-wins; make it explicit/diagnosable.
-- **Submodule portability:** the `llvm-project` submodule URL is the local checkout (its
-  pinned commit isn't pushed). If this prove-out ever needs to move machines, push that
-  commit to `Cfretz244/llvm-project` and repoint the URL.
+- **Submodule portability:** ✅ done. Both submodules point at GitHub forks
+  (`Cfretz244/nanobind`, `Cfretz244/llvm-project`) and the umbrella itself is at
+  `Cfretz244/cpp26-reflect-nanobind`, so `git clone --recursive` works on any machine
+  (the llvm-project history is ~4 GB and `./toolchain/` must still be built from it).
 
 ## Suggested order
 

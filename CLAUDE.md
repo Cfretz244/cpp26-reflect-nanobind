@@ -8,12 +8,12 @@ specific to this machine (a macOS / Apple Silicon laptop).
 
 ## Layout
 
-This repo pins the two pieces as git submodules (local file-path URLs — see `.gitmodules`)
+This repo pins the two pieces as git submodules (GitHub fork URLs — see `.gitmodules`)
 and adds demo programs:
 
 ```
 cpp26-reflect-nanobind/
-├── llvm-project/      submodule (url: local ~/git/llvm-project)  @ reflection-p2996
+├── llvm-project/      submodule (url: Cfretz244/llvm-project fork) @ reflection-p2996
 │                      The clang-p2996 fork (the compiler half). Its CLAUDE.md has
 │                      build details. Built from here into ./toolchain/ (see
 │                      "Build the toolchain"), making this repo self-contained.
@@ -69,11 +69,11 @@ two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst`
 cd ~/git/cpp26-reflect-nanobind
 git submodule update --init --recursive
 ```
-The `nanobind` submodule URL is its GitHub fork (`Cfretz244/nanobind`, branch `mk-reflect`).
-The `llvm-project` submodule URL is the **local** `~/git/llvm-project` checkout on purpose:
-its pinned commit (a CLAUDE.md edit atop the bloomberg p2996 branch) is not pushed to any
-remote, so the canonical copy is this laptop. The on-disk submodule working trees here are
-self-contained (hard-linked objects), so they survive even if the sibling repos are removed.
+Both submodule URLs are GitHub forks: `nanobind` → `Cfretz244/nanobind` (branch `mk-reflect`),
+`llvm-project` → `Cfretz244/llvm-project` (branch `reflection-p2996`; the bloomberg clang-p2996
+fork plus a CLAUDE.md edit, its pinned commit `d4ae403` pushed there). So a fresh
+`--init --recursive` clones cleanly on any machine — though the llvm-project history is ~4 GB,
+and you still have to build `./toolchain/` from it (see "Build the toolchain").
 
 ## Build the toolchain (once; ~1–2h, ~3 GB installed + ~4 GB build tree) — verified
 
@@ -159,7 +159,8 @@ user-facing reference.
 - Binder changes: edit in `nanobind/` on `mk-reflect`, push to its `fork` remote
   (`Cfretz244/nanobind`); never push to `origin` (upstream wjakob).
 - After updating a submodule, `git add <submodule> && git commit` here to re-pin the state.
-- Submodule URLs: `nanobind` → its GitHub fork (`Cfretz244/nanobind`); `llvm-project` →
-  the local `~/git/llvm-project` checkout (its pinned commit isn't pushed anywhere). This
-  umbrella is a laptop snapshot; the on-disk submodule trees are self-contained regardless.
+- Submodule URLs: `nanobind` → `Cfretz244/nanobind`; `llvm-project` → `Cfretz244/llvm-project`
+  (both GitHub forks). The umbrella itself lives at `Cfretz244/cpp26-reflect-nanobind`. A fresh
+  `--init --recursive` clones cleanly on any machine. When re-pinning llvm-project, push its
+  branch to the fork first so the new pin is reachable.
 - `build/` and `.venv/` are git-ignored scratch — safe to delete and rebuild from scratch.
