@@ -140,6 +140,18 @@ status       = "done"         # outcome E: StatusOr<int/string/double> specs dir
                               # accessors (value() using-redeclared from a PRIVATE base --
                               # invisible to members_of; real throw path still exercised).
 
+[[repo]]
+slug         = "abseil_strings"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: absl::Cord direct (ctor/Append/Prepend/Remove*/Subcord/
+                              # Compare/StartsWith/EndsWith/__str__) + strtest wrappers over the
+                              # variadic-template StrCat/StrJoin/StrSplit/SimpleAtoi/ascii API.
+                              # Found+fixed BINDER-0010 (by-value move-only param hard error).
+
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
