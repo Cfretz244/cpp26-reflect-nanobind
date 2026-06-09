@@ -72,20 +72,52 @@ status       = "done"         # outcome E: real fmt enums (color/terminal_color/
                               # template gap). LIB-0001 (fmt's unqualified malloc/free) worked around
                               # consumer-side with <cstdlib> first.
 
+# --- Abseil special case: themed sibling runs, one submodule + one prebuilt static lib ---
+# First NON-header-only library. corpus/lib/build_abseil.sh builds absl at C++17 with the repo
+# toolchain into one libabsl_merged.a; meta `link_abseil = true` links it (+ CoreFoundation).
+
 [[repo]]
-slug         = "abseil"
-tier         = 6                          # special case (breadth of fully-specialized concrete types)
-header_only  = false                      # first non-header-only lib: links throw_delegate.cc
+slug         = "abseil_containers"
+tier         = 6
+header_only  = false
 url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
-status       = "done"         # outcome E: absl::InlinedVector<int,4> + <double,2> bind directly with
-                              # full container surface; L1 differential (incl. small-buffer spill).
-                              # First lib to use extra_sources (links absl throw_delegate.cc).
-                              # Surfaced BINDER-0006 (FixedArray zero-len array member) +
-                              # BINDER-0007 (int128 free operator<< -> incomplete ostream caster).
+status       = "done"         # outcome E: absl::InlinedVector<int,4>+<double,2> direct, full surface,
+                              # L1 differential incl. small-buffer spill. hash/btree/FixedArray
+                              # deferred (BINDER-0008).
+
+[[repo]]
+slug         = "abseil_numeric"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: absl::int128/uint128 direct; arithmetic/bitwise/comparison
+                              # dunders + str() (BINDER-0007 fix); L1 differential on 128-bit results.
+
+[[repo]]
+slug         = "abseil_time"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: absl::Duration/Time direct (operators->dunders, ->__str__
+                              # "1m30s"); timetest fixtures supply factory/conversion free functions.
+
+[[repo]]
+slug         = "abseil_status"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: absl::Status + StatusCode enum direct (ok/code/message/
+                              # raw_code); L1 differential. string_view/optional casters.
 
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
-# next abseil step: flat_hash_map/flat_hash_set (deeper link surface: absl::hash/container_internal)
+# next abseil step: clean hash/btree binding (BINDER-0008: skip container_internal + member-fn templates)

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "slug": "abseil_status",
+  "url": "https://github.com/abseil/abseil-cpp",
+  "pinned_commit": "20250814.2",
+  "tier": 6,
+  "header_only": false,
+  "toolchain_commit": "269d3e3",
+  "binder_commit": "ee245e6",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^absl::Status",
+      "^^absl::StatusCode"
+    ],
+    "rationale": "absl::Status is Abseil's canonical error type \u2014 a concrete class bound head-on: ok()/code()/raw_code()/message()/ToString()/Update(), constructed from (StatusCode, string_view). absl::StatusCode is a real scoped enum (kOk/kNotFound/kInvalidArgument/...) bound with all values. Exercises the std::string_view and std::optional casters (message() -> string_view; GetPayload -> optional<Cord>). Differentially checked vs native Abseil on code/message/ToString.",
+    "skipped_features": [
+      "payload API (SetPayload/GetPayload/ErasePayload over absl::Cord) not exercised in tests \u2014 bound but Cord round-tripping is out of scope for this run",
+      "message() returns absl::string_view (= std::string_view here); requires <nanobind/stl/string_view.h>"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "5 passed in 0.01s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 1.38,
+    "binding_compile_seconds": 4.74
+  },
+  "artifacts": {},
+  "notes": ""
+}

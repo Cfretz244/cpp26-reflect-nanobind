@@ -1,0 +1,15 @@
+# Per-run descriptor for Abseil (20250814.2) numeric types. Consumed by run_gates.py.
+slug         = "abseil_numeric"
+tier         = 6                          # Abseil special case (themed: numeric)
+header_only  = false                      # links the prebuilt absl static lib (int128.cc etc.)
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"
+main_headers = ["absl/numeric/int128.h"]
+module_name  = "abseil_numeric_ext"
+strategy     = "single_stage"
+link_abseil  = true                       # -labsl_merged (+ CoreFoundation) via NB_EXTRA_LIBS
+
+reflect_args     = ["^^absl::int128", "^^absl::uint128"]
+subset_rationale = "absl::int128 / absl::uint128 are concrete 128-bit integer value types — an ideal real-library dunder-mapping target. The binder maps their member + free arithmetic/bitwise/comparison operators to Python dunders (__add__/__sub__/__mul__/__truediv__/__mod__/__and__/__or__/__xor__/__lshift__/__rshift__ + in-place, __eq__/__lt__/...), constructors from built-in integers, and __bool__/__int__/__float__ conversions. Their free operator<<(std::ostream&, ...) is surfaced as Python str() via __str__ (BINDER-0007 fix), used here as the differential oracle's value channel (128-bit results exceed Python-constructible range). Differentially checked vs native Abseil."
+skipped_features = ["int128 has several integral conversion operators that all map to __int__ (last-one-wins picks a narrow one); value read-back in tests uses str(), not int() (see findings/BINDER-0008)", "constructing 128-bit values beyond the unsigned-long-long range from Python (no bigint->int128 caster); arithmetic still produces full-width results"]

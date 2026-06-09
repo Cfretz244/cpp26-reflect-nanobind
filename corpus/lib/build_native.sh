@@ -4,6 +4,8 @@
 # compiler + one library build means any divergence is attributable to the binding layer.
 #
 # usage: build_native.sh <oracle.cpp> <out_bin> [-I extra_include ...]
+# Honors NB_EXTRA_LIBS (extra linker flags, e.g. a prebuilt absl: "-L <prefix>/lib -labsl_merged"),
+# so the native oracle links the SAME real library the bound module does.
 set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 
@@ -18,4 +20,4 @@ mkdir -p "$(dirname "$out")"
 exec "$TC/bin/clang++" -std=c++26 -stdlib=libc++ $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
   -arch arm64 -O2 -L "$TC/lib" -Wl,-rpath,"$TC/lib" \
-  "$@" "$src" -o "$out"
+  "$@" "$src" ${NB_EXTRA_LIBS:-} -o "$out"

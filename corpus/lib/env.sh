@@ -12,6 +12,10 @@ export NBSYM="$REPO_ROOT/nanobind/cmake/darwin-ld-cpython.sym"
 export VENV_PY="$REPO_ROOT/.venv/bin/python"
 
 export SDKROOT_PATH="$(xcrun --show-sdk-path)"
+
+# Prefix of the prebuilt Abseil static lib (built by build_abseil.sh; git-ignored under build/).
+# run_gates.py turns a meta.toml `link_abseil = true` into NB_EXTRA_LIBS pointing here.
+export NB_ABSEIL_PREFIX="${NB_ABSEIL_PREFIX:-$REPO_ROOT/build/abseil-install}"
 export PYINC="$("$VENV_PY" -c 'import sysconfig; print(sysconfig.get_path("include"))')"
 export EXT_SUFFIX="$("$VENV_PY" -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))')"
 

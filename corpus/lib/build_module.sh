@@ -7,10 +7,11 @@
 #   produces <out_dir>/<module_name><EXT_SUFFIX>
 # exit 0 => Gate 4 pass; nonzero => taxonomy B (binding fails to compile/link).
 #
-# Non-header-only libraries: set env NB_EXTRA_SOURCES to a space-separated list of library .cc
-# files (e.g. Abseil's throw_delegate.cc) that define symbols the bound templates reference. Each
-# is compiled (plain C++26, NO reflection — it's ordinary library code) to an object and linked in.
-# This is the minimal "link the library" path used before a full prebuilt static lib is warranted.
+# Non-header-only libraries, two paths:
+#   - NB_EXTRA_SOURCES: space-separated library .cc files compiled (plain C++26, no reflection) and
+#     linked in. The minimal path for a one-or-two-symbol closure (e.g. Abseil throw_delegate.cc).
+#   - NB_EXTRA_LIBS: extra linker flags appended to the link line (e.g. "-L <prefix>/lib
+#     -labsl_merged" for a prebuilt static library). The path for a deep link closure.
 set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 
@@ -53,7 +54,7 @@ fi
   -arch arm64 $ISYSROOT_FLAGS \
   -L "$TC/lib" -Wl,-rpath,"$TC/lib" -Wl,@"$NBSYM" \
   -Wl,-dead_strip $REFLECT_FLAGS -O3 -DNDEBUG \
-  "$obj" ${extra_objs[@]+"${extra_objs[@]}"} "$NBLIB" \
+  "$obj" ${extra_objs[@]+"${extra_objs[@]}"} "$NBLIB" ${NB_EXTRA_LIBS:-} \
   -o "$so" || { echo "BUILD_FAIL_STAGE=link" >&2; exit 13; }
 
 echo "$so"

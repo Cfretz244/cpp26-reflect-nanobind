@@ -58,6 +58,23 @@ Self-contained in the umbrella repo: `../toolchain` (clang-p2996), `../build/tes
 libnanobind-static.a` (prebuilt), `../.venv` (python3.12 + pytest). The build helpers reuse the
 prebuilt static lib — no per-run nanobind rebuild. See `../CLAUDE.md` for the canonical flags.
 
+### Non-header-only libraries
+
+Two ways for a run to pull in symbols a real (compiled) library defines:
+
+- **`extra_sources`** (`meta.toml`): a list of library `.cc` files (paths relative to the run dir),
+  compiled plain-C++26 and linked into the module. The minimal path for a one-or-two-symbol closure.
+- **`link_abseil = true`** (`meta.toml`): links the prebuilt **`libabsl_merged.a`** built by
+  `lib/build_abseil.sh` (which configures Abseil at **C++17** with the repo's clang-p2996 + the
+  same from-source libc++, then merges all `libabsl_*.a` into one archive; `+ -framework
+  CoreFoundation` for cctz). Run `bash lib/build_abseil.sh` once; the lib lives under the
+  git-ignored `../build/abseil-install/`. The C++17 archive is ABI-compatible with the C++26
+  modules because both use one libc++. `run_gates.py` turns the flag into `NB_EXTRA_LIBS`, applied
+  to **both** the module and the native-oracle link. (A general `NB_EXTRA_LIBS` env is the seam for
+  any other prebuilt library.)
+
+The Abseil runs (`abseil_containers`/`numeric`/`time`/`status`) share one submodule + this one lib.
+
 ## Known gotchas baked into the helpers
 
 - **TC-0001:** native oracles must build at `-O2` (at `-O0` this toolchain emits an unresolved weak

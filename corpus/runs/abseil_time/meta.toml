@@ -1,0 +1,15 @@
+# Per-run descriptor for Abseil (20250814.2) time types. Consumed by run_gates.py.
+slug         = "abseil_time"
+tier         = 6                          # Abseil special case (themed: time)
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"
+main_headers = ["absl/time/time.h"]
+module_name  = "abseil_time_ext"
+strategy     = "single_stage"
+link_abseil  = true                       # cctz also needs CoreFoundation (added by run_gates)
+
+reflect_args     = ["^^absl::Duration", "^^absl::Time", "^^timetest"]
+subset_rationale = "absl::Duration and absl::Time are concrete value types bound DIRECTLY: their arithmetic/comparison operators map to Python dunders and operator<<(std::ostream&,...) is surfaced as __str__ (e.g. str(Seconds(90)) == '1m30s'). They have no public integer constructors, so a timetest fixture namespace supplies the real factory/conversion free functions (absl::Seconds/Minutes/Hours/Milliseconds, ToInt64Seconds/..., FromUnixSeconds/ToUnixSeconds) to construct/extract values from Python. Differentially checked vs native Abseil. Exercises the cctz link closure (CoreFoundation)."
+skipped_features = ["absl::CivilDay/CivilSecond/... (civil_time<tag> specializations bind under mangled underlying-spec names; deferred for a clean-naming pass)", "Duration/Time factory + conversion functions are exercised via timetest wrappers (absl::Seconds etc. are overloaded free functions, not directly namable as a single reflected entity)"]

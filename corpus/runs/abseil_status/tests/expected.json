@@ -1,0 +1,1 @@
+{"ok_is_ok":true,"ok_raw":0,"nf_is_ok":false,"nf_raw":5,"nf_msg":"thing missing","nf_str":"NOT_FOUND: thing missing","inv_raw":3,"inv_msg":"bad arg","code_kOk":0,"code_kNotFound":5,"code_kInvalidArgument":3,"code_kInternal":13}

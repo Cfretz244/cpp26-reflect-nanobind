@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "slug": "abseil_numeric",
+  "url": "https://github.com/abseil/abseil-cpp",
+  "pinned_commit": "20250814.2",
+  "tier": 6,
+  "header_only": false,
+  "toolchain_commit": "269d3e3",
+  "binder_commit": "ee245e6",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^absl::int128",
+      "^^absl::uint128"
+    ],
+    "rationale": "absl::int128 / absl::uint128 are concrete 128-bit integer value types \u2014 an ideal real-library dunder-mapping target. The binder maps their member + free arithmetic/bitwise/comparison operators to Python dunders (__add__/__sub__/__mul__/__truediv__/__mod__/__and__/__or__/__xor__/__lshift__/__rshift__ + in-place, __eq__/__lt__/...), constructors from built-in integers, and __bool__/__int__/__float__ conversions. Their free operator<<(std::ostream&, ...) is surfaced as Python str() via __str__ (BINDER-0007 fix), used here as the differential oracle's value channel (128-bit results exceed Python-constructible range). Differentially checked vs native Abseil.",
+    "skipped_features": [
+      "int128 has several integral conversion operators that all map to __int__ (last-one-wins picks a narrow one); value read-back in tests uses str(), not int() (see findings/BINDER-0008)",
+      "constructing 128-bit values beyond the unsigned-long-long range from Python (no bigint->int128 caster); arithmetic still produces full-width results"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "5 passed in 0.01s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 0.54,
+    "binding_compile_seconds": 3.06
+  },
+  "artifacts": {},
+  "notes": ""
+}

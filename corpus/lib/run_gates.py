@@ -84,6 +84,14 @@ def main(run_dir):
     # throw_delegate.cc): paths relative to the run dir, compiled and linked into the
     # module by build_module.sh via the NB_EXTRA_SOURCES env. Recorded in meta.toml.
     extra_sources = [str((run / s).resolve()) for s in meta.get("extra_sources", [])]
+    # Non-header-only via a prebuilt static lib: `link_abseil = true` links the merged Abseil
+    # archive (built by corpus/lib/build_abseil.sh) into both the module and the native oracle.
+    abseil_prefix = os.environ.get("NB_ABSEIL_PREFIX", str(REPO / "build" / "abseil-install"))
+    extra_libs = ""
+    if meta.get("link_abseil", False):
+        # CoreFoundation: absl's cctz time-zone lookup (transitively in the merged archive)
+        # references it on macOS.
+        extra_libs = f"-L {abseil_prefix}/lib -labsl_merged -framework CoreFoundation"
     mod = meta["module_name"]
     strategy = meta.get("strategy", "single_stage")
 
@@ -134,6 +142,8 @@ def main(run_dir):
     build_env = dict(os.environ)
     if extra_sources:
         build_env["NB_EXTRA_SOURCES"] = " ".join(extra_sources)
+    if extra_libs:
+        build_env["NB_EXTRA_LIBS"] = extra_libs
     t0 = time.time()
     if strategy == "two_stage":
         b = sh(["bash", str(LIB / "build_module_codegen.sh"),
@@ -177,7 +187,7 @@ def main(run_dir):
     if has_diff:
         # build native oracle (-O2, per TC-0001) and emit ground-truth expected.json
         ob = sh(["bash", str(LIB / "build_native.sh"), str(oracle),
-                 str(run / "tests" / "build" / "oracle"), *incflags])
+                 str(run / "tests" / "build" / "oracle"), *incflags], env=build_env)
         if ob.returncode == 0:
             res = sh([str(run / "tests" / "build" / "oracle")], env=run_env())
             if res.returncode == 0 and res.stdout.strip():

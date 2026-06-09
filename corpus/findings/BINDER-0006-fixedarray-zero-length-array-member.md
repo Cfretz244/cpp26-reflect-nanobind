@@ -1,6 +1,8 @@
 # BINDER-0006 — Zero-length C-array data member (absl::FixedArray internal storage) hard-errors
 
-- **Status:** OPEN — worked around by excluding the type from the Abseil subset (not yet fixed)
+- **Status:** **FIXED** (array data members are skipped) — pinned `nanobind @ 58c818a`. Note:
+  `absl::FixedArray` itself remains deferred for a *separate* reason (an Abseil-internal
+  `AsValueType` instantiation), tracked in `BINDER-0008`.
 - **Found via:** special-case Abseil run, `^^absl::FixedArray<int>` (outcome B while scoping)
 - **File:** `nanobind/include/nanobind/nb_reflect.h`, data-member binding (`reflect_bind_member` /
   `with_data_extras` → `def_rw`) and `check_stl_casters`
@@ -32,12 +34,12 @@ Two intertwined gaps:
    an implementation detail reached only via FixedArray's own signatures; binding it is never
    desired.
 
-## Fix sketch (not yet implemented)
+## Fix (implemented, nanobind @ 58c818a)
 
-Guard data-member binding to **skip members of array type** (`type_of(mem)` is an array) — they
-have no `def_rw`-able form; expose via a property accessor later if ever wanted. That alone makes
-`FixedArray` bind its public surface. Independently, consider not transitively binding nested types
-that live in a library `detail`/internal scope. dedup_key: `array-data-member-def_rw`.
+`reflect_bind_member` now guards with `!std::meta::is_array_type(std::meta::type_of(mem))`, so
+array-typed data members are skipped (mirroring the unnamed/volatile/template member skips).
+Regression test: a `WithArray { int arr[3]; int scalar; }` binds `scalar`, not `arr`.
+dedup_key: `array-data-member-def_rw`.
 
 ## Workaround in the corpus
 

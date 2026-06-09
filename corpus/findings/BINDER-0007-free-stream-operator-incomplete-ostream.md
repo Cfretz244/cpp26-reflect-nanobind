@@ -1,6 +1,7 @@
 # BINDER-0007 — Free `operator<<(std::ostream&, T)` bound as a dunder → incomplete-ostream error
 
-- **Status:** OPEN — worked around by excluding the type from the Abseil subset (not yet fixed)
+- **Status:** **RESOLVED as a feature** (stream insertion → Python `__str__`) — pinned
+  `nanobind @ 58c818a`.
 - **Found via:** special-case Abseil run, `^^absl::int128` (outcome B while scoping)
 - **File:** `nanobind/include/nanobind/nb_reflect.h`, `bind_free_operators` /
   `reflect_free_operator_binder` (the `NB_REFLECT_DEFINE_FREE_OP_BINDER` family)
@@ -33,15 +34,21 @@ operators: an `ostream` is not a bindable Python type, so there is nothing meani
 even attempting it forces an incomplete-type instantiation. (`__lshift__` on a Python `int128`
 taking a stream is also semantically wrong.)
 
-## Fix sketch (not yet implemented)
+## Fix (implemented, nanobind @ 58c818a)
 
-In the free-operator scan, **skip `operator<<`/`operator>>` whose non-`T` operand is a
-`std::basic_ostream`/`std::basic_istream` (or, more generally, whose other operand has no usable
-caster).** Detect via the operand type's template (`std::basic_ostream`/`basic_istream`) and drop
-those operators before instantiation. dedup_key: `free-stream-operator-as-dunder`.
+Rather than skip, the binder now turns this into a feature. `is_stream_type` /
+`involves_stream_type` detect a stream operand (after `dealias`/`remove_cvref`, the type spelling
+is `std::basic_ostream`/`basic_istream`); `is_bindable_free_operator` excludes such operators from
+the dunder scan, **keyed on the operand type, not the operator symbol** (so the genuine
+`operator<<(int128, int)` shift still maps to `__lshift__`). Separately, `bind_stream_str<T>`
+binds **`__str__`** for any ostream-insertable `T`, formatting via `std::ostringstream` and
+returning `std::string` — `ostream` never reaches Python. Stream extraction (`operator>>` /
+`std::istream`) is skipped. Regression test: `stream_test::Streamable` (`str(s)` works; `s << 1` →
+`__lshift__`). dedup_key: `free-stream-operator-as-dunder`.
 
-## Workaround in the corpus
+## Result in the corpus
 
-`absl::int128` is excluded from the Abseil run's `reflect_args`. (Once fixed, int128's arithmetic
-and comparison operators are an excellent dunder-mapping target — but note int128 division and
-streaming are `.cc`-defined, so it would also need an `extra_sources` link like InlinedVector.)
+`absl::int128`/`uint128` now bind (`corpus/runs/abseil_numeric`, outcome E) with full
+arithmetic/bitwise/comparison dunders and a working `str()`; likewise `str(absl::Duration)` →
+`"1m30s"` and `str(absl::Status)`. Linking is via the prebuilt absl static lib (`link_abseil`),
+not per-`.cc` `extra_sources`.

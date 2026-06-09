@@ -1,0 +1,15 @@
+# Per-run descriptor for Abseil (20250814.2) containers. Consumed by run_gates.py.
+slug         = "abseil_containers"
+tier         = 6                          # Abseil special case (themed: containers)
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"
+main_headers = ["absl/container/inlined_vector.h"]
+module_name  = "abseil_ext"
+strategy     = "single_stage"
+link_abseil  = true                       # -labsl_merged (+ CoreFoundation) via NB_EXTRA_LIBS
+
+reflect_args     = ["^^absl::InlinedVector<int, 4>", "^^absl::InlinedVector<double, 2>"]
+subset_rationale = "Binds two specializations of absl::InlinedVector (a small-buffer-optimized vector) DIRECTLY (no wrappers): <int,4> and <double,2> -> distinct Python types InlinedVectorInt4/InlinedVectorDouble2, with the full push_back/pop_back/at/operator[]/front/back/size/capacity/clear/empty/reserve/resize/erase/insert surface; differentially checked vs native Abseil incl. the small-buffer spill -> heap capacity growth. Links the prebuilt absl static lib (InlinedVector::at() -> ThrowStdOutOfRange). The hash/btree containers (flat_hash_map/set, btree_*) and FixedArray are DEFERRED to BINDER-0008: their public query/insert APIs are member templates (heterogeneous lookup) the binder skips, they transitively expose ~35 container_internal types under mangled names, and FixedArray hits an Abseil-internal AsValueType instantiation; a clean binding needs internal-namespace skipping + member-template handling."
+skipped_features = ["flat_hash_map/flat_hash_set/btree_map/btree_set: bind+link OK but explode into container_internal types and their query APIs are member-template-only (BINDER-0008)", "absl::FixedArray: Abseil-internal AsValueType<int> instantiation is ill-formed under the toolchain even after the array-member skip (BINDER-0008)"]
