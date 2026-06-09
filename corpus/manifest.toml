@@ -117,6 +117,17 @@ include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::Status + StatusCode enum direct (ok/code/message/
                               # raw_code); L1 differential. string_view/optional casters.
 
+[[repo]]
+slug         = "abseil_crc"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: absl::crc32c_t direct (__int__ via explicit uint32_t
+                              # conversion, __str__ hex via namespace operator<<); crctest fixture
+                              # wraps compute/extend/concat/remove_* free fns (4 compiled symbols).
+
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
