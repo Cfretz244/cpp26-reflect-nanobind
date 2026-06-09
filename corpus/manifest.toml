@@ -152,6 +152,18 @@ status       = "done"         # outcome E: absl::Cord direct (ctor/Append/Prepen
                               # variadic-template StrCat/StrJoin/StrSplit/SimpleAtoi/ascii API.
                               # Found+fixed BINDER-0010 (by-value move-only param hard error).
 
+[[repo]]
+slug         = "abseil_civil_tz"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: CivilDay/Second/Year = real internal-namespace
+                              # civil_time<tag> specs bound (fields/normalization/__iadd__);
+                              # TimeZone + nested CivilInfo direct (const char* def_ro);
+                              # tztest wraps FromCivil/ToCivil*/Format/LoadTimeZone->optional.
+
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"

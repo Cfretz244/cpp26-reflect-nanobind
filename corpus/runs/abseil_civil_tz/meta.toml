@@ -1,0 +1,15 @@
+# Per-run descriptor for Abseil (20250814.2) civil-time + TimeZone. Consumed by run_gates.py.
+slug         = "abseil_civil_tz"
+tier         = 6                          # Abseil special case (themed: civil time / time zones)
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"
+main_headers = ["absl/time/civil_time.h", "absl/time/time.h"]
+module_name  = "abseil_civil_tz_ext"
+strategy     = "single_stage"
+link_abseil  = true
+
+reflect_args     = ["^^absl::TimeZone", "^^absl::TimeZone::CivilInfo", "^^absl::Time", "^^absl::Duration", "^^absl::CivilSecond", "^^absl::CivilDay", "^^absl::CivilYear", "^^tztest"]
+subset_rationale = "absl::TimeZone (concrete copyable value type: name(), At(Time) -> CivilInfo, ==) and the civil-time types bound head-on. CivilDay/CivilSecond/CivilYear are aliases of time_internal::cctz::detail::civil_time<tag> SPECIALIZATIONS -- real internal-namespace specs bound under their spec-derived Python names (accepted per the reachability-only decision; a friendly-naming pass is future work). Their field accessors (year/month/day/hour/minute/second) and member += (__iadd__, incl. the famous normalization behavior) bind directly. TimeZone::CivilInfo is a NESTED class listed explicitly (nested non-template classes are not auto-discovered); its cs/subsecond/offset/is_dst/zone_abbr members bind (zone_abbr exercises a const char* def_ro). The tztest fixture wraps the free conversion API (UTCTimeZone/FixedTimeZone/LoadTimeZone -> optional, FromCivil/ToCivilSecond/ToCivilDay, FromUnixSeconds/ToUnixSeconds, FormatTime, GetWeekday -> int). Differentials use UTC/fixed-offset zones only (tzdata-independent)."
+skipped_features = ["civil-time comparison/difference operators (free function TEMPLATES over <tag>, skipped by design; differential uses field accessors)", "TimeZone::At(CivilSecond) -> TimeInfo and NextTransition/PrevTransition (nested TimeInfo/CivilTransition + out-params; not exercised)", "named-zone loads in differentials (LoadTimeZone is exposed but tests stick to UTC/fixed offsets for tzdata independence)", "ctor default-argument values (C++26 gap: civil ctors bind with all six fields required)"]
