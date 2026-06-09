@@ -9,7 +9,7 @@ namespace nb = nanobind;
 int main(int argc, char** argv) {
     const char* out = (argc > 1) ? argv[1] : "trampolines.gen.h";
     return nb::write_trampolines(
-               out, nb::emit_trampolines<^^nlohmann::json, ^^jsontest>())
+               out, nb::emit_trampolines<^^nlohmann::json, ^^jsontest>())  // value_t/error_handler_t enums need no trampolines
                ? 0
                : 1;
 }

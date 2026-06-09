@@ -6,15 +6,14 @@ Total runs: **6**
 
 | outcome | count | meaning |
 |---|---|---|
-| E | 5 | clean success (behavioral) |
-| B | 1 | binding failed to compile |
+| E | 6 | clean success (behavioral) |
 
 ## Outcomes by tier
 
 | tier | E | E-weak | D | C | B | A |
 |---|---|---|---|---|---|---|
 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
-| 1 | 1 | 0 | 0 | 0 | 1 | 0 |
+| 1 | 2 | 0 | 0 | 0 | 0 | 0 |
 | 4 | 1 | 0 | 0 | 0 | 0 | 0 |
 
 ## Per-run
@@ -25,6 +24,6 @@ Total runs: **6**
 | _fixture_recursive | 0 | E | 6 | single_stage |  |   |
 | linalg | 0 | E | 6 | single_stage | v2.2 |   |
 | glm | 1 | E | 6 | single_stage | 1.0.1 |   |
-| json | 1 | B | 1 | two_stage | v3.11.3 | B.gen_compile  |
+| json | 1 | E | 6 | two_stage | v3.11.3 |   |
 | _fixture_virtual | 4 | E | 6 | two_stage |  |   |
 

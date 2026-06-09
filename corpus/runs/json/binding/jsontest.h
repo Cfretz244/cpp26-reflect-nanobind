@@ -8,9 +8,63 @@
 // Python test can obtain populated json objects and then exercise the *binder-exposed* surface
 // (dump(), is_*(), size(), operator[], ==). They do not themselves test the binder.
 #pragma once
-#include <nlohmann/json.hpp>
 #include <string>
 #include <cstdint>
+
+// [test fixture] std::char_traits<unsigned char>.
+//
+// nlohmann/json's binary-format machinery (detail::output_adapter<std::uint8_t>,
+// output_string_adapter) NAMES std::basic_string<unsigned char> but never
+// instantiates it in normal use -- which is fortunate, because std::char_traits
+// is only specialized for char/wchar_t/char8_t/char16_t/char32_t, so the byte
+// string is ill-formed to instantiate (a latent json bug). Our reflection binder
+// *does* instantiate it when it binds that machinery, so we supply the missing
+// char_traits here -- defined byte-for-byte like libc++'s own char_traits<char8_t>
+// (char8_t is the same width/representation). This is a TEST-SIDE declaration so
+// the binder can be validated against the real, unmodified nlohmann::json; json
+// itself is left pristine. Declared before <nlohmann/json.hpp> so the
+// specialization is visible at every instantiation point.
+namespace std {
+template <>
+struct char_traits<unsigned char>
+    : __char_traits_base<unsigned char, unsigned int, static_cast<unsigned int>(EOF)> {
+    static constexpr int compare(const char_type* a, const char_type* b, size_t n) noexcept {
+        for (size_t i = 0; i < n; ++i) {
+            if (lt(a[i], b[i])) return -1;
+            if (lt(b[i], a[i])) return 1;
+        }
+        return 0;
+    }
+    static constexpr size_t length(const char_type* s) noexcept {
+        size_t i = 0;
+        while (!eq(s[i], char_type())) ++i;
+        return i;
+    }
+    static constexpr const char_type* find(const char_type* s, size_t n,
+                                           const char_type& a) noexcept {
+        for (size_t i = 0; i < n; ++i)
+            if (eq(s[i], a)) return s + i;
+        return nullptr;
+    }
+};
+}  // namespace std
+
+// Make the [[=reflect::skip]] annotation visible before json is parsed, so the
+// json test copy can mark its binary-format internals (detail::output_adapter
+// family, byte_container_with_subtype) as not-to-be-bound. These types are
+// implementation details that the binder would otherwise transitively bind (they
+// appear in basic_json::to_cbor/to_msgpack/... signatures and the binary_t base);
+// binding them drags in un-castable byte types. Skipping them via the binder's own
+// supported annotation keeps the public json surface bindable. See the
+// `[[=::nanobind::reflect::skip{}]]` markers added in json.hpp.
+#include <nanobind/nb_reflect_annotations.h>
+
+// Enable the opt-in skip annotations inside json (see NLOHMANN_JSON_NB_SKIP in
+// json.hpp). Only the binding TUs do this; a plain `#include <nlohmann/json.hpp>`
+// (e.g. the Gate-1 probe) leaves json standalone and unannotated.
+#define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
+
+#include <nlohmann/json.hpp>
 
 namespace jsontest {
 

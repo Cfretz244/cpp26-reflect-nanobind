@@ -52,8 +52,12 @@ header_only  = true
 url          = "https://github.com/nlohmann/json"
 pin          = "v3.11.3"
 include_root = "../../libs/json/single_include"
-status       = "done"         # outcome B: basic_json intractable on this toolchain (TC-0002);
-                              # yielded BINDER-0004 (self-referential recursion + heavy-type perf)
+status       = "done"         # outcome E: real ^^nlohmann::json binds + L1 differential passes.
+                              # Required THREE source fixes (NOT the originally-claimed SLoc ceiling):
+                              # TC-0002 = a clang Sema use-after-free (re-acquire Rec across reentrant
+                              # consteval); BINDER-0005 = nanobind concat() ADL-hijack; TC-0001 =
+                              # missing Apple typed-alloc operators in from-source libc++abi.
+                              # json's binary internals [[=reflect::skip]]-annotated in the test copy.
 
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="fmt"          tier=2  url="https://github.com/fmtlib/fmt"

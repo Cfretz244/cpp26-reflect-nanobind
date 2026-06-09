@@ -1,10 +1,42 @@
-# TC-0001 — Undefined weak `operator new[](size_t, std::__type_descriptor_t)` at -O0
+# TC-0001 — Missing Apple type-aware allocation operators in from-source libc++abi (FIXED)
 
-- **Status:** suspected (toolchain)
-- **Kind:** wrong-codegen / unresolved-weak-symbol
-- **Signature:** `__ZnamSt19__type_descriptor_t` referenced as undefined weak; no toolchain lib defines it
-- **Toolchain:** `llvm-project` submodule @ `d4ae403` (clang-p2996), its bundled libc++
-- **Discovered:** Phase 0a, building the native differential oracle.
+- **Status:** root-caused + **fixed in the pinned toolchain**
+- **Kind:** runtime/packaging gap — clang codegen ↔ from-source libc++abi ABI mismatch
+- **Signature:** `dyld: Symbol not found: __ZnamSt19__type_descriptor_t`
+- **Toolchain:** `llvm-project` clang-p2996; `libcxxabi/src/CMakeLists.txt`, `libcxxabi/lib/new-delete.exp`
+- **Discovered:** Phase 0a (native oracle); blocked nlohmann/json's L1 differential.
+
+## Root cause (was mislabeled "-O0 only / typed new")
+
+Recent clang targeting macOS emits calls to Apple's **type-aware allocation** operators
+`operator new[]/new/delete(..., std::__type_descriptor_t)`. Those symbols exist in Apple's
+**system** libc++ and in the vendor shim `libcxxabi/src/vendor/apple/shims.cpp`, but that shim is
+**not in `LIBCXXABI_SOURCES`** — the normal libc++abi build never compiles it. So a from-source
+libc++abi is missing the symbols; clang's codegen references them; the program aborts at load.
+`-O2`/`-O3` only *sometimes* optimize the reference away (linalg/glm dodged it; **json hits it at
+every -O level** because its aggregate-heavy code keeps the call live).
+
+## Fix
+
+- `libcxxabi/src/CMakeLists.txt`: compile `vendor/apple/shims.cpp` on `APPLE` (gated with the
+  new/delete definitions).
+- `libcxxabi/lib/new-delete.exp`: export the 10 typed operators (the Apple `-exported_symbols_list`
+  otherwise hides them as local symbols even once compiled).
+
+The shim forwards each typed operator to the untyped one — the descriptor is an optional
+type-aware-allocation hint (Apple's own shim does the same; "using" it would require Apple's
+private `malloc_type_*` API and yields only allocator hardening, not correctness).
+
+Rebuild: `ninja -C toolchain-build/runtimes/runtimes-bins cxxabi_shared && ... install-cxxabi`
+(`touch llvm-project/libcxxabi/src/vendor/apple/shims.cpp` first — the `.exp` isn't a tracked link
+input). After the fix, `nm -gU toolchain/lib/libc++abi.1.0.dylib | grep type_descriptor` shows the
+operators as exported (`T`), the native oracle runs, and json reaches **outcome E**.
+
+## Historical note (superseded below)
+
+The original finding (kept for the record) framed this as "-O0-only typed `operator new[]`,
+dodged by -O2." That workaround (`build_native.sh -O2`) is now unnecessary; the real fix is in the
+toolchain.
 
 ## Symptom
 

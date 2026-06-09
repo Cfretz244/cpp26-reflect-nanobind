@@ -91,6 +91,36 @@ cmake -S llvm-project/llvm -B toolchain-build -G Ninja -DCMAKE_BUILD_TYPE=Releas
 ninja -C toolchain-build install     # the long part
 ```
 
+### Local toolchain fixes baked into the `llvm-project` submodule (built in automatically)
+
+The pinned `llvm-project` carries prove-out fixes on top of the bloomberg clang-p2996 fork;
+a fresh build from the submodule includes them — no extra flags. If you already have a built
+`./toolchain/`, re-run `ninja -C toolchain-build install` (or the targeted commands noted) to
+pick them up:
+
+- **Sema use-after-free under heavy reflection** (`clang/lib/Sema/SemaExpr.cpp`). Evaluating a
+  large immediate (consteval) invocation — e.g. `nb::reflect_<^^nlohmann::json>` /
+  `emit_trampolines` over `basic_json` — recursively pushes expression-evaluation contexts,
+  reallocating `Sema::ExprEvalContexts` and dangling the `Rec` reference held across
+  `HandleImmediateInvocations` / the tail of `PopExpressionEvaluationContext`. Manifested as a
+  non-deterministic crash (garbage/ASCII pointer) once `-fconstexpr-steps` was raised enough to
+  finish evaluating; **this is why raising the step budget appeared to "ICE" the compiler.** Fix
+  re-acquires the record after reentrant evaluation. (Rebuild: `ninja -C toolchain-build clang`
+  then `ninja -C toolchain-build install-clang`.)
+- **TC-0001 — missing Apple type-aware allocation operators in from-source libc++abi**
+  (`libcxxabi/src/CMakeLists.txt` + `libcxxabi/lib/new-delete.exp`). Recent clang targeting macOS
+  emits calls to `operator new[]/new/delete(..., std::__type_descriptor_t)`; those symbols live
+  only in Apple's *system* libc++ and the vendor shim `libcxxabi/src/vendor/apple/shims.cpp`,
+  which the normal build never compiles. A program using enough aggregate-with-method code (any
+  nontrivial nlohmann/json use) then aborts at load: `dyld: Symbol not found:
+  __ZnamSt19__type_descriptor_t`. (`-O2`/`-O3` only *sometimes* optimize the reference away — it
+  reliably bites json.) The fix compiles the shim on Apple and exports its 10 symbols via
+  `new-delete.exp`. (Rebuild: `ninja -C toolchain-build/runtimes/runtimes-bins cxxabi_shared &&
+  ninja -C toolchain-build/runtimes/runtimes-bins install-cxxabi`; the `.exp` is not tracked as a
+  link input, so `touch llvm-project/libcxxabi/src/vendor/apple/shims.cpp` first to force a
+  relink.) The shim forwards each typed operator to the untyped one — the descriptor is an
+  optional type-aware-allocation hint, exactly as Apple's own shim does.
+
 ## Build & test the binder (the main loop) — verified from scratch
 
 ```bash

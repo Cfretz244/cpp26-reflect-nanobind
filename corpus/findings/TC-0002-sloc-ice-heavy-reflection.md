@@ -1,59 +1,65 @@
-# TC-0002 — clang-p2996 ICE (SourceManager "Invalid SLocOffset") under very heavy reflection
+# TC-0002 — clang Sema use-after-free under heavy reflection (FIXED)
 
-- **Status:** suspected (toolchain ICE) + a constexpr-step-budget scale wall
-- **Kind:** internal compiler error / assertion failure
-- **Signature:** `Assertion failed: (0 && "Invalid SLocOffset or bad function choice"), function getFileIDLoaded, SourceManager.cpp:876`
-- **Toolchain:** `llvm-project` @ `d4ae403` (clang-p2996), bundled libc++
-- **Found via:** Phase 1, nlohmann/json — binding `^^nlohmann::json` (= `basic_json<>`).
+- **Status:** root-caused + **fixed in the pinned toolchain**
+- **Kind:** use-after-free (memory-safety bug in clang Sema)
+- **Toolchain:** `llvm-project` clang-p2996, `clang/lib/Sema/SemaExpr.cpp`
+- **Found via:** Phase 1, nlohmann/json — `nb::reflect_<^^nlohmann::json>` over `basic_json`.
 
-## Two stacked symptoms
+## CORRECTION of the original finding
 
-Reflecting the whole `basic_json` value type drives an enormous amount of constexpr work (its
-user-spec discovery fixpoint walks ~hundreds of members plus json's internal template web —
-`iter_impl`, `json_pointer`, `json_sax`, `detail::*`). Two failure modes result:
+The first version of this finding claimed `basic_json` was **"intractable on this toolchain"**:
+that reflecting it exceeded the constexpr step budget, and that raising `-fconstexpr-steps`
+ICE'd the compiler via **SLoc address-space exhaustion**. **All of that framing was wrong.**
+Evidence that disproved it:
 
-1. **Default flags — constexpr step-budget wall (clean diagnostic).** The binder's
-   `required_user_specs` / STL walks exceed the default `-fconstexpr-steps`:
-   ```
-   error: call to consteval function 'emit_trampolines<...>' is not a constant expression
-   note: constexpr evaluation hit maximum step limit; possible infinite loop?
-   ```
-   This is the standard-build outcome (corpus json run = **B.gen_compile**). Not itself a compiler
-   bug — `basic_json` is genuinely huge — but see below.
+- The crash under a raised step budget is a **non-deterministic SIGSEGV** (varying *ASCII-looking
+  garbage* fault addresses across runs: `0x4c453734634c4538`, `0x634c453734634c4d`, `0x74`), at a
+  constant instruction in `Sema::PopExpressionEvaluationContext`. Varying garbage = heap
+  corruption / use-after-free, **not** deterministic address-space exhaustion.
+- **Peak memory ~200 MB** — nowhere near any limit; not memory or SLoc exhaustion.
+- Shallow 17-frame stack — not a stack overflow.
 
-2. **Raised `-fconstexpr-steps` — compiler ICE.** Bumping the limit so evaluation can proceed
-   (`-fconstexpr-steps=200000000`) runs ~32 s and then **crashes the compiler**:
-   ```
-   Assertion failed: (0 && "Invalid SLocOffset or bad function choice"),
-   function getFileIDLoaded, file SourceManager.cpp, line 876.
-   ```
-   A compiler must never assert/crash — it should diagnose. The "Invalid SLocOffset" suggests
-   **source-location space exhaustion** from the volume of `std::meta` / `std::define_static_string`
-   operations the deep reflection performs. This is the genuine toolchain bug.
+The "Invalid SLocOffset" assert seen earlier was a *downstream symptom* of the same corruption,
+not the cause.
 
-## Reproducer
+## Real root cause (use-after-free)
 
-`corpus/runs/json/binding/gen.cpp` (+ `jsontest.h`) compiled against nlohmann/json v3.11.3:
+`Sema::PopExpressionEvaluationContext` holds `Rec = ExprEvalContexts.back()` — a **reference into
+the `SmallVector<ExpressionEvaluationContextRecord, 8> ExprEvalContexts`**. It then calls
+`HandleImmediateInvocations(*this, Rec)`, which evaluates pending consteval immediate invocations
+(here, `emit_trampolines<^^nlohmann::json>` / the `reflect_` machinery). That evaluation does deep
+nested **template instantiation**, which recursively **pushes (and pops) expression-evaluation
+contexts**. Once `ExprEvalContexts` grows past its inline capacity it **reallocates**, leaving
+`Rec` (and the post-loop uses in `HandleImmediateInvocations`, plus the tail of
+`PopExpressionEvaluationContext`: `Rec.VolatileAssignmentLHSs`, `Rec.SavedMaybeODRUseExprs`, …)
+**dangling into freed memory** — which gets reused for `define_static_string` text, hence the
+ASCII-garbage pointers.
 
-```
-TC=.../toolchain
-$TC/bin/clang++ -std=c++26 -freflection-latest -stdlib=libc++ \
-  -isysroot "$(xcrun --show-sdk-path)" -nostdinc++ -isystem $TC/include/c++/v1 \
-  -fconstexpr-steps=200000000 \
-  -I corpus/libs/json/single_include -I corpus/runs/json/binding -I nanobind/include \
-  corpus/runs/json/binding/gen.cpp -o /tmp/gen      # -> ICE after ~32s
-```
+The fork already half-knew this — there is a `NOTE(P2996)` and an index-based loop guarding the
+*candidate vector* from growth — but it missed the outer `Rec`-reference invalidation from the
+`ExprEvalContexts` reallocation itself.
 
-Not yet minimized (needs nanobind + json). TODO before upstreaming: reduce to a standalone TU
-that performs N `std::define_static_string` / `std::meta::members_of` ops in one consteval call
-until SLoc space is exhausted, to confirm the cause is independent of nanobind/json.
+**Why raising `-fconstexpr-steps` "ICE'd" the compiler:** the default step budget hit the
+step-limit diagnostic *before* the corruption could surface. Raising it just let evaluation run
+far enough to dereference the dangling `Rec` → crash. The step budget was a red herring; the
+budget was never the wall.
 
-## Assessment
+## Fix
 
-`nlohmann::json` whole-`basic_json` binding is **intractable on this toolchain**: too big for the
-constexpr budget, and the compiler ICEs when pushed past it. Recorded as the campaign's first
-"heavy real-world value type" ceiling datapoint. The binder improvements extracted along the way
-(BINDER-0004) reduce — but do not eliminate — the constexpr cost; the residual wall is `basic_json`'s
-intrinsic size plus the SLoc-exhaustion ICE.
+`clang/lib/Sema/SemaExpr.cpp`: re-acquire the record (always the top of the stack) after any
+reentrant evaluation, rather than holding the reference across it —
+`HandleImmediateInvocations` re-fetches via `SemaRef.currentEvaluationContext()` after the
+candidate loop; `PopExpressionEvaluationContext` re-fetches `ExprEvalContexts.back()` for its tail
+(and around `CleanupVarDeclMarking()`).
 
-dedup_key: `sloc-ice-heavy-reflection`.
+## Validation
+
+- `corpus/runs/json/binding/gen.cpp` and the full `^^nlohmann::json` module now compile (≈17 s,
+  `-fconstexpr-steps≈20M` — a legitimate budget for a type this large, no crash).
+- Regression-clean: nanobind reflection suite 41/41; `clang/test/Reflection` 16/16; a
+  consteval/immediate-invocation lit sweep 18/0.
+- nlohmann/json reaches **outcome E** (real class bound, L1 differential vs a native oracle).
+
+dedup_key: `sema-eval-context-uaf-reentrant-consteval`. Upstreamable to bloomberg/clang-p2996
+(then mainline LLVM) — confirmation reproducer: any reflection that evaluates a large immediate
+invocation pushing >8 nested eval contexts.

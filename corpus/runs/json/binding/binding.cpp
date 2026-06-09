@@ -10,5 +10,6 @@
 namespace nb = nanobind;
 
 NB_MODULE(json_ext, m) {
-    nb::reflect_<^^nlohmann::json, ^^nlohmann::detail::value_t, ^^jsontest>(m);
+    nb::reflect_<^^nlohmann::json, ^^nlohmann::detail::value_t,
+                 ^^nlohmann::detail::error_handler_t, ^^jsontest>(m);
 }

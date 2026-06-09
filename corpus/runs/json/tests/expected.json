@@ -1,0 +1,1 @@
+{"a_is_number":true,"arr123_dump":"[1,2,3]","b_dump":"[2,3]","b_is_array":true,"b_size":2,"bool_dump":"true","c_is_string":true,"eq_7_7":true,"eq_7_8":false,"int0_dump":"0","null_dump":"null","obj_dump":"{\"a\":1,\"b\":[2,3],\"c\":\"x\"}","obj_is_object":true,"obj_size":3,"text_dump":"\"hi\"","to_double_2_5":2.5,"to_int_42":42,"to_text_hello":"hello"}

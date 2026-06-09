@@ -76,6 +76,10 @@ def main(run_dir):
     meta = tomllib.loads((run / "meta.toml").read_text())
     inc = run / meta["include_root"] if meta.get("include_root") else None
     incflags = ["-I", str(inc)] if inc else []
+    # Per-run extra compile flags (e.g. a raised -fconstexpr-steps for heavy
+    # reflection like nlohmann/json's basic_json). Recorded in meta.toml for
+    # reproducibility; appended to the binding (Gate 4) compile only.
+    extra_cflags = meta.get("extra_cflags", [])
     mod = meta["module_name"]
     strategy = meta.get("strategy", "single_stage")
 
@@ -127,10 +131,10 @@ def main(run_dir):
     if strategy == "two_stage":
         b = sh(["bash", str(LIB / "build_module_codegen.sh"),
                 str(run / "binding" / "gen.cpp"), str(run / "binding" / "binding.cpp"),
-                mod, str(build_dir), *incflags])
+                mod, str(build_dir), *incflags, *extra_cflags])
     else:
         b = sh(["bash", str(LIB / "build_module.sh"),
-                str(run / "binding" / "binding.cpp"), mod, str(build_dir), *incflags])
+                str(run / "binding" / "binding.cpp"), mod, str(build_dir), *incflags, *extra_cflags])
     r["metrics"]["binding_compile_seconds"] = round(time.time() - t0, 2)
     if b.returncode != 0:
         r["gate_results"]["4_compile"] = "fail"

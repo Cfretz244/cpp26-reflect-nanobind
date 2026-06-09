@@ -9,6 +9,11 @@ main_headers = ["nlohmann/json.hpp"]
 module_name  = "json_ext"
 strategy     = "two_stage"               # codegen path for auto STL-caster includes
 
-reflect_args     = ["^^nlohmann::json", "^^nlohmann::detail::value_t", "^^jsontest"]
-subset_rationale = "nlohmann::json = basic_json<>; whole value type. Value-ingestion/extraction is all member templates (skipped), so jsontest helper factories supply inputs. OUTCOME B: basic_json is too large for the toolchain — reflecting it exceeds the constexpr step budget (the user-spec discovery fixpoint over its ~hundreds of members + internal template web), and forcing past the limit ICEs clang-p2996 (TC-0002). Intractable heavy-type datapoint."
-skipped_features = ["all member templates: get<T>/parse/get_to/emplace_back/compat-ctors", "whole-class binding intractable on this toolchain (see TC-0002)"]
+reflect_args     = ["^^nlohmann::json", "^^nlohmann::detail::value_t", "^^nlohmann::detail::error_handler_t", "^^jsontest"]
+# basic_json reflection needs a raised constexpr-step budget (~20M; default ~1.05M).
+# This is a legitimate budget bump — it no longer crashes after the TC-0002 fix
+# (a use-after-free in clang's PopExpressionEvaluationContext / HandleImmediateInvocations;
+# the Rec reference into ExprEvalContexts dangled when reentrant consteval reallocated it).
+extra_cflags     = ["-fconstexpr-steps=100000000", "-DJSON_NO_IO"]
+subset_rationale = "nlohmann::json = basic_json<>; the whole real value type is reflected (no facade). Value-ingestion/extraction is all member templates (correctly skipped), so jsontest helper factories supply populated inputs; the binder still exposes the real dump()/is_*()/size()/operator[]/== surface under test. Previously OUTCOME B: reflecting basic_json crashed clang-p2996 — originally mis-attributed to a constexpr/SLoc-exhaustion ceiling (TC-0002), but root-caused to a use-after-free in Sema (fixed in the pinned toolchain). With the fix + a raised constexpr-step budget, the real class binds."
+skipped_features = ["all member templates: get<T>/parse/get_to/emplace_back/compat-ctors (Python uses jsontest factories instead)"]
