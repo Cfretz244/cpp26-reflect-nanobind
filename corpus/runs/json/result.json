@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "slug": "json",
+  "url": "https://github.com/nlohmann/json",
+  "pinned_commit": "v3.11.3",
+  "tier": 1,
+  "header_only": true,
+  "toolchain_commit": "d4ae403",
+  "binder_commit": "be1a43c",
+  "outcome": "B",
+  "furthest_gate": 1,
+  "gate_results": {
+    "3_strategy": "two_stage",
+    "1_probe": "pass",
+    "4_compile": "fail"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^nlohmann::json",
+      "^^nlohmann::detail::value_t",
+      "^^jsontest"
+    ],
+    "rationale": "nlohmann::json = basic_json<>; whole value type. Value-ingestion/extraction is all member templates (skipped), so jsontest helper factories supply inputs. OUTCOME B: basic_json is too large for the toolchain \u2014 reflecting it exceeds the constexpr step budget (the user-spec discovery fixpoint over its ~hundreds of members + internal template web), and forcing past the limit ICEs clang-p2996 (TC-0002). Intractable heavy-type datapoint.",
+    "skipped_features": [
+      "all member templates: get<T>/parse/get_to/emplace_back/compat-ctors",
+      "whole-class binding intractable on this toolchain (see TC-0002)"
+    ]
+  },
+  "oracle": {
+    "layers_used": [],
+    "ground_truth_source": ""
+  },
+  "failure": {
+    "code": "B.gen_compile",
+    "first_diagnostics": [
+      "/Users/christopherfretz/git/cpp26-reflect-nanobind/corpus/runs/json/binding/gen.cpp:12:21: error: call to consteval function 'nanobind::emit_trampolines<^^(type), ^^(namespace)>' is not a constant expression",
+      "12 |                out, nb::emit_trampolines<^^nlohmann::json, ^^jsontest>())",
+      "|                     ^",
+      "/Users/christopherfretz/git/cpp26-reflect-nanobind/toolchain/include/c++/v1/__vector/vector.h:387:88: note: constexpr evaluation hit maximum step limit; possible infinite loop?",
+      "387 |   _LIBCPP_CONSTEXPR_SINCE_CXX20 _LIBCPP_HIDE_FROM_ABI size_type size() const _NOEXCEPT {"
+    ],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "suspected",
+    "kind": "constexpr-step-limit",
+    "signature": "constexpr evaluation hit maximum step limit",
+    "finding": "TC-0002-sloc-ice-heavy-reflection"
+  },
+  "metrics": {
+    "probe_seconds": 1.3,
+    "binding_compile_seconds": 2.1
+  },
+  "artifacts": {},
+  "notes": ""
+}

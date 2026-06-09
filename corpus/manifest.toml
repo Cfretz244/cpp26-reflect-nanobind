@@ -28,9 +28,26 @@ pin          = "v2.2"
 include_root = "../../libs/linalg"
 status       = "done"         # outcome E after BINDER-0001 fix (was B)
 
+[[repo]]
+slug         = "glm"
+tier         = 1
+header_only  = true
+url          = "https://github.com/g-truc/glm"
+pin          = "1.0.1"
+include_root = "../../libs/glm"
+status       = "done"         # outcome E (vec3/vec4 ctor+index surface); BINDER-0002/0003 found
+
+[[repo]]
+slug         = "json"
+tier         = 1
+header_only  = true
+url          = "https://github.com/nlohmann/json"
+pin          = "v3.11.3"
+include_root = "../../libs/json/single_include"
+status       = "done"         # outcome B: basic_json intractable on this toolchain (TC-0002);
+                              # yielded BINDER-0004 (self-referential recursion + heavy-type perf)
+
 # --- ramp backlog (not yet scaffolded) ---
-# [[repo]] slug="glm"          tier=1  url="https://github.com/g-truc/glm"
-# [[repo]] slug="nlohmann-json" tier=1 url="https://github.com/nlohmann/json"
 # [[repo]] slug="fmt"          tier=2  url="https://github.com/fmtlib/fmt"
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"

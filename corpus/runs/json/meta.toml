@@ -1,0 +1,14 @@
+# Per-run descriptor for nlohmann/json (v3.11.3).
+slug         = "json"
+tier         = 1
+header_only  = true
+url          = "https://github.com/nlohmann/json"
+pin          = "v3.11.3"                 # commit 9cca280a4
+include_root = "../../libs/json/single_include"
+main_headers = ["nlohmann/json.hpp"]
+module_name  = "json_ext"
+strategy     = "two_stage"               # codegen path for auto STL-caster includes
+
+reflect_args     = ["^^nlohmann::json", "^^nlohmann::detail::value_t", "^^jsontest"]
+subset_rationale = "nlohmann::json = basic_json<>; whole value type. Value-ingestion/extraction is all member templates (skipped), so jsontest helper factories supply inputs. OUTCOME B: basic_json is too large for the toolchain — reflecting it exceeds the constexpr step budget (the user-spec discovery fixpoint over its ~hundreds of members + internal template web), and forcing past the limit ICEs clang-p2996 (TC-0002). Intractable heavy-type datapoint."
+skipped_features = ["all member templates: get<T>/parse/get_to/emplace_back/compat-ctors", "whole-class binding intractable on this toolchain (see TC-0002)"]

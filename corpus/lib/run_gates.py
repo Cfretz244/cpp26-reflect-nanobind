@@ -53,6 +53,16 @@ def detect_toolchain_bug(diag_text):
         return {"status": "suspected", "kind": "unresolved-weak-symbol",
                 "signature": "__ZnamSt19__type_descriptor_t",
                 "finding": "TC-0001-typed-operator-new-at-O0"}
+    if "invalid slocoffset" in t or "getfileidloaded" in t:
+        return {"status": "suspected", "kind": "ice",
+                "signature": "SourceManager getFileIDLoaded: Invalid SLocOffset",
+                "finding": "TC-0002-sloc-ice-heavy-reflection"}
+    if "maximum step limit" in t:
+        # Not itself a compiler bug, but on this toolchain raising the limit to finish ICEs
+        # the compiler (TC-0002). Flag so the heavy-type scale wall is tracked.
+        return {"status": "suspected", "kind": "constexpr-step-limit",
+                "signature": "constexpr evaluation hit maximum step limit",
+                "finding": "TC-0002-sloc-ice-heavy-reflection"}
     for marker in ("unreachable", "internal compiler error", "please submit a bug report",
                    "assertion failed", "mangling a placeholder type", "stack dump"):
         if marker in t:
