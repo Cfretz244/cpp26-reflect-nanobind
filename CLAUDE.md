@@ -28,8 +28,8 @@ cpp26-reflect-nanobind/
 └── CLAUDE.md          (this file)
 ```
 
-Pinned submodule commits (the captured state): `llvm-project @ d4ae403`,
-`nanobind @ e3d900b`. `git submodule status` shows the current pins.
+`git submodule status` shows the current pinned submodule commits (the captured state);
+PROVE_OUT.md's status snapshot names the pins that carried each landed fix.
 
 ## The idea, in one paragraph
 

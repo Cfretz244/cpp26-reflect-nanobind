@@ -1,8 +1,8 @@
 // serialize_poc.cpp — an automatic serializer driven entirely by C++26 static
 // reflection (WG21 P2996), no per-type boilerplate and no macros.
 //
-// Build with this fork's from-source toolchain:
-//   TC=~/llvm-toolchain
+// Build with the repo-local toolchain (from the umbrella repo root):
+//   TC=$PWD/toolchain
 //   $TC/bin/clang++ -std=c++26 -freflection-latest -stdlib=libc++ \
 //     -isysroot "$(xcrun --show-sdk-path)" \
 //     -nostdinc++ -isystem $TC/include/c++/v1 \
