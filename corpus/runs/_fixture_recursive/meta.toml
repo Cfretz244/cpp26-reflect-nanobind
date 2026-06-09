@@ -1,0 +1,12 @@
+slug         = "_fixture_recursive"
+tier         = 0
+header_only  = true
+url          = ""
+pin          = ""
+include_root = "src"
+main_headers = ["tree.h"]
+module_name  = "tree_ext"
+strategy     = "single_stage"
+reflect_args     = ["^^tree::Node"]
+subset_rationale = "Self-referential data structure (Node holds std::vector<Node>). Coverage for recursive types + vector-of-self member binding. NOT a BINDER-0004 regression (builds pre-fix too)."
+skipped_features = []

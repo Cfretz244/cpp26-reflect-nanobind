@@ -20,6 +20,14 @@ pin         = ""
 status      = "done"          # outcome E (two-stage codegen / virtual override proof)
 
 [[repo]]
+slug        = "_fixture_recursive"
+tier        = 0
+header_only = true
+url         = ""
+pin         = ""
+status      = "done"          # outcome E (recursive type Node{vector<Node>}; coverage, not a bug repro)
+
+[[repo]]
 slug         = "linalg"
 tier         = 0
 header_only  = true
