@@ -9,3 +9,6 @@
 [submodule "corpus/libs/linalg"]
 	path = corpus/libs/linalg
 	url = https://github.com/sgorsten/linalg.git
+[submodule "corpus/libs/glm"]
+	path = corpus/libs/glm
+	url = https://github.com/g-truc/glm.git
