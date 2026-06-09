@@ -34,17 +34,24 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 
 ## Next steps
 
-### 🔜 1. Keyword-argument names + default arguments
-- **What:** emit `nb::arg("name")` per parameter, and bind C++ default arguments so Python
-  callers can use keywords/defaults.
-- **Why:** the single biggest ergonomics gap for real APIs; today all args are positional
-  and unnamed.
-- **Approach:** P3096 parameter reflection — `parameters_of(fn)` gives `identifier_of` (name)
-  and `has_default_argument`. Thread `nb::arg(...)` extras through the existing
-  `with_call_extras` mechanism. Default *values*: read via the parameter reflection if
-  extractable; otherwise generate a wrapper. Watch the **mangler-crash rule** — keep spliced
-  types out of any new lambda signatures (these are extras, so low risk).
-- **Effort:** small–medium.
+### ✅ 1. Keyword-argument names (+ default arguments — blocked by the standard)
+- **What:** emit `nb::arg("name")` per parameter so Python callers can use keywords. **Done**
+  for methods, static methods, free functions, and constructors.
+- **Why:** the single biggest ergonomics gap for real APIs; previously all args were
+  positional and unnamed.
+- **How it landed:** P3096 parameter reflection — `param_name<fn, I>()` reads
+  `identifier_of` (static-stored via `define_static_string`); `with_arg_call_extras<fn>`
+  prepends `nb::arg(...)` to the existing `with_call_extras` stream (and the ctor binder
+  does the same on `init<...>()`). Only emitted when a function has ≥1 named parameter;
+  unnamed params become `nb::arg()` to satisfy nanobind's all-or-nothing count. No new
+  lambda signature names a spliced type, so the mangler-crash rule is untouched. Tested by
+  `test30_keyword_arguments`.
+- **Default *values*: not done — and not doable in-language.** This is a **gap in the C++26
+  standard, not an implementation gap**: P3096 exposes only `has_default_argument` (a
+  `bool`) with no `default_argument_of`/value accessor — a default argument is an arbitrary
+  expression evaluated in the *caller's* context, not a reflectable entity. nanobind's
+  `nb::arg("x") = value` needs the value, so generic default binding is impossible without a
+  new WG21 facility. Left here as blocked-by-standard.
 
 ### 🔜 2. Free operators → reversed dunders
 - **What:** namespace-scope `operator@(A,B)` → attach `__add__`/`__radd__` etc. to the
@@ -54,13 +61,15 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
   dunder on the type of the first (or second, for reversed) operand. Reuse `operator_dunder`.
 - **Effort:** medium (deciding which class owns the binding; reversed-arg lambdas).
 
-### 🔜 3. Class/enum docstrings
-- **What:** honor `[[=r::doc{...}]]` on classes and enums (deferred earlier).
+### ✅ 3. Class/enum docstrings
+- **What:** honor `[[=r::doc{...}]]` on classes and enums. **Done.** The annotation follows the
+  `struct`/`enum class` keyword, e.g. `struct [[=r::doc{"..."}]] Widget { ... };`.
 - **Why:** completes the annotation vocabulary already shipped for functions/members.
-- **Approach:** thread an optional `const char*` doc into the 4-way `class_<...>` construction
-  (and `enum_<...>`). The 4-way branch made this awkward; factor the doc-or-not choice so it
-  doesn't multiply the branch count.
-- **Effort:** small.
+- **How it landed:** a `with_doc_extra<R>(f)` helper calls the construction continuation with the
+  `entity_doc<R>()` string as a trailing `const char*` extra (or nothing) and returns its result,
+  so `reflect_class`'s 4-way `class_<...>` branch and `reflect_enum`'s `enum_<E>` just append
+  `doc...` — no branch multiplication. nanobind treats a bare `const char*` extra as the type's
+  docstring. Tested by `test31_class_enum_docstrings`.
 
 ### 🧭 4. Properties from getter/setter pairs
 - **What:** recognize `getX()/setX(v)` (or `x()/x(v)`) conventions and bind a Python
@@ -127,7 +136,7 @@ pass. User-facing reference: `nanobind/docs/reflection.rst`.
 
 ## Suggested order
 
-`#1 (kwargs/defaults)` → `#3 (class docstrings)` → `#2 (free operators)` →
+`#1 (kwarg names)` ✅ → `#3 (class docstrings)` ✅ → `#2 (free operators)` →
 `#5 (caster includes)` → `#4 (properties)` → then the hard ones (`#6 templates`,
 `#7 trampoline hardening`) as real-codebase needs dictate. The CMake helper and full-codegen
 generalization are worth doing once a second real consumer appears.
