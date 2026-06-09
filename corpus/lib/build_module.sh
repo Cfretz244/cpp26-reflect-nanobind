@@ -6,6 +6,11 @@
 # usage: build_module.sh <binding.cpp> <module_name> <out_dir> [-I extra_include ...]
 #   produces <out_dir>/<module_name><EXT_SUFFIX>
 # exit 0 => Gate 4 pass; nonzero => taxonomy B (binding fails to compile/link).
+#
+# Non-header-only libraries: set env NB_EXTRA_SOURCES to a space-separated list of library .cc
+# files (e.g. Abseil's throw_delegate.cc) that define symbols the bound templates reference. Each
+# is compiled (plain C++26, NO reflection — it's ordinary library code) to an object and linked in.
+# This is the minimal "link the library" path used before a full prebuilt static lib is warranted.
 set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 
@@ -23,13 +28,32 @@ so="$out_dir/$mod$EXT_SUFFIX"
   -I "$PYINC" -I "$NBINC" "$@" \
   -c "$src" -o "$obj" || { echo "BUILD_FAIL_STAGE=compile" >&2; exit 11; }
 
+# --- compile extra library sources (NB_EXTRA_SOURCES), if any ---
+# These keep the -I include flags from "$@" but drop -freflection-latest: they are ordinary
+# library translation units, not binder code.
+extra_objs=()
+if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
+  i=0
+  for esrc in $NB_EXTRA_SOURCES; do
+    eobj="$out_dir/extra_${i}.o"
+    "$TC/bin/clang++" \
+      -std=c++26 -stdlib=libc++ -O2 -DNDEBUG -arch arm64 $ISYSROOT_FLAGS \
+      -nostdinc++ -isystem "$TC/include/c++/v1" \
+      -fPIC -fvisibility=hidden \
+      -I "$PYINC" -I "$NBINC" "$@" \
+      -c "$esrc" -o "$eobj" || { echo "BUILD_FAIL_STAGE=extra_compile" >&2; exit 12; }
+    extra_objs+=("$eobj")
+    i=$((i + 1))
+  done
+fi
+
 # --- link ---  (-isysroot/-arch resolve libSystem; -L$TC/lib resolves libc++)
 "$TC/bin/clang++" \
   -bundle -Wl,-headerpad_max_install_names \
   -arch arm64 $ISYSROOT_FLAGS \
   -L "$TC/lib" -Wl,-rpath,"$TC/lib" -Wl,@"$NBSYM" \
   -Wl,-dead_strip $REFLECT_FLAGS -O3 -DNDEBUG \
-  "$obj" "$NBLIB" \
+  "$obj" ${extra_objs[@]+"${extra_objs[@]}"} "$NBLIB" \
   -o "$so" || { echo "BUILD_FAIL_STAGE=link" >&2; exit 13; }
 
 echo "$so"

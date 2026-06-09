@@ -80,6 +80,10 @@ def main(run_dir):
     # reflection like nlohmann/json's basic_json). Recorded in meta.toml for
     # reproducibility; appended to the binding (Gate 4) compile only.
     extra_cflags = meta.get("extra_cflags", [])
+    # Per-run extra library source files for non-header-only libs (e.g. Abseil's
+    # throw_delegate.cc): paths relative to the run dir, compiled and linked into the
+    # module by build_module.sh via the NB_EXTRA_SOURCES env. Recorded in meta.toml.
+    extra_sources = [str((run / s).resolve()) for s in meta.get("extra_sources", [])]
     mod = meta["module_name"]
     strategy = meta.get("strategy", "single_stage")
 
@@ -127,14 +131,18 @@ def main(run_dir):
     r["furthest_gate"] = 1
 
     # ---- Gate 4: compile the binding ----
+    build_env = dict(os.environ)
+    if extra_sources:
+        build_env["NB_EXTRA_SOURCES"] = " ".join(extra_sources)
     t0 = time.time()
     if strategy == "two_stage":
         b = sh(["bash", str(LIB / "build_module_codegen.sh"),
                 str(run / "binding" / "gen.cpp"), str(run / "binding" / "binding.cpp"),
-                mod, str(build_dir), *incflags, *extra_cflags])
+                mod, str(build_dir), *incflags, *extra_cflags], env=build_env)
     else:
         b = sh(["bash", str(LIB / "build_module.sh"),
-                str(run / "binding" / "binding.cpp"), mod, str(build_dir), *incflags, *extra_cflags])
+                str(run / "binding" / "binding.cpp"), mod, str(build_dir), *incflags, *extra_cflags],
+               env=build_env)
     r["metrics"]["binding_compile_seconds"] = round(time.time() - t0, 2)
     if b.returncode != 0:
         r["gate_results"]["4_compile"] = "fail"

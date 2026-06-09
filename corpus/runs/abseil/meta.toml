@@ -1,0 +1,19 @@
+# Per-run descriptor for Abseil (20250814.2) — the "special case" run. Consumed by run_gates.py.
+slug         = "abseil"
+tier         = 6                          # special case (breadth of fully-specialized concrete types)
+header_only  = false                      # NOT header-only: links throw_delegate.cc (see extra_sources)
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"        # relative to this run dir; the submodule
+main_headers = ["absl/container/inlined_vector.h"]
+module_name  = "abseil_ext"
+strategy     = "single_stage"
+
+# Abseil is not header-only; InlinedVector::at() references absl::base_internal::ThrowStdOutOfRange.
+# This minimal .cc is compiled + linked into the module by build_module.sh (NB_EXTRA_SOURCES).
+extra_sources = ["../../libs/abseil/absl/base/internal/throw_delegate.cc"]
+
+# Gate 2 record.
+reflect_args     = ["^^absl::InlinedVector<int, 4>", "^^absl::InlinedVector<double, 2>"]
+subset_rationale = "Abseil's value to the prove-out is the quantity of complex, fully-specialized concrete data structures that bind DIRECTLY (no fixture wrappers) — each named specialization is reflected head-on. This run binds two specializations of absl::InlinedVector (a small-buffer-optimized vector): <int,4> and <double,2>, to distinct Python types InlinedVectorInt4/InlinedVectorDouble2, with the full push_back/pop_back/at/operator[]/front/back/size/capacity/clear/empty/reserve/resize/erase/insert surface; differentially checked vs native Abseil (incl. the small-buffer spill -> heap capacity growth). It is the first NON-header-only corpus lib: the .cc-defined ThrowStdOutOfRange (from at()) is linked via the new extra_sources machinery. Two real binder-coverage findings were surfaced while scoping and are deferred: BINDER-0006 (absl::FixedArray internal zero-length-array storage member) and BINDER-0007 (absl::int128 free operator<< -> incomplete std::ostream caster)."
+skipped_features = ["absl::FixedArray (BINDER-0006: internal StorageElementWrapper zero-length int[0] member breaks def_rw)", "absl::int128 (BINDER-0007: free operator<<(std::ostream&,...) makes the binder instantiate an incomplete std::ostream caster)", "absl::flat_hash_map/flat_hash_set (deeper link surface: absl::hash/container_internal .cc units — next step after InlinedVector banks E)"]

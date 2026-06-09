@@ -72,6 +72,20 @@ status       = "done"         # outcome E: real fmt enums (color/terminal_color/
                               # template gap). LIB-0001 (fmt's unqualified malloc/free) worked around
                               # consumer-side with <cstdlib> first.
 
+[[repo]]
+slug         = "abseil"
+tier         = 6                          # special case (breadth of fully-specialized concrete types)
+header_only  = false                      # first non-header-only lib: links throw_delegate.cc
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: absl::InlinedVector<int,4> + <double,2> bind directly with
+                              # full container surface; L1 differential (incl. small-buffer spill).
+                              # First lib to use extra_sources (links absl throw_delegate.cc).
+                              # Surfaced BINDER-0006 (FixedArray zero-len array member) +
+                              # BINDER-0007 (int128 free operator<< -> incomplete ostream caster).
+
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
+# next abseil step: flat_hash_map/flat_hash_set (deeper link surface: absl::hash/container_internal)

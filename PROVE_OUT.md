@@ -52,8 +52,28 @@ A tier is "ramped past" only when **≥1 library in it reaches `E`** (not `E-wea
 | 3 | inheritance; shared_ptr; log-level enums | **spdlog**; (`tl::expected`) | ⏭️ **next** |
 | 4 | virtual override → two-stage codegen | `_fixture_virtual` | ✅ E |
 | 5 | stress ceiling; expression templates | **Eigen** (`Matrix<double,3,3>`); a header-only Boost piece | ⬜ frontier |
+| ★ | **special case — breadth of fully-specialized concrete data structures** | **Abseil** 20250814.2 (`InlinedVector<int,4>`+`<double,2>` ✅; `flat_hash_map`/`FixedArray`/`int128` queued) | ✅ E |
 
-Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (spdlog → eigen).
+Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (abseil → spdlog → eigen).
+
+**Special case — Abseil (first run landed at E).** Unlike the format-heavy/template-front-door
+libraries above, Abseil's value here is *quantity of complex, fully-specialized concrete data
+types* — exactly what binds directly: each `absl::InlinedVector<T,N>`, `flat_hash_map<K,V>`,
+`FixedArray<T>`, `int128` is a namable specialization the binder reflects head-on (no fixture
+wrappers). The first run binds `InlinedVector<int,4>` + `<double,2>` to distinct Python types with
+the full container surface, differentially checked vs native Abseil (incl. the small-buffer-spill
+→ heap capacity growth). Genuine *special-case* facts established:
+- Abseil is **not header-only** — even `InlinedVector::at()` references
+  `absl::base_internal::ThrowStdOutOfRange` (in `throw_delegate.cc`). Added a reusable
+  **`extra_sources`** path (`meta.toml` → `NB_EXTRA_SOURCES` → `build_module.sh` compiles+links the
+  library `.cc`) — the minimal "link the library" route before a full prebuilt absl is warranted.
+- Two real binder-coverage findings surfaced while scoping, **deferred** (type excluded, written
+  up): **BINDER-0006** (`absl::FixedArray` internal zero-length `int[0]` storage member breaks
+  `def_rw`) and **BINDER-0007** (`absl::int128`'s free `operator<<(std::ostream&,…)` makes the
+  binder instantiate an incomplete `std::ostream` caster). Both have fix sketches.
+- **Next Abseil step:** `flat_hash_map`/`flat_hash_set` (deeper link surface: `absl::hash` /
+  `container_internal` `.cc` units) — likely a fuller prebuilt-absl link, and the binder fixes
+  above unlock `int128`/`FixedArray`.
 
 ## Phasing (and where fan-out begins)
 
@@ -82,16 +102,21 @@ standalone `repro.cpp`, fingerprinted (so N repos hitting one ICE dedup to one
 item), and fixed at the source via the `llvm-project` submodule (re-pinned).
 `corpus/aggregate/toolchain_bugs.md` is the impact-ranked upstreaming queue.
 
-## Status snapshot (as of fmt reaching E)
+## Status snapshot (as of Abseil reaching E)
 
-7 corpus runs, **all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
-`json`, `_fixture_virtual`, **`fmt`**. Fixes landed and pinned along the way:
+8 corpus runs, **all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
+`json`, `_fixture_virtual`, `fmt`, **`abseil`**. Fixes landed and pinned along the way:
 
 - **BINDER-0001** templated members → skipped · **BINDER-0002** anonymous-union
   members → skipped · **BINDER-0003** spec-name enum NTTP (open, cosmetic; visible on
   fmt's `to_string<int>`→`to_stringInt0`) · **BINDER-0004** heavy-type perf de-dup ·
   **BINDER-0005** `concat()` ADL-hijack → fold rewrite + ADL-suppression · codegen
   trampoline dedup · `[[=reflect::skip]]` honored in transitive discovery.
+- **BINDER-0006** (open, Abseil) `absl::FixedArray` internal zero-length `int[0]`
+  storage member breaks `def_rw` → skip array-typed data members (fix sketched) ·
+  **BINDER-0007** (open, Abseil) free `operator<<(std::ostream&,T)` bound as a dunder
+  forces an incomplete `std::ostream` caster → skip stream operators in the
+  free-operator scan (fix sketched).
 - **TC-0001** Apple type-aware-allocation operators missing from from-source
   libc++abi → vendor shim compiled + exported (**fixed**).
 - **TC-0002** clang Sema use-after-free under heavy reflection (the real cause of
@@ -107,15 +132,20 @@ item), and fixed at the source via the `llvm-project` submodule (re-pinned).
 
 Submodule pins carry these: `nanobind @ mk-reflect`, `llvm-project @
 reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
-`corpus/libs/fmt @ 11.2.0`.
+`corpus/libs/fmt @ 11.2.0`, `corpus/libs/abseil @ 20250814.2`.
 
 ## Immediate next steps
 
-1. **Enter Phase 2** — dispatch one subagent on `spdlog` (Tier 3: inheritance,
+1. **Abseil special case** — ✅ first run landed (E): `InlinedVector<int,4>`+`<double,2>` via the
+   new `extra_sources` link path. **Next:** (a) land the **BINDER-0006/0007** fixes to unlock
+   `FixedArray` and `int128` (the latter's operators are a rich dunder target); (b) take on
+   `flat_hash_map`/`flat_hash_set`, which need the deeper `absl::hash`/`container_internal` link
+   surface (likely a fuller prebuilt-absl static lib rather than per-`.cc` `extra_sources`).
+2. **Enter Phase 2** — dispatch one subagent on `spdlog` (Tier 3: inheritance,
    shared_ptr, log-level enums) end-to-end; if it produces a schema-valid
    `result.json` unaided and its tests genuinely assert behavior, open a small serial
    batch. (Phase 1 is closed: fmt landed at E, Tiers 0–2 banked.)
-2. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
+3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
 A pending follow-up (independent of the ramp): minimize **TC-0002** (the Sema UAF) to

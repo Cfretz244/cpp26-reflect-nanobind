@@ -5,8 +5,8 @@
   "pinned_commit": "v3.11.3",
   "tier": 1,
   "header_only": true,
-  "toolchain_commit": "d4ae403",
-  "binder_commit": "28edb62",
+  "toolchain_commit": "269d3e3",
+  "binder_commit": "b5cfbba",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -44,8 +44,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.29,
-    "binding_compile_seconds": 17.06
+    "probe_seconds": 1.27,
+    "binding_compile_seconds": 17.39
   },
   "artifacts": {},
   "notes": ""

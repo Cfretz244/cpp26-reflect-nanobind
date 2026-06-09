@@ -19,3 +19,6 @@
 [submodule "corpus/libs/fmt"]
 	path = corpus/libs/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "corpus/libs/abseil"]
+	path = corpus/libs/abseil
+	url = https://github.com/abseil/abseil-cpp
