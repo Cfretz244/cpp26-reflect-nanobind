@@ -1,6 +1,6 @@
 [submodule "nanobind"]
 	path = nanobind
-	url = /Users/christopherfretz/git/nanobind
+	url = git@github.com:Cfretz244/nanobind.git
 	branch = mk-reflect
 [submodule "llvm-project"]
 	path = llvm-project

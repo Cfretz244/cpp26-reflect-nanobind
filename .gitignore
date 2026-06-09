@@ -5,3 +5,7 @@ examples/serialize_poc
 *.so
 *.dylib
 .DS_Store
+
+# Repo-local build state (recreate from scratch via CLAUDE.md)
+build/
+.venv/

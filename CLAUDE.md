@@ -13,11 +13,11 @@ and adds demo programs:
 
 ```
 cpp26-reflect-nanobind/
-├── llvm-project/      submodule → ~/git/llvm-project  @ reflection-p2996
+├── llvm-project/      submodule (url: local ~/git/llvm-project)  @ reflection-p2996
 │                      The clang-p2996 fork (the compiler half). Its CLAUDE.md has
 │                      build details. The usable toolchain is already installed at
 │                      ~/llvm-toolchain (you rarely rebuild it).
-├── nanobind/          submodule → ~/git/nanobind      @ mk-reflect
+├── nanobind/          submodule (url: Cfretz244/nanobind fork)   @ mk-reflect
 │                      The reflection-driven binder (the active development surface).
 │                      include/nanobind/nb_reflect*.h + tests/test_reflect*. See its
 │                      CLAUDE.md and docs/reflection.rst.
@@ -54,40 +54,45 @@ two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst`
   + expansion statements + annotations (P3394) + the rest.
 - **Python**: Homebrew **`python3.12`** (`/opt/homebrew/bin/python3.12`). The system
   `/usr/bin/python3` lacks dev headers — do not use it.
-- **Scratch build state (under `/tmp`, recreate if cleared)**: venv with pytest at
-  `/tmp/nbvenv`; nanobind CMake build tree at `/tmp/nbbuild`.
+- **Build state lives inside this repo** (both git-ignored, recreate from scratch any time):
+  the venv at `.venv/`, the CMake build tree at `build/`. (Earlier work used `/tmp/nbbuild`,
+  which is bound to the *old* `~/git/nanobind` source — do not reuse it from here.)
 - Tools: `cmake`, `ninja`, `ccache` via Homebrew.
 
 ## First-time setup on a fresh checkout of THIS repo
 
 ```bash
 cd ~/git/cpp26-reflect-nanobind
-# The submodule URLs are local paths on this laptop; this materializes them.
-git -c protocol.file.allow=always submodule update --init --recursive
+git submodule update --init --recursive
 ```
-(If `~/llvm-toolchain` is missing, rebuild it per `llvm-project/CLAUDE.md` → "Full
-reflection toolchain" build; otherwise skip — it's already there.)
+The `nanobind` submodule URL is its GitHub fork (`Cfretz244/nanobind`, branch `mk-reflect`).
+The `llvm-project` submodule URL is the **local** `~/git/llvm-project` checkout on purpose:
+its pinned commit (a CLAUDE.md edit atop the bloomberg p2996 branch) is not pushed to any
+remote, so the canonical copy is this laptop. The on-disk submodule working trees here are
+self-contained (hard-linked objects), so they survive even if the sibling repos are removed.
+If `~/llvm-toolchain` is missing, rebuild it per `llvm-project/CLAUDE.md` → "Full reflection
+toolchain"; otherwise skip — it's already there.
 
-## Build & test the binder (the main loop)
+## Build & test the binder (the main loop) — verified from scratch
 
 ```bash
+cd ~/git/cpp26-reflect-nanobind
 TC=~/llvm-toolchain
-# venv + build tree (skip if /tmp/nbvenv and /tmp/nbbuild already exist)
-/opt/homebrew/bin/python3.12 -m venv /tmp/nbvenv && /tmp/nbvenv/bin/pip -q install pytest
-cmake -S nanobind -B /tmp/nbbuild -G Ninja -DCMAKE_BUILD_TYPE=Release \
+python3.12 -m venv .venv && .venv/bin/pip -q install pytest   # /opt/homebrew/bin/python3.12
+cmake -S nanobind -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=$TC/bin/clang -DCMAKE_CXX_COMPILER=$TC/bin/clang++ \
   -DCMAKE_OSX_SYSROOT="$(xcrun --show-sdk-path)" \
-  -DPython_EXECUTABLE=/tmp/nbvenv/bin/python \
+  -DPython_EXECUTABLE="$PWD/.venv/bin/python" \
   -DNB_TEST=ON -DNB_TEST_FREE_THREADED=OFF -DNB_TEST_STABLE_ABI=OFF \
   -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-rpath,$TC/lib" \
   -DCMAKE_MODULE_LINKER_FLAGS="-Wl,-rpath,$TC/lib"
 
-ninja -C /tmp/nbbuild test_reflect_ext test_reflect_codegen_ext
-DYLD_LIBRARY_PATH=$TC/lib PYTHONPATH=/tmp/nbbuild/tests \
-  /tmp/nbvenv/bin/python -m pytest nanobind/tests/test_reflect.py \
+ninja -C build test_reflect_ext test_reflect_codegen_ext
+DYLD_LIBRARY_PATH=$TC/lib PYTHONPATH=$PWD/build/tests \
+  .venv/bin/python -m pytest nanobind/tests/test_reflect.py \
   nanobind/tests/test_reflect_codegen.py -W error::RuntimeWarning
 ```
-All reflection tests pass. (`test_reflect_codegen_ext` exercises the two-stage codegen:
+All 31 reflection tests pass. (`test_reflect_codegen_ext` exercises the two-stage codegen:
 CMake builds a generator, runs it to emit a trampoline header, then builds the module that
 includes it.)
 
@@ -128,5 +133,7 @@ user-facing reference.
 - Binder changes: edit in `nanobind/` on `mk-reflect`, push to its `fork` remote
   (`Cfretz244/nanobind`); never push to `origin` (upstream wjakob).
 - After updating a submodule, `git add <submodule> && git commit` here to re-pin the state.
-- `.gitmodules` uses local file-path URLs on purpose — this umbrella is a laptop snapshot,
-  not a portable distribution.
+- Submodule URLs: `nanobind` → its GitHub fork (`Cfretz244/nanobind`); `llvm-project` →
+  the local `~/git/llvm-project` checkout (its pinned commit isn't pushed anywhere). This
+  umbrella is a laptop snapshot; the on-disk submodule trees are self-contained regardless.
+- `build/` and `.venv/` are git-ignored scratch — safe to delete and rebuild from scratch.
