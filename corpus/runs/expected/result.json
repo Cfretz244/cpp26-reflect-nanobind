@@ -5,8 +5,8 @@
   "pinned_commit": "v1.3.1",
   "tier": 3,
   "header_only": true,
-  "toolchain_commit": "01c87cf",
-  "binder_commit": "615e79c",
+  "toolchain_commit": "fc2ca0d",
+  "binder_commit": "820e828",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -42,7 +42,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "16 passed in 0.01s"
+    "pytest_summary": "16 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -53,8 +53,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.4,
-    "binding_compile_seconds": 8.17
+    "probe_seconds": 0.36,
+    "binding_compile_seconds": 7.79
   },
   "artifacts": {},
   "notes": ""

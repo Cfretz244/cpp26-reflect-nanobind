@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "slug": "leveldb",
+  "url": "https://github.com/google/leveldb",
+  "pinned_commit": "1.23",
+  "tier": 4,
+  "header_only": false,
+  "toolchain_commit": "fc2ca0d",
+  "binder_commit": "820e828",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^leveldb::Status",
+      "^^leveldb::Slice",
+      "^^leveldb::Options",
+      "^^leveldb::ReadOptions",
+      "^^leveldb::WriteOptions",
+      "^^leveldb::WriteBatch",
+      "^^leveldb::CompressionType",
+      "^^leveldbtest",
+      "^^nb::exclude_<^^leveldb::Comparator, ^^leveldb::Env, ^^leveldb::Cache, ^^leveldb::FilterPolicy, ^^leveldb::Logger, ^^leveldb::Snapshot, ^^leveldb::WriteBatch::Handler>"
+    ],
+    "rationale": "leveldb's real result/view/batch/option surface is bound head-on: leveldb::Status (ok/IsNotFound/IsCorruption/IsIOError/.../ToString -- the result type, checked differentially on ok + IsNotFound + ToString text), leveldb::Slice (the key/value view -- data/size/empty/ToString/compare/starts_with + ==/!= dunders, constructible from a Python str via the std::string ctor + caster), the three plain option structs (Options/ReadOptions/WriteOptions -- mutable POD fields), leveldb::WriteBatch (Put/Delete/Clear/Append/ApproximateSize -- the atomic-update buffer, built head-on and applied atomically), and the CompressionType enum. leveldb::DB CANNOT be bound head-on: LevelDB is built -fno-rtti (its CMakeLists.txt lines 61-76), so the archive emits DB's vtable but not its std::type_info, and nanobind's RTTI-based registry fails to link 'typeinfo for leveldb::DB' (see findings_draft/leveldb-fno-rtti-polymorphic-typeinfo-missing.md). The DB is therefore driven through leveldbtest::KVStore -- a non-polymorphic owning handle whose put/get/del/write methods forward VERBATIM to the genuine DB::Put/Get/Delete/Write, and which also bridges DB::Open's DB** and DB::Get's std::string* out-parameters. KVStore wraps no behavior of its own; the Status/Slice/WriteBatch it returns and takes are the real bound classes. Differential vs the native oracle: open-put-get-delete-get sequence comparing values + Status ok/NotFound + ToString text, NotFound on missing keys, WriteBatch atomicity (batch then read), and re-open persistence.",
+    "skipped_features": [
+      "leveldb::DB cannot be bound head-on -- LevelDB is built -fno-rtti so the archive lacks DB's std::type_info (only the vtable is present); nanobind's RTTI-based registry then fails to link 'typeinfo for leveldb::DB'. Driven via the leveldbtest::KVStore forwarding handle instead. The non-polymorphic Status/Slice/WriteBatch/option surface is unaffected and bound head-on. (findings_draft/leveldb-fno-rtti-polymorphic-typeinfo-missing.md)",
+      "DB::Open (static, DB** out-parameter) -- bridged by KVStore.open; Python cannot drive a DB** out-param",
+      "DB::Get (std::string* out-parameter) -- bridged by KVStore.get returning a GetResult{status,value,found}; Python cannot drive a std::string* out-param",
+      "DB::NewIterator/GetSnapshot/ReleaseSnapshot/GetApproximateSizes/CompactRange/GetProperty -- return/take the polymorphic Iterator*/Snapshot* (also RTTI-absent) or std::string*/Range* out-params; not surfaced (the put/get/delete/batch differential covers store behavior)",
+      "WriteBatch::Handler (pure-virtual Put/Delete visitor) + WriteBatch::Iterate(Handler*) -- excluded; needs a Python-implemented virtual (two-stage), and atomicity is checked via KVStore.write of a batch",
+      "Options' collaborator pointers (comparator/env/info_log/block_cache/filter_policy -> Comparator/Env/Logger/Cache/FilterPolicy) -- forward-declared opaque types with no Python meaning; excluded, defaults used",
+      "Status' error-constructing statics (NotFound/Corruption/NotSupported/InvalidArgument/IOError) take Slice + have non-bindable default-argument VALUES (a C++26 reflection gap); Status objects are observed as returned by the real DB operations instead",
+      "Slice::operator[] (char by index) and remove_prefix/clear (in-place mutation) bound but not core to the differential; data()/size()/ToString()/compare() cover the view",
+      "DestroyDB/RepairDB free functions -- DestroyDB surfaced via leveldbtest.destroy_db for test cleanup; RepairDB not exercised"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "8 passed in 0.15s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 1.32,
+    "binding_compile_seconds": 30.35
+  },
+  "artifacts": {},
+  "notes": ""
+}

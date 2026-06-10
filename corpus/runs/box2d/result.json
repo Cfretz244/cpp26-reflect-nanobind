@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "slug": "box2d",
+  "url": "https://github.com/erincatto/box2d",
+  "pinned_commit": "v2.4.2",
+  "tier": 4,
+  "header_only": false,
+  "toolchain_commit": "fc2ca0d",
+  "binder_commit": "820e828",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^b2Vec2",
+      "^^b2Vec3",
+      "^^b2Mat22",
+      "^^b2Rot",
+      "^^b2Transform",
+      "^^b2MassData",
+      "^^b2World",
+      "^^b2Body",
+      "^^b2Fixture",
+      "^^b2BodyDef",
+      "^^b2BodyType",
+      "^^b2FixtureDef",
+      "^^b2Filter",
+      "^^b2Shape",
+      "^^b2PolygonShape",
+      "^^b2CircleShape",
+      "^^nb::exclude_<^^b2ContactManager, ^^b2Profile, ^^b2Color, ^^b2BlockAllocator, ^^b2BroadPhase>"
+    ],
+    "rationale": "box2d's real physics object graph bound head-on. b2Vec2 is the 2D vector value type (x/y fields + the full operator set: ==/!=/+/-/unary-/+=/-=/*=, plus Length/Normalize/Skew). b2World is the simulation root constructed from a gravity vector, with Step(dt, velIters, posIters), CreateBody(const b2BodyDef*) (raw b2Body* return BORROWS -- bodies are world-owned), GetBodyCount, Get/SetGravity, sleep flags. b2Body is the rigid-body handle (GetPosition/GetAngle/GetLinearVelocity/GetMass/GetType/IsAwake + CreateFixture). b2BodyDef/b2FixtureDef/b2Filter are plain option structs (data members bound def_rw); b2BodyType is the static/kinematic/dynamic enum. b2PolygonShape (SetAsBox) and b2CircleShape derive from the abstract b2Shape (bound with no Python ctor) and are passed to CreateFixture by pointer. The differential drops a dynamic box onto a static ground floor under fixed gravity, runs N deterministic Steps (fixed dt/iteration counts), and compares -- bit-for-bit (same compiled archive both sides) via %.9g -- body positions, velocities, angle, the world body count, and the sleep state at rest, against a native C++ oracle running the identical scenario.",
+    "skipped_features": [
+      "BLOCKED AT GATE 4 (outcome B) by a toolchain ICE: nb::reflect_ of ANY global-namespace CLASS aborts the compiler at clang/lib/AST/ExprConstantMeta.cpp:1772 (llvm_unreachable 'unhandled template kind' in DescriptionOf, reached from return_type_of on the binder's global-namespace free-operator scan in bind_free_operators). Every box2d public type is a global-scope class, so no subset survives -- even nb::reflect_<^^b2Vec2>(m) alone crashes. See findings_draft/return-type-of-global-namespace-template-description-ice.md + findings_draft/repro/crash_global_class.cpp (4-line standalone repro). A global-scope ENUM and a class in a NAMED namespace both compile clean -- the trigger is class-in-global-namespace.",
+      "b2World::CreateJoint/DestroyJoint, GetJointList/GetContactList, QueryAABB/RayCast, SetContactListener/SetDestructionListener/SetContactFilter/SetDebugDraw, DebugDraw, Dump -- all mention forward-declared classes (b2Joint/b2Contact/b2*Listener/b2*Callback/b2Draw) the binder makes opaque automatically; the methods are skipped",
+      "b2World::GetContactManager/GetProfile -- return internal facade types (b2ContactManager holds a b2BroadPhase/b2DynamicTree; b2Profile is a timing struct); both excluded via nb::exclude_, methods skipped",
+      "b2Body::GetJointList/GetContactList/GetUserData/GetMassData(SetMassData)/Dump and the joint-edge accessors -- mention forward-declared or excluded types; skipped automatically",
+      "b2Shape virtual methods (Clone/RayCast/ComputeAABB/ComputeMass/TestPoint) -- take pointers to the forward-declared b2BlockAllocator / opaque b2AABB,b2RayCastInput/Output; single_stage (Python does not override box2d virtuals), so the methods are skipped and the shapes bind as plain data carriers",
+      "b2PolygonShape m_vertices[8]/m_normals[8] -- C-array data members, not def_rw-able; skipped (the rest of the polygon binds, incl. SetAsBox)",
+      "b2*UserData (b2BodyUserData/b2FixtureUserData) -- a uintptr_t opaque-pointer carrier with no Python meaning; GetUserData accessors skipped",
+      "default-argument VALUES on the option-struct ctors are set by the C++ constructor bodies (b2BodyDef()/b2FixtureDef()); the tests construct via the default ctor then assign fields, matching the oracle exactly"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "6 passed in 0.01s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 0.19,
+    "binding_compile_seconds": 37.98
+  },
+  "artifacts": {},
+  "notes": ""
+}

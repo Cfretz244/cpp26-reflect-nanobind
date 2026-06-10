@@ -1,12 +1,12 @@
 # Corpus report
 
-Total runs: **28**
+Total runs: **36**
 
 ## Outcomes (overall)
 
 | outcome | count | meaning |
 |---|---|---|
-| E | 28 | clean success (behavioral) |
+| E | 36 | clean success (behavioral) |
 
 ## Outcomes by tier
 
@@ -15,8 +15,8 @@ Total runs: **28**
 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
 | 1 | 2 | 0 | 0 | 0 | 0 | 0 |
 | 2 | 4 | 0 | 0 | 0 | 0 | 0 |
-| 3 | 7 | 0 | 0 | 0 | 0 | 0 |
-| 4 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 3 | 9 | 0 | 0 | 0 | 0 | 0 |
+| 4 | 7 | 0 | 0 | 0 | 0 | 0 |
 | 5 | 1 | 0 | 0 | 0 | 0 | 0 |
 | 6 | 10 | 0 | 0 | 0 | 0 | 0 |
 
@@ -37,10 +37,18 @@ Total runs: **28**
 | concurrentqueue | 3 | E | 6 | single_stage | v1.0.5 |   |
 | expected | 3 | E | 6 | single_stage | v1.3.1 |   |
 | pugixml | 3 | E | 6 | single_stage | v1.15 |   |
+| simdjson | 3 | E | 6 | single_stage | v4.6.4 |   |
 | spdlog | 3 | E | 6 | single_stage | v1.17.0 |   |
 | tomlplusplus | 3 | E | 6 | single_stage | v3.4.0 |   |
 | unordered_dense | 3 | E | 6 | single_stage | v4.8.1 |   |
+| yamlcpp | 3 | E | 6 | single_stage | yaml-cpp-0.9.0 |   |
 | _fixture_virtual | 4 | E | 6 | two_stage |  |   |
+| box2d | 4 | E | 6 | single_stage | v2.4.2 |   |
+| httplib | 4 | E | 6 | single_stage | v0.47.0 |   |
+| immer | 4 | E | 6 | single_stage | v0.9.1 |   |
+| leveldb | 4 | E | 6 | single_stage | 1.23 |   |
+| sqlitecpp | 4 | E | 6 | single_stage | 3.3.3 |   |
+| taskflow | 4 | E | 6 | single_stage | v4.0.0 |   |
 | eigen | 5 | E | 6 | single_stage | 5.0.1 |   |
 | abseil_btree | 6 | E | 6 | single_stage | 20250814.2 |   |
 | abseil_civil_tz | 6 | E | 6 | single_stage | 20250814.2 |   |

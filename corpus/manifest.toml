@@ -345,7 +345,10 @@ header_only  = false
 url          = "https://github.com/jbeder/yaml-cpp"
 pin          = "yaml-cpp-0.9.0"
 include_root = "../../libs/yamlcpp/include"
-status       = "pending"
+status       = "done"          # outcome E: YAML::Node head-on (Type/size/Scalar/__getitem__ via
+                              # non-template operator[]) + NodeType enum + Mark + Dump/Clone; yamlfix
+                              # concretizes as<T>/keyed access (member templates). Found BINDER-0022
+                              # (enum name collision, fixed). First extra_libs archive consumer.
 
 [[repo]]
 slug         = "simdjson"
@@ -354,7 +357,10 @@ header_only  = false
 url          = "https://github.com/simdjson/simdjson"
 pin          = "v4.6.4"
 include_root = "../../libs/simdjson/singleheader"
-status       = "pending"          # amalgamated simdjson.cpp via extra_sources
+status       = "done"          # outcome E: dom::element/array/object + element_type/error_code enums
+                              # head-on; Doc fixture anchors parser lifetime + unwraps
+                              # simdjson_result<T>. Exposed TC-0015 (guide-spec mangling) via the
+                              # namespace-alias leak that became BINDER-0028 (both fixed).
 
 [[repo]]
 slug         = "httplib"
@@ -363,7 +369,10 @@ header_only  = true
 url          = "https://github.com/yhirose/cpp-httplib"
 pin          = "v0.47.0"
 include_root = "../../libs/httplib"
-status       = "pending"
+status       = "done"          # outcome E: REAL Client driven over loopback against a real Server
+                              # (EchoServer fixture owns thread+handlers only); Request/Response/
+                              # Result + Error/StatusCode enums head-on; 15-test differential incl.
+                              # closed-port error path. BINDER-0027 noted (open).
 
 [[repo]]
 slug         = "leveldb"
@@ -372,7 +381,11 @@ header_only  = false
 url          = "https://github.com/google/leveldb"
 pin          = "1.23"
 include_root = "../../libs/leveldb/include"
-status       = "pending"
+status       = "done"          # outcome E: Status/Slice/Options/WriteBatch/CompressionType head-on;
+                              # DB via KVStore forwarding handle -- LIB-0003: leveldb builds
+                              # -fno-rtti, typeinfo absent, head-on DB binding impossible. Also
+                              # flagged the non-owning-view ctor dangling hazard (BINDER-0029 open
+                              # design note family).
 
 [[repo]]
 slug         = "sqlitecpp"
@@ -381,7 +394,10 @@ header_only  = false
 url          = "https://github.com/SRombauts/SQLiteCpp"
 pin          = "3.3.3"
 include_root = "../../libs/sqlitecpp/include"
-status       = "pending"          # bundled sqlite3 inside the merged archive
+status       = "done"          # outcome E: Database/Statement/Column/Transaction/Exception head-on,
+                              # in-memory DB differential incl. rollback + UNIQUE-violation path.
+                              # Found BINDER-0023 (const void* hard error) + BINDER-0024 (member+
+                              # static same-name import abort), both fixed; co-found TC-0014.
 
 [[repo]]
 slug         = "taskflow"
@@ -390,7 +406,10 @@ header_only  = true
 url          = "https://github.com/taskflow/taskflow"
 pin          = "v4.0.0"
 include_root = "../../libs/taskflow"
-status       = "pending"
+status       = "done"          # outcome E (v4.0.0): Taskflow/Task/Executor head-on; Diamond fixture
+                              # wires the graph (emplace/precede are callable templates) + order-
+                              # constraint differential. Found BINDER-0025 (T& returns copy-policy
+                              # abort, fixed) + LIB-0004 (missing <bit> include).
 
 [[repo]]
 slug         = "box2d"
@@ -399,7 +418,11 @@ header_only  = false
 url          = "https://github.com/erincatto/box2d"
 pin          = "v2.4.2"
 include_root = "../../libs/box2d/include"
-status       = "pending"          # v2.4.x deliberately: v3 is a C API, out of scope
+status       = "done"          # outcome E (was B): b2Vec2/b2World/b2Body/defs/enums head-on, 90-step
+                              # byte-identical physics differential. THE toolchain-bug magnet:
+                              # TC-0014 (DescriptionOf builtin templates -- every global-namespace
+                              # class ICEd) + TC-0016 (members_of truncated by Python.h, free
+                              # operators silently unbound) found+fixed via this run.
 
 [[repo]]
 slug         = "immer"
@@ -408,7 +431,10 @@ header_only  = true
 url          = "https://github.com/arximboldi/immer"
 pin          = "v0.9.1"
 include_root = "../../libs/immer"
-status       = "pending"
+status       = "done"          # outcome E: vector<int>/<string> + map<int,int> + set<int> specs
+                              # head-on, NO fixture; persistent-semantics differential (originals
+                              # unchanged after every update). Found BINDER-0026 (init-list ctor
+                              # hijack via braced nb::init, fixed); immer::detail excluded.
 
 # --- ramp backlog (not yet scaffolded) ---
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix

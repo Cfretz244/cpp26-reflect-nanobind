@@ -255,6 +255,39 @@ pick them up:
   splice by its own value kind. Repro: `corpus/findings/repros/TC-0013/`; regression test
   `auto-nttp-dependent-splice-requires.pass.cpp`. (Rebuild:
   `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
+- **TC-0014 — DescriptionOf crashed on builtin-template reflections**
+  (`clang/lib/AST/ExprConstantMeta.cpp`). The global namespace enumerates clang's BUILTIN
+  templates (`__make_integer_seq`); a metafunction's recovered error path describing one hit
+  `llvm_unreachable("unhandled template kind")` — reflecting ANY global-namespace class
+  (box2d's whole API) ICE'd via the binder's free-operator scan. Fix adds
+  BuiltinTemplateDecl/TemplateTemplateParmDecl arms + a generic fallback (a description
+  helper must degrade, never crash). Repro: `corpus/findings/repros/TC-0014/`; regression
+  test `description-of-template-kinds.verify.cpp`.
+- **TC-0015 — deduction-guide SPECIALIZATION reflections ICE'd the mangler**
+  (`clang/lib/AST/ItaniumMangle.cpp`, `mangleReflection` Declaration case). TC-0008 covered
+  Template-kind guides; a guide spec (via `substitute`) is Declaration-kind and routed
+  through `mangleFunctionEncoding` → the same unreachable. Encodes as `"dg"` + deduced
+  template + ODR hash with the spec's function type folded in (TC-0009's lesson). Found via
+  simdjson (exposed by the BINDER-0028 namespace-alias leak). Repro:
+  `corpus/findings/repros/TC-0015/`; regression test
+  `deduction-guide-spec-reflection-mangling.pass.cpp`.
+- **TC-0016 — members_of silently truncated by `extern "C" { typedef struct X X; }`**
+  (`clang/lib/AST/ExprConstantMeta.cpp`, `findIterableMember`). The implicit tag's semantic
+  ctx is the enclosing scope, lexical ctx the linkage block; stepping it via the semantic
+  chain ended the enumeration — Python.h's pytypedefs.h hid EVERY later global decl from
+  reflection in every nanobind TU (box2d's free operators silently never bound). Fix: walk
+  the lexical block (TC-0011's rewrite, extended) + the namespace MultDC tail-hop skips
+  linkage-spec-lexical decls (else the walk cycles). Repro:
+  `corpus/findings/repros/TC-0016/`; regression test
+  `members-of-linkage-spec-typedef-tag.pass.cpp`.
+- **TC-0017 — 64-bit NEON vector mangling ICE'd on LP64**
+  (`clang/lib/AST/ItaniumMangle.cpp`, `mangleNeonVectorType`). Darwin predeclares
+  `__Int64x1_t` et al. with plain `long` elements; the switches only handled
+  `LongLong`/`ULongLong` — `is_class_type` over TU members in codegen mode (the `<meta>`
+  builtin-expansion substitution mangles a specialization) hit
+  `llvm_unreachable("unexpected Neon vector element type")`. Likely reproducible in
+  upstream clang on Darwin. Repro: `corpus/findings/repros/TC-0017/`. (Rebuild for any of
+  TC-0014..0017: `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 
 ## Build & test the binder (the main loop) — verified from scratch
 

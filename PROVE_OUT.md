@@ -301,6 +301,37 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
    then a second full sweep on the TC-0013-fixed compiler. **Next: wave 2**
    (yaml-cpp, simdjson, cpp-httplib, leveldb, SQLiteCpp, taskflow, Box2D 2.4.x,
    immer).
+7. **Phase 3, wave 2: ✅ COMPLETE — the compiled/stateful tier, 8/8 at E after
+   triage; the richest toolchain-bug wave of the campaign (FOUR new TCs).**
+   Harness grew the generic prebuilt-archive path (`build_cmake_lib.sh` + the
+   `extra_libs` meta key, `{repo}`-portable) — yamlcpp/leveldb/sqlitecpp/box2d
+   link driver-prebuilt merged archives; sqlitecpp bundles its sqlite3. All 8
+   agents finished unaided (7 E / 1 B raw); the independent audit verified
+   every E genuine (fixture-heavier tier by nature — servers on threads, DB
+   out-param fronts, task-graph callables — but all thin forwarding/lifetime
+   anchors over real bound types). Findings: **BINDER-0022..0028** (enum/class
+   module-name collisions bind parent-qualified — yamlcpp's NodeType::value
+   clobber; cv-void* skip; same-name member+static import ABORT skipped;
+   T& returns borrow like T* — taskflow's policy=copy abort; reflected ctors
+   construct with PARENS — immer's initializer_list hijack; namespace aliases
+   not followed — simdjson's fixture alias bound the world; std::function-arg
+   exclusion recursion recorded OPEN), **LIB-0003** (leveldb -fno-rtti:
+   typeinfo absent, head-on DB binding impossible — will recur for Google
+   libs) and **LIB-0004** (taskflow v4 missing <bit>). Toolchain: **TC-0014**
+   (DescriptionOf ICE'd on builtin templates — the box2d B-blocker: EVERY
+   global-namespace class died; with the fix the same TU compiles clean
+   because the error was always handled, only its MESSAGE crashed),
+   **TC-0015** (deduction-guide SPECIALIZATION reflections ICE'd the mangler —
+   the Declaration-kind sibling of TC-0008, exposed by the simdjson alias
+   leak), **TC-0016** (members_of silently TRUNCATED at `extern "C" { typedef
+   struct X X; }` — Python.h's pytypedefs.h hid every later global decl from
+   reflection in every nanobind TU; box2d's free operators "didn't exist";
+   fix walks the lexical block + de-cycles the namespace MultDC tail-hop),
+   and **TC-0017** (64-bit NEON vectors with LP64 `long` elements ICE'd the
+   mangler — driver-found writing TC-0016's regression test; likely
+   reproducible in upstream clang). box2d re-gated B→E with byte-identical
+   90-step physics; full-corpus sweep green on the final compiler. Upstream
+   batch: four issues/PRs (TC-0016 stacked on TC-0011's PR), all on #308.
 
 Pending follow-ups (independent of the ramp): **TC-0010..0012 are upstreamed**
 (#302/PR #305, #303/PR #306, #304/PR #307); **TC-0013** (wave 1, driver-found) is

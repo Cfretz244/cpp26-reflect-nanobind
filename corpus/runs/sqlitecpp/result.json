@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "slug": "sqlitecpp",
+  "url": "https://github.com/SRombauts/SQLiteCpp",
+  "pinned_commit": "3.3.3",
+  "tier": 4,
+  "header_only": false,
+  "toolchain_commit": "fc2ca0d",
+  "binder_commit": "820e828",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^SQLite::Database",
+      "^^SQLite::Statement",
+      "^^SQLite::Column",
+      "^^SQLite::Transaction",
+      "^^SQLite::Exception",
+      "^^SQLite::TransactionBehavior",
+      "^^nb::exclude_<^^sqlite3, ^^sqlite3_stmt, ^^sqlite3_context, ^^sqlite3_value, ^^std::basic_ostream, ^^std::filesystem::path, ^^SQLite::Column::getBlob, ^^SQLite::Header>"
+    ],
+    "rationale": "SQLiteCpp's RAII wrapper classes are bound head-on, exercised against an in-memory (\":memory:\") database for determinism: SQLite::Database (the connection -- opened with OPEN_READWRITE|OPEN_CREATE flag ints, exec/tableExists/execAndGet/getLastInsertRowid/getChanges/getTotalChanges/getErrorMsg/getFilename), SQLite::Statement (the prepared statement -- the int/int64/double/string bind() overloads, executeStep, getColumn/getColumnName/getColumnCount/getColumnIndex/reset), SQLite::Column (the result cell -- getInt/getInt64/getDouble/getText/getString/getName/getType/getBytes + isNull/isInteger/isText/isFloat and the conversion-operator dunders), SQLite::Transaction (commit/rollback with RAII rollback-on-destruct semantics), and SQLite::Exception (derives std::runtime_error -> surfaces as a Python exception on the constraint-violation error path). TransactionBehavior is the real scoped enum. OPEN_* and INTEGER/FLOAT/TEXT/BLOB/Null/OK are namespace-level int constants surfaced via a tiny fixture (the binder reflects a NAMESPACE/class, not loose namespace-scope variables). Differential: native oracle and Python both create a table, insert rows via bound statements, select them back, and emit typed column values, names, declared types, last-insert-rowid, change counts, a committed-vs-rolled-back transaction visibility check, and a UNIQUE-constraint-violation error path; the test asserts equality on all of it.",
+    "skipped_features": [
+      "Database::getHandle()/createFunction/loadExtension/backup/Deleter -- take or return the raw sqlite3*/sqlite3_stmt*/sqlite3_context*/sqlite3_value* C-API handles (forward-declared incomplete structs, no Python meaning); excluded",
+      "Database::getHeaderInfo/Header struct -- file-on-disk feature out of scope; ALSO blocked by a BINDER bug (same-named member+static getHeaderInfo overload aborts nanobind at import); SQLite::Header excluded to skip both overloads (findings_draft: binder-same-name-member-static-method-import-abort)",
+      "Column::getBlob()/the blob bind(void*) overloads -- getBlob returns const void* which the binder does not gracefully skip (HARD caster error); excluded as an individual member (findings_draft: binder-const-void-ptr-return-caster-hard-error)",
+      "Database::isUnencrypted/key/rekey/loadExtension/createFunction/backup/getHandle/Deleter -- encryption / file / raw-C-API-handle features out of scope (createFunction takes C function pointers; getHandle/Deleter touch the opaque sqlite3* handle)",
+      "std::filesystem::path Database ctor overload -- bound through the const char*/std::string ctors head-on; the path type is excluded",
+      "operator<<(std::ostream&, const Column&) free function -- no ostream caster; getText/getString cover text extraction head-on",
+      "bindNoCopy overloads (SQLITE_STATIC lifetime contract Python cannot honor) -- bind() (SQLITE_TRANSIENT, copies) is the bindable surface",
+      "bind(void*, int)/getBlob blob overloads -- raw void* has no caster; int/int64/double/string columns are exercised",
+      "getColumns<T,N> member template (non-defaulted template params) -- skipped per the member-template-needs-explicit-args limitation",
+      "default-argument VALUES (Database ctor flags/timeout/vfs, Column::getText default) are a C++26 reflection gap; the tests pass every defaulted arg explicitly to match the native oracle",
+      "Database has BOTH a const char* and a std::string ctor; only the std::string overload converts an empty vfs to nullptr, but nanobind selects the const char* overload for a Python str, so the empty-vfs sentinel is not honored -- the tests pass an explicit valid vfs (\"unix\", the platform default) on BOTH the bound and native sides so both drive an identical call",
+      "Column's conversion operators (operator int/double/std::string/const char*/const void*) -- the binder maps numeric/string conversions to __int__/__float__ dunders; operator const void* has no clean dunder and is skipped; the typed getInt/getDouble/getString/getText accessors are what the differential exercises"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "8 passed in 0.02s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 0.98,
+    "binding_compile_seconds": 20.42
+  },
+  "artifacts": {},
+  "notes": ""
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "slug": "yamlcpp",
+  "url": "https://github.com/jbeder/yaml-cpp",
+  "pinned_commit": "yaml-cpp-0.9.0",
+  "tier": 3,
+  "header_only": false,
+  "toolchain_commit": "fc2ca0d",
+  "binder_commit": "820e828",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "subset": {
+    "reflect_args": [
+      "^^YAML::Node",
+      "^^YAML::Mark",
+      "^^YAML::NodeType::value",
+      "^^YAML::Dump",
+      "^^YAML::Clone",
+      "^^yamlfix",
+      "^^nb::exclude_<^^YAML::detail::node, ^^YAML::detail::node_data, ^^YAML::detail::iterator_value, ^^YAML::detail::shared_memory_holder, ^^YAML::Emitter, ^^std::basic_ostream, ^^std::basic_istream>"
+    ],
+    "rationale": "yaml-cpp's central type YAML::Node is bound head-on (value semantics): Type()->NodeType enum, IsNull/IsScalar/IsSequence/IsMap/IsDefined, size(), Scalar(), Tag()/SetTag(), Style()/SetStyle(), reset(), is(). YAML::NodeType::value and YAML::EmitterStyle::value are real enums bound with all values. YAML::Mark (the source-location struct: pos/line/column + is_null) is bound head-on. The free functions YAML::Dump(const Node&)->std::string (serialization), YAML::Clone, and YAML::operator== are bound directly. The yamlfix fixture supplies ONLY what the real API expresses solely as member templates the binder cannot instantiate: Node::as<int/double/bool/string>() (scalar coercion -- the library's central typed accessor, a non-defaulted free type parameter T) and Node::operator[](string/int) (keyed/indexed access; the non-template operator[](const Node&) overload is a spliced-signature shape the binder skips). Differential: oracle_native.cpp parses one fixed multi-document-shaped YAML string natively (a map with scalar/sequence/nested-map children) and emits node Type() enums, scalar coercions (int/double/bool/string), sequence + map sizes, keyed/indexed access values, the Dump() round-trip text, and a malformed-input error path; test_bindings.py drives the SAME string through the binding and asserts byte-for-byte equality, plus the as<T>(fallback) BadConversion-swallow and an isinstance/exception-type layer.",
+    "skipped_features": [
+      "Node::as<T>() and Node::operator[](Key) are MEMBER TEMPLATES (non-defaulted type parameter); the binder cannot instantiate them, so scalar coercion + keyed access are surfaced through the yamlfix forwarders (one concrete instantiation each). This is the only fixture use; everything else is head-on.",
+      "iterator/range traversal (Node::begin/end -> YAML::iterator/const_iterator, the detail::iterator_value proxy) -- excluded; size() + get_key/get_idx cover container walking head-on",
+      "stream/emitter serialization (operator<<(Emitter&/ostream&, Node), Load(istream&)) -- no ostream/istream caster; Dump(const Node&)->string covers serialization head-on, Load drives from std::string",
+      "Load is an overload SET (const string&/const char*/istream&); passing ^^YAML::Load directly to reflect_ is an ambiguous reflection, so the single std::string overload is forwarded through the yamlfix.load fixture (one unambiguous parse front). Dump(const Node&) and Clone(const Node&) are NOT overloaded and bind head-on off ^^YAML::Dump / ^^YAML::Clone. LoadAll/LoadAllFromFile (std::vector<Node>, multi-document) not exercised.",
+      "EmitterStyle::value enum: NOT reflected. It shares the unqualified Python name 'value' with NodeType::value; binding both makes the second clobber the first on the module dict (binder enum-name-collision, findings_draft/enum-name-collision-sibling-namespace.md). NodeType::value is the differential's primary enum (Node::Type()) so it stays; Style()/SetStyle() still bind (return/take an opaque, module-unnamed EmitterStyle enum) but are not asserted on.",
+      "Node mutation via operator= / push_back / force_insert / Assign are MEMBER TEMPLATES (non-defaulted T) -- skipped; the differential is read-path over a parsed document, which is yaml-cpp's primary use",
+      "default-argument VALUES (SetStyle/reset defaults) are a C++26 reflection gap (P3096 exposes has_default_argument but not the value); the tests pass defaulted args explicitly",
+      "the real C++ exception TYPE (ParserException/BadConversion) is not distinguishable in Python: nanobind's default translator maps unknown std::exception-derived throws to RuntimeError carrying what(); the error-path differential asserts on the message text + RuntimeError, matching the native oracle's caught what()"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "14 passed in 0.02s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 2.12,
+    "binding_compile_seconds": 22.56
+  },
+  "artifacts": {},
+  "notes": ""
+}
