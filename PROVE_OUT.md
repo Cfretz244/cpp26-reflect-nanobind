@@ -202,8 +202,7 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
 Pending follow-ups (independent of the ramp): minimize **TC-0002** (the Sema UAF) to a
-standalone reproducer for an upstream bloomberg/clang-p2996 issue; file the drafted
-**TC-0004** issue (`corpus/findings/repros/TC-0004/UPSTREAM.md` — repro, root cause, and
-fix are done); upstream the local **TC-0003** entity-proxy fixes and minimize its
-still-open addendum (proxy qualifier misreport on StatusOr; fresh evidence in the
-finding).
+standalone reproducer for an upstream bloomberg/clang-p2996 issue; **TC-0004 is
+upstreamed** (issue bloomberg/clang-p2996#286, PR #287 — track to merge); upstream the
+local **TC-0003** entity-proxy fixes and minimize its still-open addendum (proxy
+qualifier misreport on StatusOr; fresh evidence in the finding).

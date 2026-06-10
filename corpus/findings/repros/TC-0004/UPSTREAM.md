@@ -1,9 +1,15 @@
-# DRAFT — bloomberg/clang-p2996 issue (not yet filed)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-09)
 
-Status: prepared 2026-06-09 during the cpp26-reflect-nanobind prove-out. Re-verify the
-repro against bloomberg's `p2996` tip before filing (this draft was validated on the fork
-at `651ff7a`'s base). A fix is available to cherry-pick:
-`Cfretz244/llvm-project @ b329d544cb20` (branch `reflection-p2996`).
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/286
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/287 — branch
+  `reflect-fn-template-nttp-mangling` on `Cfretz244/llvm-project` (commit `caac148`:
+  `b329d544cb20` cherry-picked onto their `p2996` tip `837da39` — which equaled our local
+  base, so the PR code is byte-for-byte what the corpus validated — with the internal
+  TC-0004 reference dropped from the code comment).
+
+The draft below is what was filed (lightly adapted in the issue itself).
+
+---
 
 ---
 

@@ -4,7 +4,9 @@
 instantiation" — minimization showed the predicates never misreported; see Root cause.)
 
 - **Status:** FIXED locally (llvm-project @ `b329d544cb20`,
-  `clang/lib/AST/ItaniumMangle.cpp`); upstream issue not yet filed (draft:
+  `clang/lib/AST/ItaniumMangle.cpp`); **upstreamed**: issue
+  [bloomberg/clang-p2996#286](https://github.com/bloomberg/clang-p2996/issues/286) + PR
+  [#287](https://github.com/bloomberg/clang-p2996/pull/287) (see
   `repros/TC-0004/UPSTREAM.md`). The binder workaround has been REMOVED (substitution
   happens inline in `reflect_bind_member_template` again).
 - **Found via:** Wave-4 container binding. `absl::flat_hash_map<int,std::string>` bound with
