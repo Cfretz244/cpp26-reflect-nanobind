@@ -1,0 +1,32 @@
+# Per-run descriptor for toml++ v3.4.0. Consumed by run_gates.py.
+slug         = "tomlplusplus"
+tier         = 3                          # value-type structs + node_type enum + parse_error
+header_only  = true                       # header-only; TOML_IMPLEMENTATION pulls the .inl defs into the TU
+url          = "https://github.com/marzer/tomlplusplus"
+pin          = "v3.4.0"
+include_root = "../../libs/tomlplusplus/include"
+main_headers = ["toml++/toml.hpp"]
+module_name  = "tomlpp_ext"
+strategy     = "single_stage"
+
+# Raised for the binder's completeness-aware signature gates over the value-struct +
+# date/time bind set; -Wno-deprecated-declarations silences toml++'s `operator"" _x`
+# (pre-C++23 literal-operator spelling) and is_trivial_v deprecations.
+extra_cflags = ["-fconstexpr-steps=100000000", "-Wno-deprecated-declarations"]
+
+reflect_args = [
+  "^^toml::node_type", "^^toml::date", "^^toml::time", "^^toml::time_offset",
+  "^^toml::date_time", "^^toml::source_position", "^^toml::source_region",
+  "^^toml::parse_error", "^^tomlfix", "^^nb::exclude_<^^std::shared_ptr>",
+]
+
+subset_rationale = "toml++'s VALUE-TYPE surface is bound head-on: toml::date (year/month/day; its comparison operators are hidden friends, not reflectable namespace members), toml::time (hour/minute/second/nanosecond), toml::time_offset (minutes), toml::date_time (date/time/offset + is_local()), the toml::node_type discriminant enum (all 10 values), and the parse-error surface toml::parse_error (description/source/what) + toml::source_region (begin/end) + toml::source_position (line/column). These are the library's OWN real types, and the differential reads/round-trips real instances of them (date/time fields, enum values, error line/column). The document-tree classes (toml::node/table/array/value<T> and the exceptions-off parse_result) are NOT bound: every node class declares `virtual bool is_homogeneous(node_type, node*& first_nonmatch) noexcept` and the binder hard-errors on the non-const lvalue-reference-to-pointer out-param instead of skipping it (a binder gap; per-overload nb::exclude_ is ineffective for it -- findings_draft/binder-lvalue-ref-to-pointer-param.md). The tomlfix namespace therefore parses + walks the tree in C++ using the LIBRARY's own parse(), node::value<T>() coercion, and toml_formatter/json_formatter, returning plain Python values plus the bound date/time structs and the real node_type/parse_error objects. The differential parses one TOML document natively and from Python and compares: parse success, table size + top-level keys, node_type of representative keys, coerced scalars (incl. nested dotted-key access and permissive int-of-float -> None), real date/time/date_time field values + is_local()/offset, integer-array contents + mixed-array element types, byte-for-byte TOML and JSON round-trip serialization, and the parse-error path (bad TOML -> failed + description + error line/column on the real parse_error/source_region)."
+
+skipped_features = [
+  "toml::node / table / array / value<T> / parse_result -- NOT BOUND: every node class declares is_homogeneous(node_type, node*& first_nonmatch); the binder hard-errors on the node*& (non-const lvalue-ref-to-pointer) out-param instead of skipping it, and a per-overload nb::exclude_ of exactly those overloads does not suppress the bind. Tree navigation runs in C++ (tomlfix, using the library's parse/coerce/format) and surfaces plain Python values + the bound value structs. See findings_draft/binder-lvalue-ref-to-pointer-param.md.",
+  "toml::parse(...) overload set (string_view/u8string_view/std::istream&/wstring_view source paths) -- wrapped by a single tomlfix std::string entry point (the parsing is the library's).",
+  "node::value<T>() / value_exact<T>() -- consteval template accessors with an explicit type arg; reached via tomlfix::get_int/float/bool/string/date/time/datetime forwarders (the coercion is the library's).",
+  "operator<<(std::ostream&, ...) and the toml_formatter/json_formatter/yaml_formatter objects -- ostream-based, no Python representation; wrapped by tomlfix::to_toml/to_json which run the library's real formatters into a string.",
+  "source_region::path + the source_path_ptr-taking parse_error ctors -- std::shared_ptr<const std::string> (excluded; shared_ptr<T> binding needs T to be a bound class, but std::string has a type caster).",
+  "table/array mutation (insert/emplace/push_back), node_view operator[] proxies, and the constrained template ctors of date/time/date_time -- template-heavy / proxy / template-ctor fronts; the run is parse/read oriented.",
+]

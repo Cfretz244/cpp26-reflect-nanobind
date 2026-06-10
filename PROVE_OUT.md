@@ -270,8 +270,42 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
    banked.)
 5. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
+6. **Phase 3, wave 1: ✅ COMPLETE — first PARALLEL fan-out, 8 Opus agents at once,
+   8/8 at E after triage.** The campaign plan: 24 new libraries over 3 waves of 8
+   (graded easy→frontier; wave 3 carries the compiled heavyweights re2/JoltPhysics/
+   Botan), driver checkpoint per wave. Parallel-dispatch protocol added to
+   `AGENT_PROMPT.md` (driver-side Gate 0 — concurrent `git submodule add` races the
+   index; per-run `findings_draft/` with `dedup_key`, canonical numbers assigned at
+   triage; per-run pytest cache). Wave 1 = tomlplusplus, cli11, date,
+   unordered_dense, pugixml, tinyobjloader, fast_float, concurrentqueue. **All 8
+   agents finished unaided** (8/8 schema-valid, >= the 80% bar) at 6 E / 1 D / 1 B;
+   an independent spot-check audit verified every E differential genuine. Triage
+   clustered 8 draft findings into **BINDER-0015..0021** (zero toolchain bugs from
+   the wave itself — the agents' findings were all binder-layer): 0015 unbindable
+   shapes (ptr-to-ptr / `T*&` out-params / fn-pointers) now skip gracefully
+   everywhere; 0017 raw class-pointer returns default to BORROWING policies (the
+   cli11 D-blocker: take_ownership double-freed CLI11's fluent API); 0018
+   `typedef struct {...} name_t;` binds under the typedef name threaded from the
+   walk (the tinyobjloader B-blocker); 0019 plain-class completeness gates
+   (pugixml's pImpl); 0020 const statics bind by value (no ODR-use link errors —
+   moodycamel's config constants); 0016 per-overload exclude_ report NOT
+   reproduced (repros banked; `is_exclude_marker` dealias hardening); 0021 open
+   design note (uncastable-member property). Implementing 0020's probe surfaced
+   **TC-0013** (dependent splice as `auto`-NTTP argument in a requires-expression
+   ICEs at parse — driver-found, fixed, regression-tested, 16/16
+   `clang/test/Reflection`). Harness classifier false-positive fixed
+   (`static assertion failed` no longer tags compiler-crash). Re-gates: binder
+   suite 58/58 (4 new tests); cli11 D→E, tinyobjloader B→E; full-corpus sweep
+   **28/28 E** — which caught a real regression (json's two-stage generator blew
+   its 100M constexpr-step budget under the new per-member gates → 400M, green),
+   then a second full sweep on the TC-0013-fixed compiler. **Next: wave 2**
+   (yaml-cpp, simdjson, cpp-httplib, leveldb, SQLiteCpp, taskflow, Box2D 2.4.x,
+   immer).
 
-Pending follow-ups (independent of the ramp): **TC-0002 through TC-0009 are upstreamed**
+Pending follow-ups (independent of the ramp): **TC-0010..0012 are upstreamed**
+(#302/PR #305, #303/PR #306, #304/PR #307); **TC-0013** (wave 1, driver-found) is
+fixed locally with its upstream filing in flight — all tracked on the campaign
+issue bloomberg/clang-p2996#308. **TC-0002 through TC-0009 are upstreamed**
 (bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291, #292/PR #293, and the
 expected-run batch #294/PR #295 (TC-0006), #296/PR #297 (TC-0007), #298/PR #299
 (TC-0008, stacked on #287), #300/PR #301 (TC-0009, stacked on #299) — track to merge;

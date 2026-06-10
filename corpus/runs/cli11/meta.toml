@@ -1,0 +1,23 @@
+# Per-run descriptor for CLI11 v2.6.2. Consumed by run_gates.py.
+slug         = "cli11"
+tier         = 3                          # parser: App/Option, fluent builder API, error hierarchy
+header_only  = true
+url          = "https://github.com/CLIUtils/CLI11"
+pin          = "v2.6.2"
+include_root = "../../libs/cli11/include"
+main_headers = ["CLI/CLI.hpp"]
+module_name  = "cli11_ext"
+strategy     = "single_stage"
+
+# Raised -fconstexpr-steps: the App/Option/Error bind-set + STL-caster discovery fixpoint over
+# CLI11's heavily-templated builder API exceeds the default step budget (hits the "maximum step
+# limit; possible infinite loop?" note in std::vector while lifting the member ranges).
+extra_cflags = ["-Wno-deprecated-declarations", "-fconstexpr-steps=600000000"]
+
+reflect_args     = ["^^CLI::App", "^^CLI::Option", "^^CLI::Error", "^^CLI::ParseError", "^^CLI::RequiredError", "^^CLI::ExtrasError", "^^CLI::ArgumentMismatch", "^^CLI::ConversionError", "cli_excluded_marker()"]
+subset_rationale = """CLI::App is bound head-on through its string-collecting option API -- the path that needs no typed C++ variable, so it crosses to Python with no fixture: add_option(name)/add_flag(name) return an Option whose parsed values stay as strings (results() == list[str]); parse(list[str]) drives a parse from a reversed forward command line (CLI11's parse(vector<string>&) expects the reversed vector, avoiding argc/argv). CLI::Option exposes count/empty/results/get_single_name/get_snames/get_lnames and the configuration chain (required/expected/take_all). The CLI::ParseError hierarchy (RequiredError/ExtrasError/ArgumentMismatch/ConversionError) is reflected so the failure-path differential can compare real CLI exceptions. oracle_native.cpp drives four scenarios (basic option+repeated-flag parse, a 3-value option, a required-missing RequiredError, an unexpected-extra ExtrasError) and the Python test mirrors them exactly. NOTE: the run does NOT reach a clean pass -- the binder defaults raw-pointer-returning methods (add_option/add_flag -> Option*, every fluent setter -> App*/Option*) to rv_policy::automatic (= take_ownership for pointers), but App owns each Option through std::unique_ptr, so Python's wrapper double-frees it. The first parse aborts (SIGABRT) or segfaults inside CLI::App::_process_requirements (when a discarded add_flag return is GC'd early). This is a real binder ownership-default bug, minimized in findings_draft/reflect-raw-ptr-return-take-ownership-default.md; the tests are written against correct behavior and pass once pointer returns default to a non-owning policy. No fixture is used: wrapping add_* in a C++ factory would only hide the bug."""
+skipped_features = [
+  "ensure_utf8(char**) and the argv-style parse(int, char**) / parse(int, wchar_t**) overloads: a pointer-to-pointer parameter has no nanobind caster and the binder does not gracefully skip it (it synthesizes a non-matching forwarding lambda -> hard compile error); excluded by member reflection via cli_excluded_marker(). The bindable parse(vector<string>&) is what the run drives. (see findings_draft/binder-ptr-to-ptr-param-no-graceful-skip.md)",
+  "typed option binding (add_option(name, T& variable) / add_flag(name, T& variable)): templated on the bound C++ variable's type -- a consteval/template front that cannot reference a Python value, so not bindable; the string-collecting Option.results() path is the bindable equivalent and is what the differential checks",
+  "Validator / Formatter / Config subobjects, callbacks (std::function setters), subcommand trees beyond add_subcommand presence: deep auxiliary surface, out of the parse-correctness focus",
+]

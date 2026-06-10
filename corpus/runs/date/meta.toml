@@ -1,0 +1,20 @@
+# Per-run descriptor for HowardHinnant/date v3.0.4. Consumed by run_gates.py.
+slug         = "date"
+tier         = 2                          # value types + a rich operator surface
+header_only  = true                       # <date/date.h> only; tz.h is out of scope
+url          = "https://github.com/HowardHinnant/date"
+pin          = "v3.0.4"
+include_root = "../../libs/date/include"
+main_headers = ["date/date.h"]
+module_name  = "date_ext"
+strategy     = "single_stage"
+
+reflect_args     = ["^^date::year", "^^date::month", "^^date::day", "^^date::weekday", "^^date::year_month", "^^date::month_day", "^^date::year_month_day", "^^datefix"]
+subset_rationale = "date's calendrical VALUE types bound head-on: year/month/day (each an opaque integral wrapper with explicit ctor, ok(), and a full free-operator surface), year_month and month_day (the two-field composites), year_month_day (the central y/m/d triple, with its operator sys_days() conversion exercised through the fixture), and weekday. The differential checks calendrical arithmetic (operator+/- with days/months/years free operators -> dunders), the six comparison operators -> rich-comparison dunders, weekday computation from a date, and formatted output. The datefix fixture bridges only what the real API cannot express to Python: the sys_days serial-day round-trip (date::sys_days is std::chrono::time_point<system_clock, days> -- a typedef over a chrono time_point with no nanobind caster, so year_month_day<->sys_days and weekday(sys_days) go through free functions over a plain day-count int) and date::format() (a function TEMPLATE over CharT/Traits/Streamable, unbindable; wrapped to take/return std::string)."
+skipped_features = [
+  "tz.h / time-zone database (needs tz.cpp compiled + an IANA tzdata install -- out of scope for the header-only run; only <date/date.h> is bound)",
+  "the indexed/last calendar types (weekday_indexed, weekday_last, month_day_last, year_month_day_last, month_weekday[_last], year_month_weekday[_last]) -- secondary surface, the run pins the core value types and their operators",
+  "operator++/-- (pre/post increment) -- the binder skips ++/-- per docs (no Python analog)",
+  "date::format()/operator<< as bound entities -- function templates over CharT/Traits/Streamable, not bindable; formatted output is exercised through the datefix format_*() std::string wrappers",
+  "the chrono duration typedefs days/months/years and sys_days/local_days as bound types -- chrono time_points/durations have no nanobind caster; arithmetic that needs them is reached through the value-type operators (day +/- days etc. take a bound operand) or the datefix serial-day bridge",
+]

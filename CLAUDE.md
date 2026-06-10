@@ -244,6 +244,17 @@ pick them up:
   `is-complete-type-alias-sugar.pass.cpp`. Upstreamed as issue #304 / PR #307 (tracking
   issue #308). (Rebuild for any of
   TC-0010..0012: `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
+- **TC-0013 — dependent splice as `auto`-NTTP argument in a requires-expression ICEs at parse**
+  (`clang/lib/AST/ExprClassification.cpp`). A dependent `CXXSpliceExpr` is created with a
+  NULL model expression (`SemaReflect.cpp`, `BuildReflectionSpliceExpr`'s dependent tail);
+  classifying it — `Sema::DeduceAutoType` deducing an `auto` NTTP from
+  `typename probe<([:mem:])>` inside a requires-expression — dyn_cast'ed the null model:
+  `Casting.h:662 dyn_cast on a non-existent value`, at PARSE time. Found by the DRIVER
+  implementing BINDER-0020's value-readability probe (wave 1), not by a corpus run; the
+  binder dodges it with a fixed-type (`long double`) NTTP probe. Fix: classify a model-less
+  splice by its own value kind. Repro: `corpus/findings/repros/TC-0013/`; regression test
+  `auto-nttp-dependent-splice-requires.pass.cpp`. (Rebuild:
+  `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 
 ## Build & test the binder (the main loop) — verified from scratch
 

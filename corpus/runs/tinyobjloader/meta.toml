@@ -1,0 +1,19 @@
+# Per-run descriptor for tinyobjloader v1.0.7. Consumed by run_gates.py.
+slug         = "tinyobjloader"
+tier         = 2                          # POD aggregates + nested std::vector data members
+header_only  = true                       # single-header; one TU defines TINYOBJLOADER_IMPLEMENTATION
+url          = "https://github.com/tinyobjloader/tinyobjloader"
+pin          = "v1.0.7"
+include_root = "../../libs/tinyobjloader"
+main_headers = ["tiny_obj_loader.h"]
+module_name  = "tinyobjloader_ext"
+strategy     = "single_stage"
+
+reflect_args     = ["^^tinyobj::index_t", "^^tinyobj::mesh_t", "^^tinyobj::shape_t", "^^tinyobj::attrib_t", "^^tinyobj::material_t", "^^objtest"]
+subset_rationale = """tinyobjloader's parse output is a set of plain-aggregate structs; they are bound head-on via reflection: index_t (vertex/normal/texcoord indices), mesh_t (vector<index_t> indices, num_face_vertices, material_ids, smoothing_group_ids, vector<tag_t> tags), shape_t (name + mesh + path), attrib_t (vector<real_t> vertices/normals/texcoords/colors), and material_t (name, illum, the texname strings, the std::map<string,string> unknown_parameter, and the texture_option_t texopts). tag_t, path_t, texture_option_t and texture_type_t are pulled in transitively as reachable member types and bound too. LoadObj is an out-param front (fills attrib_t*/vector<shape_t>*/vector<material_t>* + string* warn/err from a filename or istream), unreachable from Python; the objtest::parse_obj fixture drives the std::istream* overload over an in-memory .obj string and returns objtest::LoadResult AGGREGATING the library's own real attrib_t/vector<shape_t>/vector<material_t>. The differential parses the SAME .obj through native tinyobj and compares vertex/normal/texcoord counts and values, per-shape names, mesh face indices (vertex_index per index_t), num_face_vertices, material_ids, and material name/illum -- all read off the binder-exposed real types."""
+skipped_features = [
+  "material_t / texture_option_t C-array fields (real_t ambient[3], diffuse[3], scale[3], ... and char imfchan): fixed-size C arrays are skipped by the binder (def_rw's setter is ill-formed for array members) -- color triples are not in the differential; the bound scalar/string/map material fields are",
+  "LoadObj filename overload and the .mtl MaterialReader/MaterialFileReader/MaterialStreamReader hierarchy (filesystem + virtual operator() -- the in-memory istream path is what the fixture drives)",
+  "LoadObjWithCallback / callback_t (function-pointer callback struct -- no Python representation)",
+  "ParseTextureNameAndOption / LoadMtl (out-param free functions, same shape as LoadObj; the .obj path is the bound surface)",
+]

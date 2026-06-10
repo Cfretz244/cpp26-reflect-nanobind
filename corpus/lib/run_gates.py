@@ -63,6 +63,11 @@ def detect_toolchain_bug(diag_text):
         return {"status": "suspected", "kind": "constexpr-step-limit",
                 "signature": "constexpr evaluation hit maximum step limit",
                 "finding": "TC-0002-sloc-ice-heavy-reflection"}
+    # A *static* assertion is a deliberate source-level diagnostic (e.g. the
+    # binder's BINDER-0014 completeness gate naming a missing caster header),
+    # not a compiler self-assert -- drop it before the generic "assertion
+    # failed" ICE match below (false-positived during the unordered_dense run).
+    t = t.replace("static assertion failed", "").replace("static_assert", "")
     for marker in ("unreachable", "internal compiler error", "please submit a bug report",
                    "assertion failed", "mangling a placeholder type", "stack dump"):
         if marker in t:

@@ -1,0 +1,21 @@
+# Per-run descriptor for ankerl::unordered_dense v4.8.1. Consumed by run_gates.py.
+slug         = "unordered_dense"
+tier         = 3
+header_only  = true
+url          = "https://github.com/martinus/unordered_dense"
+pin          = "v4.8.1"
+include_root = "../../libs/unordered_dense/include"
+main_headers = ["ankerl/unordered_dense.h"]
+module_name  = "unordered_dense_ext"
+strategy     = "single_stage"
+extra_cflags = ["-fconstexpr-steps=1000000000"]   # heavy detail::table bind-set fixpoint (peer of json/abseil_hash)
+
+reflect_args     = ["^^ankerl::unordered_dense::map<int, std::string>", "^^ankerl::unordered_dense::set<int>", "^^udtest"]
+subset_rationale = "ankerl::unordered_dense::map<int,std::string> and set<int> bound HEAD-ON: the library's public alias templates resolve to detail::table<...> specializations, listed explicitly in the reflect_ pack. The query/mutation surface binds directly off the spec -- the non-template at(Key const&)/operator[](Key const&)->__getitem__ (C++ semantics: default-inserts on miss)/erase(Key const&)->size_t, plus the heterogeneous (member-template) contains/count/find, and size/empty/clear/bucket_count/load_factor/max_load_factor as plain methods. Default construction binds via the table() ctor (BINDER-0013 copy-construction also available since table is copyable). The udtest fixture supplies only VALUE-SETTING population (put/add): insert()'s pair<iterator,bool> return has no Python representation (iterators are C++-only) and __getitem__ cannot express assignment. Differential drives the identical lookup/erase/grow scenario through the native oracle and compares sizes, lookup results, default-insert semantics, and erase return codes."
+skipped_features = [
+  "insert/emplace/try_emplace/insert_or_assign from Python (returns pair<iterator,bool>/iterator; iterator types have no Python value semantics -- population via udtest::put/add or d[k] default-insert)",
+  "begin/end/find iteration (iterator-returning; a future __iter__/make_iterator feature -- find binds but its iterator return is not value-compared)",
+  "segmented_map/segmented_set + PMR variants (same table template, IsSegmented/allocator differ; the standard map/set are the representative head-on bind)",
+  "extract/replace/values()/reserve/rehash (value_container_type / node-handle returns with no Python value semantics)",
+  "constructors taking bucket_count/Hash/KeyEqual/allocator (defaulted/initializer_list/iterator-range forms have no Python representation; default-construct + populate is the bound path)",
+]

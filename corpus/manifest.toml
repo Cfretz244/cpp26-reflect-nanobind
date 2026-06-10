@@ -246,7 +246,10 @@ header_only  = true
 url          = "https://github.com/marzer/tomlplusplus"
 pin          = "v3.4.0"
 include_root = "../../libs/tomlplusplus/include"
-status       = "pending"
+status       = "done"          # outcome E: date/time/offset/date_time + node_type enum + parse_error/source_region
+                              # head-on; tomlfix carries parse/coerce/format (node tree was blocked by
+                              # BINDER-0015/0016 reports -- 0015 fixed, tree revisit is a residual);
+                              # 46-observable L1 differential incl. byte-for-byte serialization.
 
 [[repo]]
 slug         = "cli11"
@@ -255,7 +258,10 @@ header_only  = true
 url          = "https://github.com/CLIUtils/CLI11"
 pin          = "v2.6.2"
 include_root = "../../libs/cli11/include"
-status       = "pending"
+status       = "done"          # outcome E (was D): App/Option head-on via the string-collecting option
+                              # API + ParseError hierarchy; found BINDER-0017 (raw-ptr-return
+                              # take_ownership double-free, THE wave-1 blocker) + BINDER-0015 shape
+                              # (char** fronts). Re-gated green after the rv_policy default fix.
 
 [[repo]]
 slug         = "date"
@@ -264,7 +270,9 @@ header_only  = true
 url          = "https://github.com/HowardHinnant/date"
 pin          = "v3.0.4"
 include_root = "../../libs/date/include"
-status       = "pending"
+status       = "done"          # outcome E: calendrical value types + operator/ DSL + comparisons +
+                              # format() head-on; datefix bridges sys_days serial round-trip (chrono
+                              # time_point has no caster). Clean run, no findings.
 
 [[repo]]
 slug         = "unordered_dense"
@@ -273,7 +281,9 @@ header_only  = true
 url          = "https://github.com/martinus/unordered_dense"
 pin          = "v4.8.1"
 include_root = "../../libs/unordered_dense/include"
-status       = "pending"
+status       = "done"          # outcome E: map<int,string>/set<int> head-on (detail::table specs),
+                              # query surface + __getitem__ default-insert differential; flagged the
+                              # harness static_assert-as-ICE false positive (classifier fixed).
 
 [[repo]]
 slug         = "pugixml"
@@ -282,7 +292,10 @@ header_only  = false
 url          = "https://github.com/zeux/pugixml"
 pin          = "v1.15"
 include_root = "../../libs/pugixml/src"
-status       = "pending"          # one .cpp via extra_sources
+status       = "done"          # outcome E: xml_document/node/attribute/parse_result + 3 enums head-on,
+                              # REAL inheritance (document -> node); found BINDER-0019 (incomplete
+                              # pImpl pointer gate). extra_sources=pugixml.cpp; 15-test differential
+                              # incl. byte-for-byte serialization + malformed-XML error path.
 
 [[repo]]
 slug         = "tinyobjloader"
@@ -291,7 +304,10 @@ header_only  = true
 url          = "https://github.com/tinyobjloader/tinyobjloader"
 pin          = "v1.0.7"
 include_root = "../../libs/tinyobjloader"
-status       = "pending"          # header-only w/ TINYOBJLOADER_IMPLEMENTATION TU macro
+status       = "done"          # outcome E (was B): attrib_t/shape_t/mesh_t/index_t/material_t head-on;
+                              # found BINDER-0018 (typedef-anon-struct naming, THE blocker -- every
+                              # public type is `typedef struct {...} name_t;`). Re-gated green after
+                              # the reached-through-alias naming fix.
 
 [[repo]]
 slug         = "fast_float"
@@ -300,7 +316,10 @@ header_only  = true
 url          = "https://github.com/fastfloat/fast_float"
 pin          = "v8.2.8"
 include_root = "../../libs/fast_float/include"
-status       = "pending"
+status       = "done"          # outcome E: chars_format enum + parse_options_t<char> +
+                              # from_chars_result_t<char> head-on; fixture wraps the pointer-pair/
+                              # out-param from_chars fronts (126 oracle keys incl. subnormals, hex
+                              # floats, overflow errc). BINDER-0021 noted (open design note).
 
 [[repo]]
 slug         = "concurrentqueue"
@@ -309,7 +328,10 @@ header_only  = true
 url          = "https://github.com/cameron314/concurrentqueue"
 pin          = "v1.0.5"
 include_root = "../../libs/concurrentqueue"
-status       = "pending"
+status       = "done"          # outcome E: ConcurrentQueue<int>/<string> head-on (enqueue/try_enqueue/
+                              # size_approx/is_lock_free), FIFO differential; found BINDER-0020
+                              # (static-const address ODR-use at link; fixed -- its exclude_
+                              # workaround is now removable as a residual).
 
 # --- ramp backlog (not yet scaffolded) ---
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
