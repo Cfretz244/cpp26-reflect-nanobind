@@ -180,7 +180,8 @@ pick them up:
   `MetaActions::Substitute` overloads now take `SuppressDiagnostics`, return null on failure,
   and the metafunction maps null to `can_substitute == false` / a `metafn_substitution_failed`
   note. Repro: `corpus/findings/repros/TC-0006/`; regression tests
-  `can-substitute-invalid-type-formation.pass.cpp` + `substitute.verify.cpp`.
+  `can-substitute-invalid-type-formation.pass.cpp` + `substitute.verify.cpp`. Upstreamed
+  as bloomberg/clang-p2996 issue #294 / PR #295.
 - **TC-0007 — type-completing metafunctions eagerly instantiated member bodies**
   (`clang/lib/Sema/SemaReflect.cpp`, `EnsureInstantiated`). Reflection-triggered completion
   used `TSK_ExplicitInstantiationDefinition` + `InstantiateClassTemplateSpecializationMembers`,
@@ -188,7 +189,8 @@ pick them up:
   storage-base idiom, `tl::expected<void,E>`) — order-dependently (pre-instantiating the class
   dodged it). Now mirrors `RequireCompleteTypeImpl` (`TSK_ImplicitInstantiation`, declarations
   only, plus a member-class branch). Repro: `corpus/findings/repros/TC-0007/`; regression test
-  `members-of-lazily-ill-formed-bodies.pass.cpp`.
+  `members-of-lazily-ill-formed-bodies.pass.cpp`. Upstreamed as bloomberg/clang-p2996
+  issue #296 / PR #297.
 - **TC-0008 — deduction-guide reflections ICE'd the Itanium mangler**
   (`clang/lib/AST/ItaniumMangle.cpp`, `mangleReflection`). `members_of` over a namespace
   enumerates guides; lifting the list into `define_static_array` mangles each reflection as a
@@ -199,7 +201,8 @@ pick them up:
   same-signature explicit ones). The binder ALSO strips guides pre-lift
   (`namespace_members_for_binding`), so it works on unpatched toolchains. Repro:
   `corpus/findings/repros/TC-0008/`; regression test
-  `deduction-guide-reflection-mangling.pass.cpp`.
+  `deduction-guide-reflection-mangling.pass.cpp`. Upstreamed as bloomberg/clang-p2996
+  issue #298 / PR #299 (stacked on TC-0004's PR #287).
 - **TC-0009 — same-headed member-template reflections of a specialization mangled identically**
   (`clang/lib/AST/ItaniumMangle.cpp`, the TC-0004 hash block). `ODRHash::AddFunctionDecl`
   silently no-ops in "specialization context", so `tl::expected<T,E>`'s four `value()` member
@@ -208,7 +211,8 @@ pick them up:
   (caught by the expected run's differential suite, not a diagnostic). The hash now also folds
   in the pattern's function type (`AddQualType`) + ref-qualifier. Repro:
   `corpus/findings/repros/TC-0009/`; regression test
-  `fn-template-nttp-mangling-spec-context.pass.cpp`. (Rebuild for any of TC-0006..0009:
+  `fn-template-nttp-mangling-spec-context.pass.cpp`. Upstreamed as bloomberg/clang-p2996
+  issue #300 / PR #301 (stacked on PR #299). (Rebuild for any of TC-0006..0009:
   `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 
 ## Build & test the binder (the main loop) — verified from scratch

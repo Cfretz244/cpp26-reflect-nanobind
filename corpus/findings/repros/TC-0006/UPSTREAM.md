@@ -1,8 +1,9 @@
-# READY TO FILE — bloomberg/clang-p2996 issue + PR (prepared 2026-06-10)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-10)
 
-Everything verified; filing was blocked by the session's permission layer, not by
-verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.md`
-(replace `#ISSUE_TC6` with the filed issue number).
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/294
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/295 — branch
+  `reflect-substitute-failure-report` on `Cfretz244/llvm-project`.
+  Filed bodies: `upstream-issue.md` / `upstream-pr.md` (here, verbatim).
 
 - **Issue title:** `` `can_substitute`/`substitute` crash (SIGSEGV) instead of reporting failure when substitution forms an invalid type inside a template-id (e.g. reference to void) ``
 - **PR title:** `[clang][reflection] Report substitution failure instead of crashing when substitution forms an invalid type in the declaration`
@@ -12,21 +13,6 @@ verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.m
   style, internal finding references scrubbed. **Verified standalone**: built
   Release+assertions on that base; the new regression test and `repro.cpp` pass with the
   branch compiler.
-
-## Filing commands (from the umbrella root)
-
-```bash
-git -C llvm-project push origin reflect-substitute-failure-report
-gh issue create -R bloomberg/clang-p2996 \
-  --title '`can_substitute`/`substitute` crash (SIGSEGV) instead of reporting failure when substitution forms an invalid type inside a template-id (e.g. reference to void)' \
-  --body-file corpus/findings/repros/TC-0006/upstream-issue.md
-# note the issue number N, then:
-sed -i '' 's/#ISSUE_TC6/#N/g' corpus/findings/repros/TC-0006/upstream-pr.md
-gh pr create -R bloomberg/clang-p2996 --base p2996 \
-  --head Cfretz244:reflect-substitute-failure-report \
-  --title '[clang][reflection] Report substitution failure instead of crashing when substitution forms an invalid type in the declaration' \
-  --body-file corpus/findings/repros/TC-0006/upstream-pr.md
-```
 
 ## Validation evidence behind the filing (all on this laptop)
 

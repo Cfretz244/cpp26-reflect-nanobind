@@ -1,12 +1,12 @@
-Fixes #ISSUE_TC9.
+Fixes #300.
 
-> **Stacked on #287 and the deduction-guide PR (#PR_TC8)** — the first two commits are theirs (this change amends the same `mangleReflection` hash block); review the last commit only.
+> **Stacked on #287 and the deduction-guide PR (#299)** — the first two commits are theirs (this change amends the same `mangleReflection` hash block); review the last commit only.
 
 ## Problem
 
 The NTTP discriminator for overloaded function-template reflections (#286 / #287) hashes the template parameter list plus the declaration pattern via `ODRHash::AddFunctionDecl(pattern, /*SkipBody=*/true)`. But `AddFunctionDecl` **silently no-ops for any declaration in "specialization context"** — its decl-context walk returns on finding a `ClassTemplateSpecializationDecl`. A member template of an instantiated class template — the common `members_of` shape — therefore contributed only its template HEAD to the hash, and same-named siblings with **identical heads** still mangled identically. #287's own field shape (absl `operator[]` + its pack twin) escaped only because those heads differ.
 
-Field shape: `tl::expected<T,E>`'s four `value()` member templates (`const&`/`&`/`const&&`/`&&`, one shared `template <class U = T, enable_if_t<!is_void<U>::value>* = nullptr>` head) — all four reflections got one mangled name, CodeGen silently folded the linkonce_odr dispatcher specializations of a reflection-driven binding generator, and `value()` never bound. Caught by a differential test suite, not a diagnostic; where the TU collides explicitly the symptom is `error: definition with same mangled name ... as another definition` (see #ISSUE_TC9 for the reproducer).
+Field shape: `tl::expected<T,E>`'s four `value()` member templates (`const&`/`&`/`const&&`/`&&`, one shared `template <class U = T, enable_if_t<!is_void<U>::value>* = nullptr>` head) — all four reflections got one mangled name, CodeGen silently folded the linkonce_odr dispatcher specializations of a reflection-driven binding generator, and `value()` never bound. Caught by a differential test suite, not a diagnostic; where the TU collides explicitly the symptom is `error: definition with same mangled name ... as another definition` (see #300 for the reproducer).
 
 ## Fix
 
@@ -22,7 +22,7 @@ Field shape: `tl::expected<T,E>`'s four `value()` member templates (`const&`/`&`
 ## Validation
 
 - Base: the deduction-guide PR's branch tip (itself on #287 on `837da39eb88c`); builds standalone.
-- Without the fix: the #ISSUE_TC9 reproducer fails at `-c` with the duplicate-mangled-name error (clean at `-fsyntax-only`; clean with the same signatures at namespace scope — the no-specialization-context control); the new test fails.
+- Without the fix: the #300 reproducer fails at `-c` with the duplicate-mangled-name error (clean at `-fsyntax-only`; clean with the same signatures at namespace scope — the no-specialization-context control); the new test fails.
 - With the fix: reproducer matrix clean; new test passes; #287's `substitute-nested-dependent.pass.cpp` and the deduction-guide test still pass on the stack tip.
 - `clang/test/Reflection`: 16/16 with the fix on this machine — identical to base.
 - Downstream soak (reflection-driven nanobind binding generator): 53-test binder suite green; the TartanLlama/expected v1.3.1 corpus run that caught this (its `value()` differential went from `AttributeError` to passing) is green end-to-end, `tl::expected<int,std::string>::value()` bound with all four sibling reflections mangled distinctly.

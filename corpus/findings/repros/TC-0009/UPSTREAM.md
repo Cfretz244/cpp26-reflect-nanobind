@@ -1,9 +1,9 @@
-# READY TO FILE — bloomberg/clang-p2996 issue + PR (prepared 2026-06-10)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-10)
 
-Everything verified; filing was blocked by the session's permission layer, not by
-verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.md`
-(replace `#ISSUE_TC9` with the filed issue number and `#PR_TC8` with the TC-0008 PR
-number).
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/300
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/301 — branch
+  `reflect-spec-context-nttp-mangling` on `Cfretz244/llvm-project`.
+  Filed bodies: `upstream-issue.md` / `upstream-pr.md` (here, verbatim).
 
 - **Issue title:** `Same-named member function templates of a class template specialization with identical template heads mangle identically as reflection NTTPs — silent linkonce_odr fold (gap in #286's fix)`
 - **PR title:** `[clang][reflection] Discriminate same-headed member-template reflections of a specialization in NTTP mangling`
@@ -15,21 +15,6 @@ number).
   Release+assertions; the new regression test, `repro.cpp` (matrix incl. the
   namespace-scope control), and both upstack tests (#287's + the guide test) pass with
   the branch compiler.
-
-## Filing commands (from the umbrella root; file AFTER TC-0008's PR so #PR_TC8 is known)
-
-```bash
-git -C llvm-project push origin reflect-spec-context-nttp-mangling
-gh issue create -R bloomberg/clang-p2996 \
-  --title 'Same-named member function templates of a class template specialization with identical template heads mangle identically as reflection NTTPs — silent linkonce_odr fold (gap in #286'"'"'s fix)' \
-  --body-file corpus/findings/repros/TC-0009/upstream-issue.md
-# note the issue number N (and TC-0008's PR number M), then:
-sed -i '' 's/#ISSUE_TC9/#N/g; s/#PR_TC8/#M/g' corpus/findings/repros/TC-0009/upstream-pr.md
-gh pr create -R bloomberg/clang-p2996 --base p2996 \
-  --head Cfretz244:reflect-spec-context-nttp-mangling \
-  --title '[clang][reflection] Discriminate same-headed member-template reflections of a specialization in NTTP mangling' \
-  --body-file corpus/findings/repros/TC-0009/upstream-pr.md
-```
 
 ## Validation evidence behind the filing (all on this laptop)
 

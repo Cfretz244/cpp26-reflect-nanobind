@@ -1,8 +1,9 @@
-# READY TO FILE — bloomberg/clang-p2996 issue + PR (prepared 2026-06-10)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-10)
 
-Everything verified; filing was blocked by the session's permission layer, not by
-verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.md`
-(replace `#ISSUE_TC7` with the filed issue number).
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/296
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/297 — branch
+  `reflect-implicit-instantiation-completion` on `Cfretz244/llvm-project`.
+  Filed bodies: `upstream-issue.md` / `upstream-pr.md` (here, verbatim).
 
 - **Issue title:** `` `members_of` instantiates member function definitions when it triggers the class template specialization's instantiation — valid types with lazily-ill-formed member bodies are wrong-rejected (order-dependent) ``
 - **PR title:** `[clang][reflection] Complete reflected specializations with implicit-instantiation semantics`
@@ -11,21 +12,6 @@ verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.m
   cherry-picked onto bloomberg `p2996` tip `837da39eb88c`, message reworded to upstream
   style. **Verified standalone**: built Release+assertions on that base; the new
   regression test and `repro.cpp` (both orderings) pass with the branch compiler.
-
-## Filing commands (from the umbrella root)
-
-```bash
-git -C llvm-project push origin reflect-implicit-instantiation-completion
-gh issue create -R bloomberg/clang-p2996 \
-  --title '`members_of` instantiates member function definitions when it triggers the class template specialization'"'"'s instantiation — valid types with lazily-ill-formed member bodies are wrong-rejected (order-dependent)' \
-  --body-file corpus/findings/repros/TC-0007/upstream-issue.md
-# note the issue number N, then:
-sed -i '' 's/#ISSUE_TC7/#N/g' corpus/findings/repros/TC-0007/upstream-pr.md
-gh pr create -R bloomberg/clang-p2996 --base p2996 \
-  --head Cfretz244:reflect-implicit-instantiation-completion \
-  --title '[clang][reflection] Complete reflected specializations with implicit-instantiation semantics' \
-  --body-file corpus/findings/repros/TC-0007/upstream-pr.md
-```
 
 ## Validation evidence behind the filing (all on this laptop)
 

@@ -271,10 +271,11 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 5. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
-Pending follow-ups (independent of the ramp): **TC-0002 through TC-0005 are upstreamed**
-(bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291, #292/PR #293 — track to
-merge), and **TC-0006 through TC-0009 follow the same path** (fixed locally + regression
-tests; per-finding `repros/TC-000N/UPSTREAM.md` tracks each filing). TC-0003's addendum is CLOSED: minimization promoted it to **TC-0005** (the
+Pending follow-ups (independent of the ramp): **TC-0002 through TC-0009 are upstreamed**
+(bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291, #292/PR #293, and the
+expected-run batch #294/PR #295 (TC-0006), #296/PR #297 (TC-0007), #298/PR #299
+(TC-0008, stacked on #287), #300/PR #301 (TC-0009, stacked on #299) — track to merge;
+per-finding `repros/TC-000N/UPSTREAM.md` has each filing's evidence). TC-0003's addendum is CLOSED: minimization promoted it to **TC-0005** (the
 qualifier misreport was never proxy-specific — `[[clang::lifetimebound]]`'s
 AttributedType sugar blinded a family of `dyn_cast<FunctionProtoType>` sites; fixed +
 filed). The binder's `sizeof`-gate turned out to be its universal binder-matrix

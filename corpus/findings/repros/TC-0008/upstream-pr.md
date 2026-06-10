@@ -1,10 +1,10 @@
-Fixes #ISSUE_TC8.
+Fixes #298.
 
 > **Stacked on #287** — the first commit here is #287's (this change extends the same `mangleReflection` hash block); review the last commit only.
 
 ## Problem
 
-`members_of` over a namespace enumerates deduction guides like any other member, and lifting that member list into `define_static_array` mangles each element reflection as a template argument of the backing array specialization. `mangleReflection`'s `Template` case encodes a reflected template via `mangleTemplateName` → `mangleUnqualifiedName`, which has no case for `CXXDeductionGuideName`: `llvm_unreachable("Can't mangle a deduction guide name!", ItaniumMangle.cpp:1774)` — a sound invariant for normal symbol mangling (guides are never odr-used) that reflection now makes reachable from ordinary user code. Field shape: TartanLlama/expected's namespace-scope `template <class E> unexpected(E) -> unexpected<E>;` — a reflection-driven binding generator walking the `tl` namespace ICE'd at codegen while binding ANY `tl` class (see #ISSUE_TC8 for the reproducer + build matrix).
+`members_of` over a namespace enumerates deduction guides like any other member, and lifting that member list into `define_static_array` mangles each element reflection as a template argument of the backing array specialization. `mangleReflection`'s `Template` case encodes a reflected template via `mangleTemplateName` → `mangleUnqualifiedName`, which has no case for `CXXDeductionGuideName`: `llvm_unreachable("Can't mangle a deduction guide name!", ItaniumMangle.cpp:1774)` — a sound invariant for normal symbol mangling (guides are never odr-used) that reflection now makes reachable from ordinary user code. Field shape: TartanLlama/expected's namespace-scope `template <class E> unexpected(E) -> unexpected<E>;` — a reflection-driven binding generator walking the `tl` namespace ICE'd at codegen while binding ANY `tl` class (see #298 for the reproducer + build matrix).
 
 ## Fix
 
@@ -22,7 +22,7 @@ Deterministic and cross-TU-stable (ODR hash), preserving legitimate linkonce_odr
 ## Validation
 
 - Base: #287's branch tip (`caac14845397`, itself on `837da39eb88c`); builds standalone.
-- Without the fix: the #ISSUE_TC8 reproducer ICEs at `-c` (clean at `-fsyntax-only` and without the guide); the new test ICEs.
+- Without the fix: the #298 reproducer ICEs at `-c` (clean at `-fsyntax-only` and without the guide); the new test ICEs.
 - With the fix: reproducer matrix fully clean; new test passes; #287's own regression test (`substitute-nested-dependent.pass.cpp`) still passes on the stack.
 - `clang/test/Reflection`: 16/16 with the fix on this machine — identical to base.
 - Downstream soak (reflection-driven nanobind binding generator): 53-test binder suite green; TartanLlama/expected v1.3.1 corpus run — formerly ICE'ing at codegen on every `tl` class — passes its full differential suite.

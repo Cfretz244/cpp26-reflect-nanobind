@@ -1,8 +1,9 @@
-# READY TO FILE — bloomberg/clang-p2996 issue + PR (prepared 2026-06-10)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-10)
 
-Everything verified; filing was blocked by the session's permission layer, not by
-verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.md`
-(replace `#ISSUE_TC8` with the filed issue number).
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/298
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/299 — branch
+  `reflect-deduction-guide-mangling` on `Cfretz244/llvm-project`.
+  Filed bodies: `upstream-issue.md` / `upstream-pr.md` (here, verbatim).
 
 - **Issue title:** `Itanium mangler ICE ("Can't mangle a deduction guide name!") mangling a reflection of a deduction guide as a template argument / define_static_array element`
 - **PR title:** `[clang][reflection] Mangle deduction-guide reflections instead of hitting unreachable`
@@ -16,23 +17,6 @@ verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.m
 - The binder side also gained a belt-and-suspenders guide filter
   (`namespace_members_for_binding` in nb_reflect.h) so it works on unpatched
   toolchains; the compiler fix is required regardless (no silent ICEs).
-
-## Filing commands (from the umbrella root)
-
-```bash
-git -C llvm-project push origin reflect-deduction-guide-mangling
-gh issue create -R bloomberg/clang-p2996 \
-  --title 'Itanium mangler ICE ("Can'"'"'t mangle a deduction guide name!") mangling a reflection of a deduction guide as a template argument / define_static_array element' \
-  --body-file corpus/findings/repros/TC-0008/upstream-issue.md
-# note the issue number N, then:
-sed -i '' 's/#ISSUE_TC8/#N/g' corpus/findings/repros/TC-0008/upstream-pr.md
-gh pr create -R bloomberg/clang-p2996 --base p2996 \
-  --head Cfretz244:reflect-deduction-guide-mangling \
-  --title '[clang][reflection] Mangle deduction-guide reflections instead of hitting unreachable' \
-  --body-file corpus/findings/repros/TC-0008/upstream-pr.md
-# after filing, also fix the #PR_TC8 placeholder in TC-0009's PR body:
-#   sed -i '' 's/#PR_TC8/#<this PR number>/g' corpus/findings/repros/TC-0009/upstream-pr.md
-```
 
 ## Validation evidence behind the filing (all on this laptop)
 
