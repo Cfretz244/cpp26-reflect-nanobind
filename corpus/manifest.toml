@@ -202,8 +202,22 @@ status       = "done"         # outcome E: logger head-on (log/levels/pattern/cl
                               # L1 differential on formatted text. SPDLOG_USE_STD_FORMAT
                               # (bundled-fmt string_view_t has no caster).
 
+[[repo]]
+slug         = "expected"
+tier         = 3
+header_only  = true
+url          = "https://github.com/TartanLlama/expected"
+pin          = "v1.3.1"
+include_root = "../../libs/expected/include"
+status       = "pending"      # PHASE 2: first unaided subagent run (corpus/lib/AGENT_PROMPT.md)
+                              # -> outcome B (schema-valid, guardrails held, repros verified):
+                              # TC-0008 deduction-guide-reflection mangler ICE blocks Gate 4;
+                              # behind it BINDER-0012 (deleted ctors bound), TC-0006
+                              # (can_substitute SEGV on void& formation), TC-0007 (members_of
+                              # wrong-instantiates member bodies). Re-run after fixes land;
+                              # differential tests are committed and latent.
+
 # --- ramp backlog (not yet scaffolded) ---
-# [[repo]] slug="expected"     tier=3  url="https://github.com/TartanLlama/expected"  (Phase-2 subagent candidate)
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
 # or [[=reflect::skip]]); container iteration -> future __iter__/make_iterator feature.

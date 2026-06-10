@@ -1,0 +1,26 @@
+# Per-run descriptor for TartanLlama/expected v1.3.1. Consumed by run_gates.py.
+slug         = "expected"
+tier         = 3                          # error-channel vocabulary type: spec binding + exception path
+header_only  = true                       # single public header, tl/expected.hpp
+url          = "https://github.com/TartanLlama/expected"
+pin          = "v1.3.1"                   # commit 1770e35 (== master at scaffold time)
+include_root = "../../libs/expected/include"
+main_headers = ["tl/expected.hpp"]
+module_name  = "expected_ext"
+strategy     = "single_stage"
+# Quiet the binder's own dealias deprecation warning so result.json's
+# first_diagnostics capture the actual Gate-4 failure (the TC-0008 ICE), not
+# warning noise.
+extra_cflags = ["-Wno-deprecated-declarations"]
+
+reflect_args     = ["^^tl::expected<int, std::string>", "^^tl::expected<std::string, int>", "^^tl::unexpected<std::string>", "^^tl::unexpected<int>", "^^tl::bad_expected_access<std::string>", "^^extest"]
+subset_rationale = "tl::expected<T,E> is the library's whole point, bound head-on as two real specializations (int/std::string value-or-error and the role-swapped std::string/int): default + copy ctors, has_value(), explicit operator bool -> __bool__, the all-defaulted member templates value<U=T>() (real throw path -> bad_expected_access) and swap<OT,OE>(), and the non-template error() overload set. tl::unexpected<std::string>/<int> are listed for their REAL non-template ctors (a Python str/int constructs one directly) + value(); tl::bad_expected_access<std::string> for ctor/error()/what() (its thrown form surfaces in Python as RuntimeError('Bad expected access'), differentially checked). The extest fixture supplies factories (every value/error converting ctor is a template, skipped by design) plus thin wrappers over the all-template fronts: the free operator== family, value_or<U>, and map/and_then with fixed C++ callables. KNOWN OUTCOME B at the pinned toolchain+binder, two layers deep: (1) recorded failure = TC-0008, a codegen ICE -- tl's namespace-scope deduction guide `unexpected(E) -> unexpected<E>` lands in bind_free_operators' define_static_array(members_of(^^tl,...)) walk and the Itanium mangler aborts ('Can't mangle a deduction guide name!'); binding ANY tl class triggers it, no consumer-side dodge. (2) Behind it, visible at -fsyntax-only: BINDER-0012 -- unexpected<E> declares `unexpected() = delete;` and the binder binds every public non-template ctor with no is_deleted filter, so the TU hard-errors ('call to deleted constructor'); the unexpected<E> specs cannot be dropped to dodge it because expected<T,E>'s default-instantiable operator=(unexpected<G>&&) member template makes them signature-reachable anyway. Tests/oracle are written for this surface so the run re-runs green once TC-0008 (or a binder-side deduction-guide filter) and BINDER-0012 land."
+skipped_features = [
+  "expected<void, std::string> (DROPPED from the pack: reflecting it is wrong-rejected -- members_of instantiates member bodies, TC-0007 -- and can_substitute on its swap<OT=void> member template SEGVs the compiler, TC-0006; extest has no void factories so discovery cannot re-add it)",
+  "all value/error converting constructors + in_place/unexpect tag ctors (templates, skipped by design; extest factories instead)",
+  "monadic and_then/map/transform/or_else and value_or (member templates with a non-defaulted F/U parameter -- not default-instantiable; extest wraps map/and_then/value_or with fixed callables as the differential channel)",
+  "emplace (parameter-pack member template, skipped by design)",
+  "free operator==/!= family and free swap/make_unexpected (free function templates -- not bindable; extest eq_* wrappers cover equality)",
+  "operator*/operator-> accessors (unary deref has no Python dunder; value() is the access path)",
+  "&&/const&&-qualified value()/error()/unexpected::value() overloads (binder qualifier matrix skips rvalue-ref-qualified)",
+]

@@ -25,3 +25,6 @@
 [submodule "corpus/libs/spdlog"]
 	path = corpus/libs/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "corpus/libs/expected"]
+	path = corpus/libs/expected
+	url = https://github.com/TartanLlama/expected

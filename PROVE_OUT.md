@@ -242,11 +242,27 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 2. **spdlog (Tier 3)** — ✅ E, handled directly (one more direct run before fan-out, per
    the not-yet-flying-by call). BINDER-0011 found+fixed. **Residual:** Python-side custom
    sinks (sink's pure virtuals via a two-stage trampoline) deliberately out of scope.
-3. **Enter Phase 2** — dispatch one subagent on a fresh repo (`tl::expected` is the
-   queued Tier-3 candidate; Eigen stays the Tier-5 frontier) end-to-end; if it produces
-   a schema-valid `result.json` unaided and its tests genuinely assert behavior, open a
-   small serial batch. (Phase 1 is closed: fmt landed at E, Tiers 0–2 banked.)
-4. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
+3. **Phase 2 — first unaided subagent run: ✅ dispatched and PASSED its bar.**
+   `tl::expected` v1.3.1 ran end-to-end under the identical-prompt protocol
+   (`corpus/lib/AGENT_PROMPT.md`, written for this dispatch and reused verbatim for
+   every later repo). The agent produced a schema-valid `result.json` unaided, held
+   every guardrail (no commits, no binder/toolchain edits), bound the real API
+   (`expected<int,string>` + role-swapped spec, `unexpected`, `bad_expected_access`;
+   fixtures only for template-ctor factories), wrote 10 genuinely-differential tests
+   (latent, committed), and — the payoff — recorded outcome **B** with a four-bug
+   cascade, each with a verified minimized repro: **TC-0008** (deduction-guide
+   reflection ICEs the Itanium mangler — `unexpected(E) -> unexpected<E>` at namespace
+   scope means binding ANY tl class dies at codegen; TC-0004's component family),
+   **BINDER-0012** (ctor pass lacks an `is_deleted` filter), **TC-0006**
+   (`can_substitute` SIGSEGVs forming `void&` in a template-id instead of returning
+   false), **TC-0007** (`members_of` wrong-instantiates member bodies when it is what
+   first instantiates the spec). Driver-verified: repros reproduce, controls clean.
+   **Next: fix the cascade (binder + toolchain track), re-run to E, then open the
+   small serial batch.**
+4. **Enter Phase 2 batch** — after the expected blockers land, dispatch 3–5 repos
+   serially under the same prompt. (Phase 1 is closed: fmt landed at E, Tiers 0–2
+   banked.)
+5. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
 Pending follow-ups (independent of the ramp): **TC-0002 through TC-0005 are upstreamed**
