@@ -4,7 +4,7 @@
   llvm-project (`clang/lib/AST/ExprConstantMeta.cpp`, `isReflectableDecl` +
   `findIterableMember`); regression test
   `llvm-project/libcxx/test/std/experimental/reflection/namespace-members-out-of-line-defs.pass.cpp`;
-  prepared for upstream (draft in `repros/TC-0011/UPSTREAM.md`)
+  upstreamed as bloomberg/clang-p2996 issue #303 / PR #306 (tracking issue #308)
 - **Track:** toolchain (clang-p2996, pinned by this repo), namespace member
   enumeration (`members_of`)
 - **Found via:** `corpus/runs/eigen` (Eigen 5.0.1), Gate 4 — the binder's

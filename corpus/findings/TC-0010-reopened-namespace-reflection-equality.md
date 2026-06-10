@@ -4,7 +4,7 @@
   llvm-project (`clang/lib/AST/APValue.cpp`, `profileReflection`,
   `ReflectionKind::Namespace`); regression test
   `llvm-project/libcxx/test/std/experimental/reflection/namespace-reflection-equality-reopened.pass.cpp`;
-  prepared for upstream (draft in `repros/TC-0010/UPSTREAM.md`)
+  upstreamed as bloomberg/clang-p2996 issue #302 / PR #305 (tracking issue #308)
 - **Track:** toolchain (clang-p2996, pinned by this repo), reflection equality
   (constant evaluator / APValue profiling)
 - **Found via:** `corpus/runs/eigen` (Eigen 5.0.1) — the run's

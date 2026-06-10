@@ -233,14 +233,16 @@ pick them up:
   silently DROP every remaining member (69 of 125 Eigen members). Fix: such definitions are
   rejected (semantic ctx is a CXXRecordDecl, lexical differs) and stepping from one walks
   the LEXICAL chain. Repro: `corpus/findings/repros/TC-0011/`; regression test
-  `namespace-members-out-of-line-defs.pass.cpp`. Upstream draft prepared.
+  `namespace-members-out-of-line-defs.pass.cpp`. Upstreamed as issue #303 / PR #306
+  (tracking issue #308).
 - **TC-0012 — is_complete_type blind to alias sugar** (`clang/lib/AST/ExprConstantMeta.cpp`).
   `findTypeDecl` on a TypedefType returns the alias decl, for which EnsureInstantiated is a
   no-op, so an instantiable-but-never-instantiated spec named through an alias (spdlog's
   `stdout_sink_mt`, member typedefs) read as incomplete — order-dependently. Bit the
   binder's new completeness gates (BINDER-0014). Fix desugars like `members_of` does.
   Repro: `corpus/findings/repros/TC-0012/`; regression test
-  `is-complete-type-alias-sugar.pass.cpp`. Upstream draft prepared. (Rebuild for any of
+  `is-complete-type-alias-sugar.pass.cpp`. Upstreamed as issue #304 / PR #307 (tracking
+  issue #308). (Rebuild for any of
   TC-0010..0012: `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 
 ## Build & test the binder (the main loop) — verified from scratch
@@ -322,6 +324,20 @@ has one commit per feature; `nanobind/docs/reflection.rst` is the user-facing re
 
 ## Working agreements
 
+- **Upstreaming toolchain fixes (mandatory flow for EVERY new TC-XXXX):** (1) minimized
+  repro under `corpus/findings/repros/TC-XXXX/` + finding write-up + regression test in
+  `llvm-project/libcxx/test/std/experimental/reflection/` (or `clang/test/Reflection/`);
+  (2) cherry-pick the fix commit onto bloomberg's `p2996` tip on a branch of
+  `Cfretz244/llvm-project` (strip internal TC-/BINDER- references from the commit
+  message; code comments must already be clean), validate the PR-state compiler (repro +
+  regression test + `clang/test/Reflection` unchanged vs base), push, file issue + PR
+  against `bloomberg/clang-p2996`; (3) **add the new issue/PR pair to the campaign
+  tracking issue [bloomberg/clang-p2996#308](https://github.com/bloomberg/clang-p2996/issues/308)
+  under its root-cause category** (A identity/equality, B sugar-blind metafunctions,
+  C member/namespace enumeration, D reflection-NTTP mangling, E constant-evaluator
+  robustness — add a category if none fits), and tick its checkbox there when the PR
+  merges; (4) record everything in `repros/TC-XXXX/UPSTREAM.md` (FILED header with
+  numbers + validation evidence — see TC-0005 or TC-0010 for the format).
 - Binder changes: edit in `nanobind/` on `mk-reflect`, push to its `fork` remote
   (`Cfretz244/nanobind`); never push to `origin` (upstream wjakob).
 - After updating a submodule, `git add <submodule> && git commit` here to re-pin the state.

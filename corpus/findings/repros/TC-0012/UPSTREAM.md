@@ -1,6 +1,25 @@
-# DRAFT — not yet filed (prepared 2026-06-10, eigen run)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-10)
 
-Planned: bloomberg/clang-p2996 issue + PR, same flow as TC-0005..0011.
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/304
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/307 — branch
+  `reflect-is-complete-type-desugar` on `Cfretz244/llvm-project` (commit `785fbb9`:
+  `c5db481` cherry-picked onto their `p2996` tip `837da39` == our local base, so
+  the PR code is byte-for-byte what the corpus validated; commit message cleaned of
+  internal finding references; code comments were already clean).
+- **Tracking:** listed on the campaign tracking issue
+  https://github.com/bloomberg/clang-p2996/issues/308 (keep its checkbox/state
+  current as the PR merges).
+
+## Validation evidence behind the filing (all on this laptop)
+
+- `repro.cpp` + regression test `is-complete-type-alias-sugar.pass.cpp` compiled and run against a
+  PR-state compiler (base `837da39` + the three eigen-run fixes, built in
+  `toolchain-build` from the `reflect-validation-tc10-12` branch): all pass;
+  each fails at pristine base per the repro headers.
+- `clang/test/Reflection`: 15/16 on the PR-state compiler — identical to
+  pristine base (`splice-exprs.cpp` pre-existing).
+- Full local toolchain (reflection-p2996): binder suite 54/54, full corpus
+  20/20 outcome E.
 
 ## Proposed issue title
 

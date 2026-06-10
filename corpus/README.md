@@ -23,7 +23,10 @@ corpus/
 ├── runs/<slug>/           # per-library, committed: meta.toml binding/ tests/ result.json
 ├── findings/              # binder + toolchain bug write-ups (TC-*, BINDER-*)
 │   └── repros/TC-XXXX/    # standalone minimized repros (repro.cpp with the compile
-│                          # command + expected/actual in its header; UPSTREAM.md drafts)
+│                          # command + expected/actual in its header; UPSTREAM.md drafts).
+│                          # Every TC filed upstream MUST also be added (and later
+│                          # check-marked) on tracking issue bloomberg/clang-p2996#308;
+│                          # full flow in the umbrella CLAUDE.md "Working agreements".
 └── aggregate/             # report.md, results.jsonl, toolchain_bugs.md (generated)
 ```
 

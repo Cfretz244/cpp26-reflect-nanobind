@@ -1,8 +1,25 @@
-# DRAFT — not yet filed (prepared 2026-06-10, eigen run)
+# FILED — bloomberg/clang-p2996 issue + PR (2026-06-10)
 
-Planned: bloomberg/clang-p2996 issue + PR, same flow as TC-0005..0009 (cherry-pick
-the fix commit onto their `p2996` tip on a branch of `Cfretz244/llvm-project`,
-no internal finding references in code comments).
+- **Issue:** https://github.com/bloomberg/clang-p2996/issues/302
+- **PR:** https://github.com/bloomberg/clang-p2996/pull/305 — branch
+  `reflect-namespace-equality-canonical-decl` on `Cfretz244/llvm-project` (commit `3729fb1`:
+  `3b1fda0` cherry-picked onto their `p2996` tip `837da39` == our local base, so
+  the PR code is byte-for-byte what the corpus validated; commit message cleaned of
+  internal finding references; code comments were already clean).
+- **Tracking:** listed on the campaign tracking issue
+  https://github.com/bloomberg/clang-p2996/issues/308 (keep its checkbox/state
+  current as the PR merges).
+
+## Validation evidence behind the filing (all on this laptop)
+
+- `repro.cpp` + regression test `namespace-reflection-equality-reopened.pass.cpp` compiled and run against a
+  PR-state compiler (base `837da39` + the three eigen-run fixes, built in
+  `toolchain-build` from the `reflect-validation-tc10-12` branch): all pass;
+  each fails at pristine base per the repro headers.
+- `clang/test/Reflection`: 15/16 on the PR-state compiler — identical to
+  pristine base (`splice-exprs.cpp` pre-existing).
+- Full local toolchain (reflection-p2996): binder suite 54/54, full corpus
+  20/20 outcome E.
 
 ## Proposed issue title
 

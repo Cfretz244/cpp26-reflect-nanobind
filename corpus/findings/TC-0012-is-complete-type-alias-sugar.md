@@ -4,7 +4,7 @@
   llvm-project (`clang/lib/AST/ExprConstantMeta.cpp`, `is_complete_type`);
   regression test
   `llvm-project/libcxx/test/std/experimental/reflection/is-complete-type-alias-sugar.pass.cpp`;
-  prepared for upstream (draft in `repros/TC-0012/UPSTREAM.md`)
+  upstreamed as bloomberg/clang-p2996 issue #304 / PR #307 (tracking issue #308)
 - **Track:** toolchain (clang-p2996, pinned by this repo), metafunction engine —
   the TC-0005 theme (sugar-blind metafunctions) at a different site
 - **Found via:** the eigen run's full-corpus regression sweep — the new
