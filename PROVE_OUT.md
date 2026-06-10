@@ -99,13 +99,14 @@ features + four toolchain fixes, taking the corpus to **17 runs, all E**:
   policy-type explosion. Residuals: `FixedArray` (Abseil-internal `AsValueType` hard error —
   absl-side), container iteration (future `__iter__`/make_iterator feature), `insert()`'s
   `pair<iterator,bool>` return (no Python representation; population via fixtures).
-- **Toolchain track:** **TC-0003** (entity-proxy metafunction ICEs + proxy-mangling ICE —
-  fixed locally; qualifier misreport through proxies still open, worked around binder-side;
+- **Toolchain track:** **TC-0003** (entity-proxy metafunction ICEs + proxy-mangling
+  defects — fixed locally and **upstreamed** as bloomberg/clang-p2996 #290 / PR #291;
+  qualifier misreport through proxies still open, worked around binder-side;
   fresh minimization evidence in the finding) and **TC-0004** (**fixed locally** — was
   recorded as predicate misreports; minimization showed same-named function-template
   reflections as NTTPs mangled identically and codegen folded the dispatch instantiations.
   Mangler fix + standalone repro + regression tests landed; the binder's dispatch-level
-  substitution workaround removed; upstream issue drafted, not yet filed).
+  substitution workaround removed; upstreamed as #286 / PR #287).
 
 ## Phasing (and where fan-out begins)
 
@@ -166,10 +167,16 @@ Fixes landed and pinned along the way:
   re-acquire the eval-context record across reentrant consteval (**fixed**; follow-up
   audit hardened `CheckLValueToRValueConversionOperand`, added a standalone repro +
   regression test, and upstreamed it as bloomberg/clang-p2996 #288 / PR #289).
-- **TC-0003** (**fixed locally**, Abseil buildout) entity-proxy sharp edges: four
-  metafunction ICEs (`is_constructor` et al. on proxies) + the Itanium-mangler ICE on
-  proxy reflections from class-template specializations; the
-  `is_rvalue_reference_qualified` misreport through proxies is worked around binder-side.
+- **TC-0003** (**fixed locally**, Abseil buildout; **upstreamed** as
+  bloomberg/clang-p2996 #290 / PR #291) entity-proxy sharp edges: six metafunction ICEs
+  (`is_constructor` et al.; the upstreaming pass probed the remaining unreachable arms
+  and hardened `is_enumerable_type`/`has_complete_definition` too) + the Itanium-mangler
+  defects on proxy reflections as NTTPs (root cause corrected during upstreaming:
+  operator-named shadows crash `mangleUnqualifiedName`, and an overload set behind one
+  using-declarator mangles all its shadow proxies identically — not the
+  class-template-specialization shape originally blamed). Regression test added
+  (`entity-proxy-member-queries.pass.cpp`); the `is_rvalue_reference_qualified`
+  misreport through proxies is still worked around binder-side.
 - **TC-0004** (**fixed locally**) originally recorded as `substitute()` predicate
   misreports under nested-dependent instantiation (silently dropped
   `raw_hash_map::operator[]`); the standalone repro showed the real mechanism —
@@ -203,7 +210,8 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
-Pending follow-ups (independent of the ramp): **TC-0002 and TC-0004 are upstreamed**
-(bloomberg/clang-p2996 #286/PR #287 and #288/PR #289 — track to merge); upstream the
-local **TC-0003** entity-proxy fixes and minimize its still-open addendum (proxy
-qualifier misreport on StatusOr; fresh evidence in the finding).
+Pending follow-ups (independent of the ramp): **TC-0002, TC-0003, and TC-0004 are
+upstreamed** (bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291 — track to
+merge); minimize and root-cause TC-0003's still-open addendum (proxy qualifier misreport
+on StatusOr; fresh evidence in the finding), file it separately, and remove the binder's
+`reflect_bind_proxy` gate workaround once fixed.

@@ -125,6 +125,22 @@ pick them up:
   link input, so `touch llvm-project/libcxxabi/src/vendor/apple/shims.cpp` first to force a
   relink.) The shim forwards each typed operator to the untyped one — the descriptor is an
   optional type-aware-allocation hint, exactly as Apple's own shim does.
+- **TC-0003 — entity-proxy reflections ICE member metafunctions and the Itanium mangler**
+  (`clang/lib/AST/ExprConstantMeta.cpp` + `clang/lib/AST/ItaniumMangle.cpp`). With
+  `-fentity-proxy-reflection`, `members_of` enumerates using-shadow declarations as
+  `EntityProxy` reflections, but six metafunctions (`is_constructor`, `is_destructor`,
+  `is_special_member_function`, `is_static_member`, `is_enumerable_type`,
+  `has_complete_definition`) treated that kind as `llvm_unreachable` — enumerating members
+  and asking ordinary kind questions ICE'd. All six now answer `false` (a shadow decl is
+  never itself one of these), matching the surrounding predicates. The mangler encoded a
+  proxy NTTP by mangling the shadow's NAME: operator-named shadows (StatusOr's `using
+  StatusOr::OperatorBase::operator*;`) crashed `mangleUnqualifiedName` outright, and an
+  overload set behind one using-declarator mangled all its shadow proxies identically;
+  it now mangles the proxy's TARGET decl kind-aware, keeping the `a` tag. Repros:
+  `corpus/findings/repros/TC-0003/`; regression test
+  `llvm-project/libcxx/test/std/experimental/reflection/entity-proxy-member-queries.pass.cpp`.
+  Upstreamed as bloomberg/clang-p2996 issue #290 / PR #291. (Rebuild:
+  `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 - **TC-0004 — same-named function-template reflections as NTTPs mangled identically**
   (`clang/lib/AST/ItaniumMangle.cpp`, `mangleReflection`, `ReflectionKind::Template`). A
   reflected template mangled as its *name only*; function templates overload, so a dispatcher
