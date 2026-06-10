@@ -73,6 +73,26 @@ asked of the shadow declaration, or transparently unwrap).
    function type" (`sizeof` on the undefined primary is a substitution failure),
    which filters volatile/`&&` shapes without trusting the decl predicates.
 
+   *Re-probed during the TC-0004 root-cause (still OPEN, sharper picture now):*
+   this is NOT the TC-0004 mangling collapse (the TC-0004 fix is scoped to
+   function-template reflections and does not touch this path; the misreport
+   persists after it). A minimal shape — non-template `D : private OB<int>`
+   with `using OB<int>::value;`, four cv/ref-qualified overloads — answers ALL
+   qualifier predicates correctly at every nesting depth, including through
+   NTTP dispatch. Against the real `absl::StatusOr<int>`, the same probe
+   reports `is_const`/`is_lvalue_reference_qualified`/
+   `is_rvalue_reference_qualified` ALL false for ALL four `value()` proxies'
+   underlyings, while `is_function` is true — i.e. the underlying entity IS a
+   function but its qualifiers are invisible. Two minimal shapes were ruled
+   out: `using` in a plain class over an instantiated base (`D : private
+   OB<int>`) AND `using` inside a class template over a dependent base
+   (`template <class T> struct DT : private OB<T> { using OB<T>::value; }`,
+   probed via `DT<int>`) both answer correctly. Whatever StatusOr adds beyond
+   that — its multi-level internal_statusor base/using chain is the prime
+   suspect — is still unminimized. Probe scripts from this session:
+   the StatusOr probe compiles against `corpus/libs/abseil` +
+   `build/abseil-install/lib/libabsl_merged.a` (+ `-framework CoreFoundation`).
+
 ## Binder-side hardening (independent of the toolchain fix)
 
 `nb_reflect.h` orders `is_using_proxy(fn)` guards before any kind-predicate in every

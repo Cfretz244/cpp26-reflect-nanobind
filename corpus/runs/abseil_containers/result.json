@@ -6,7 +6,7 @@
   "tier": 6,
   "header_only": false,
   "toolchain_commit": "651ff7a",
-  "binder_commit": "89676a8",
+  "binder_commit": "f1c14dd",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -43,8 +43,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.65,
-    "binding_compile_seconds": 3.74
+    "probe_seconds": 0.73,
+    "binding_compile_seconds": 4.04
   },
   "artifacts": {},
   "notes": ""

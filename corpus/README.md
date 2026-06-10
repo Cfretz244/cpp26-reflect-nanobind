@@ -22,6 +22,8 @@ corpus/
 ├── libs/<slug>/           # the library, as a pinned submodule
 ├── runs/<slug>/           # per-library, committed: meta.toml binding/ tests/ result.json
 ├── findings/              # binder + toolchain bug write-ups (TC-*, BINDER-*)
+│   └── repros/TC-XXXX/    # standalone minimized repros (repro.cpp with the compile
+│                          # command + expected/actual in its header; UPSTREAM.md drafts)
 └── aggregate/             # report.md, results.jsonl, toolchain_bugs.md (generated)
 ```
 

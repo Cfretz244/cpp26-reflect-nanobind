@@ -100,10 +100,12 @@ features + four toolchain fixes, taking the corpus to **17 runs, all E**:
   absl-side), container iteration (future `__iter__`/make_iterator feature), `insert()`'s
   `pair<iterator,bool>` return (no Python representation; population via fixtures).
 - **Toolchain track:** **TC-0003** (entity-proxy metafunction ICEs + proxy-mangling ICE —
-  fixed locally; qualifier misreport through proxies worked around binder-side) and
-  **TC-0004** (substitute() results misreport predicates under nested-dependent
-  instantiation — the binder hoists substitution to the dispatch level; minimization
-  skeleton recorded for upstreaming).
+  fixed locally; qualifier misreport through proxies still open, worked around binder-side;
+  fresh minimization evidence in the finding) and **TC-0004** (**fixed locally** — was
+  recorded as predicate misreports; minimization showed same-named function-template
+  reflections as NTTPs mangled identically and codegen folded the dispatch instantiations.
+  Mangler fix + standalone repro + regression tests landed; the binder's dispatch-level
+  substitution workaround removed; upstream issue drafted, not yet filed).
 
 ## Phasing (and where fan-out begins)
 
@@ -166,9 +168,12 @@ Fixes landed and pinned along the way:
   metafunction ICEs (`is_constructor` et al. on proxies) + the Itanium-mangler ICE on
   proxy reflections from class-template specializations; the
   `is_rvalue_reference_qualified` misreport through proxies is worked around binder-side.
-- **TC-0004** (**open**, worked around) `substitute()` results misreport predicates under
-  nested-dependent instantiation (silently dropped `raw_hash_map::operator[]`); binder
-  hoists substitution to the dispatch level; minimization skeleton recorded.
+- **TC-0004** (**fixed locally**) originally recorded as `substitute()` predicate
+  misreports under nested-dependent instantiation (silently dropped
+  `raw_hash_map::operator[]`); the standalone repro showed the real mechanism —
+  same-named function-template reflections as NTTPs mangled identically and codegen
+  folded the sibling dispatch instantiations into one body. Mangler fix (ODR-hash
+  discriminator) + repro + regression tests landed; binder workaround removed.
 - **LIB-0001** (new, fmt) fmt's `detail::allocator<T>` calls unqualified global
   `malloc`/`free` without `<cstdlib>`; strict two-phase lookup rejects it. Triage
   `library` (latent fmt bug, not toolchain/binder) → consumer-side `<cstdlib>`-first
@@ -196,7 +201,9 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
-Pending follow-ups (independent of the ramp): minimize **TC-0002** (the Sema UAF) and
-**TC-0004** (nested-dependent substitute misreport; skeleton in its finding) to
-standalone reproducers for upstream bloomberg/clang-p2996 issues; upstream the local
-**TC-0003** entity-proxy fixes.
+Pending follow-ups (independent of the ramp): minimize **TC-0002** (the Sema UAF) to a
+standalone reproducer for an upstream bloomberg/clang-p2996 issue; file the drafted
+**TC-0004** issue (`corpus/findings/repros/TC-0004/UPSTREAM.md` — repro, root cause, and
+fix are done); upstream the local **TC-0003** entity-proxy fixes and minimize its
+still-open addendum (proxy qualifier misreport on StatusOr; fresh evidence in the
+finding).

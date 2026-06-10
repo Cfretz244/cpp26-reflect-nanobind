@@ -22,3 +22,6 @@ corpus/runs/*/tests/build/
 corpus/runs/*/logs/
 corpus/runs/*/.pytest_cache/
 **/__pycache__/
+
+# compiled finding repros (corpus/findings/repros/*/repro.cpp builds)
+corpus/findings/repros/*/repro

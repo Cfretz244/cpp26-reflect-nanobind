@@ -122,6 +122,22 @@ pick them up:
   link input, so `touch llvm-project/libcxxabi/src/vendor/apple/shims.cpp` first to force a
   relink.) The shim forwards each typed operator to the untyped one — the descriptor is an
   optional type-aware-allocation hint, exactly as Apple's own shim does.
+- **TC-0004 — same-named function-template reflections as NTTPs mangled identically**
+  (`clang/lib/AST/ItaniumMangle.cpp`, `mangleReflection`, `ReflectionKind::Template`). A
+  reflected template mangled as its *name only*; function templates overload, so a dispatcher
+  `f<T, tmpl>` instantiated for two same-named siblings (absl raw_hash_map's `operator[]` and
+  its SFINAE-false lifetimebound pack sibling) got ONE mangled name — CodeGen silently folded
+  the linkonce_odr definitions and a single body served both call sites. The AST-level
+  specializations were correct, so `flat_hash_map`'s `operator[]` just dropped with no
+  diagnostic (originally mis-read as predicate misreports; corrected in the finding). Fix
+  appends an ODR hash of the template head + declaration pattern for `FunctionTemplateDecl`s
+  (a structural mangling of the pattern type crashes on real-world dependent types —
+  lifetimebound SFINAE / `noexcept(...)` referencing parameters). Standalone repro:
+  `corpus/findings/repros/TC-0004/repro.cpp`; regression tests in
+  `llvm-project/libcxx/test/std/experimental/reflection/substitute-nested-dependent.pass.cpp`
+  and the binder's HetMap pack-sibling `operator[]`. The binder's dispatch-level substitution
+  workaround has been removed. (Rebuild: `ninja -C toolchain-build clang &&
+  ninja -C toolchain-build install-clang`.)
 
 ## Build & test the binder (the main loop) — verified from scratch
 
