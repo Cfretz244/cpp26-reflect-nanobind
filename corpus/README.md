@@ -43,7 +43,9 @@ python corpus/lib/aggregate.py                          # refresh aggregate/*
 ```
 
 `meta.toml` keys: `slug tier header_only url pin include_root main_headers module_name strategy
-reflect_args subset_rationale skipped_features` (see any existing run for an example).
+reflect_args subset_rationale skipped_features` plus optional `extra_cflags` (e.g. a raised
+`-fconstexpr-steps` for heavy bind-set fixpoints — json, abseil_hash, abseil_btree),
+`extra_sources`, and `link_abseil` (see any existing run for an example).
 
 ## Outcomes (failure taxonomy)
 
