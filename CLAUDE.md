@@ -170,6 +170,46 @@ pick them up:
   and the binder's HetMap pack-sibling `operator[]`. The binder's dispatch-level substitution
   workaround has been removed. (Rebuild: `ninja -C toolchain-build clang &&
   ninja -C toolchain-build install-clang`.)
+- **TC-0006 — `can_substitute`/`substitute` crashed when substitution forms an invalid type**
+  (`clang/lib/Sema/SemaReflect.cpp`, `clang/lib/AST/ExprConstantMeta.cpp`,
+  `clang/include/clang/AST/MetaActions.h`, `DiagnosticMetafnKinds.td`). Substituting valid
+  arguments whose *declaration* substitution fails in the immediate context (reference to
+  void inside a template-id — `tl::expected<void,E>::swap<OT=void>`, the classic `enable_if`
+  shape) SIGSEGV'd (function templates: null `Spec` deref in `MetaActionsImpl::Substitute`),
+  leaked a hard error (alias templates), or tripped an assert (variable templates). The
+  `MetaActions::Substitute` overloads now take `SuppressDiagnostics`, return null on failure,
+  and the metafunction maps null to `can_substitute == false` / a `metafn_substitution_failed`
+  note. Repro: `corpus/findings/repros/TC-0006/`; regression tests
+  `can-substitute-invalid-type-formation.pass.cpp` + `substitute.verify.cpp`.
+- **TC-0007 — type-completing metafunctions eagerly instantiated member bodies**
+  (`clang/lib/Sema/SemaReflect.cpp`, `EnsureInstantiated`). Reflection-triggered completion
+  used `TSK_ExplicitInstantiationDefinition` + `InstantiateClassTemplateSpecializationMembers`,
+  wrong-rejecting specializations with lazily-ill-formed member bodies (the specialized-
+  storage-base idiom, `tl::expected<void,E>`) — order-dependently (pre-instantiating the class
+  dodged it). Now mirrors `RequireCompleteTypeImpl` (`TSK_ImplicitInstantiation`, declarations
+  only, plus a member-class branch). Repro: `corpus/findings/repros/TC-0007/`; regression test
+  `members-of-lazily-ill-formed-bodies.pass.cpp`.
+- **TC-0008 — deduction-guide reflections ICE'd the Itanium mangler**
+  (`clang/lib/AST/ItaniumMangle.cpp`, `mangleReflection`). `members_of` over a namespace
+  enumerates guides; lifting the list into `define_static_array` mangles each reflection as a
+  template argument, hitting `llvm_unreachable("Can't mangle a deduction guide name!")`
+  (tl's `unexpected(E) -> unexpected<E>`; binding ANY tl class died at codegen). Guides now
+  mangle as `"dg"` + deduced template + the TC-0004 ODR hash with `isImplicit()` + deduction-
+  candidate kind folded in (implicit per-ctor guides are structurally identical to
+  same-signature explicit ones). The binder ALSO strips guides pre-lift
+  (`namespace_members_for_binding`), so it works on unpatched toolchains. Repro:
+  `corpus/findings/repros/TC-0008/`; regression test
+  `deduction-guide-reflection-mangling.pass.cpp`.
+- **TC-0009 — same-headed member-template reflections of a specialization mangled identically**
+  (`clang/lib/AST/ItaniumMangle.cpp`, the TC-0004 hash block). `ODRHash::AddFunctionDecl`
+  silently no-ops in "specialization context", so `tl::expected<T,E>`'s four `value()` member
+  templates (identical heads, differing only in cv/ref qualifiers + return type) hashed
+  identically — codegen folded the binder's dispatch bodies and `value()` silently never bound
+  (caught by the expected run's differential suite, not a diagnostic). The hash now also folds
+  in the pattern's function type (`AddQualType`) + ref-qualifier. Repro:
+  `corpus/findings/repros/TC-0009/`; regression test
+  `fn-template-nttp-mangling-spec-context.pass.cpp`. (Rebuild for any of TC-0006..0009:
+  `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 
 ## Build & test the binder (the main loop) — verified from scratch
 
@@ -190,7 +230,7 @@ DYLD_LIBRARY_PATH=$TC/lib PYTHONPATH=$PWD/build/tests \
   .venv/bin/python -m pytest nanobind/tests/test_reflect.py \
   nanobind/tests/test_reflect_codegen.py -W error::RuntimeWarning
 ```
-All 31 reflection tests pass. (`test_reflect_codegen_ext` exercises the two-stage codegen:
+All 53 reflection tests pass. (`test_reflect_codegen_ext` exercises the two-stage codegen:
 CMake builds a generator, runs it to emit a trampoline header, then builds the module that
 includes it.)
 
@@ -225,10 +265,14 @@ a fixpoint — a spec's own template args do NOT qualify — + listed explicitly
 templates** with all-defaulted parameters (default instantiation under the template's name —
 hash/btree heterogeneous query APIs incl. `operator[]`→`__getitem__`), and
 **using-redeclarations** via entity proxies (incl. from PRIVATE bases, e.g. StatusOr's
-`value()`; needs `-fentity-proxy-reflection`). Remaining: per-arg ownership transfer,
-container `__iter__`/make_iterator, member templates needing explicit args, trampoline
-hardening, friendly spec naming. The binder's git history on `mk-reflect` has one commit per
-feature; `nanobind/docs/reflection.rst` is the user-facing reference.
+`value()`; needs `-fentity-proxy-reflection`), **deleted-function filtering** on every
+binding/scanning path (a class with only deleted ctors binds with no `__init__` → TypeError;
+BINDER-0012), **Python-side copy construction** (`init<const T&>` for copyable non-trampolined
+classes; BINDER-0013), and **deduction-guide stripping** in the namespace walks (guides are
+never bindable and pre-TC-0008 toolchains can't mangle their reflections). Remaining: per-arg
+ownership transfer, container `__iter__`/make_iterator, member templates needing explicit
+args, trampoline hardening, friendly spec naming. The binder's git history on `mk-reflect`
+has one commit per feature; `nanobind/docs/reflection.rst` is the user-facing reference.
 
 ## Gotchas (carried over; see submodule CLAUDE.md files for detail)
 

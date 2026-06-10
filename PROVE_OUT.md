@@ -49,7 +49,7 @@ A tier is "ramped past" only when **≥1 library in it reaches `E`** (not `E-wea
 | 0 | pipeline bring-up; data/ctors/by-value/free-ops | `_fixture_pod`, `_fixture_recursive`, **linalg** v2.2 | ✅ E |
 | 1 | value types + operators + enums + STL casters | **glm** 1.0.1, **nlohmann/json** v3.11.3 | ✅ E |
 | 2 | free-function / format-heavy; kwargs; member-fn-template gap | **fmt** 11.2.0 (`FMT_HEADER_ONLY`) | ✅ E |
-| 3 | inheritance; shared_ptr; log-level enums | **spdlog** v1.17.0; (`tl::expected`) | ✅ E |
+| 3 | inheritance; shared_ptr; log-level enums | **spdlog** v1.17.0; **tl::expected** v1.3.1 | ✅ E |
 | 4 | virtual override → two-stage codegen | `_fixture_virtual` | ✅ E |
 | 5 | stress ceiling; expression templates | **Eigen** (`Matrix<double,3,3>`); a header-only Boost piece | ⬜ frontier |
 | ★ | **special case — breadth of fully-specialized concrete data structures** | **Abseil** 20250814.2 — themed runs: `containers` (InlinedVector), `numeric` (int128/uint128), `time` (Duration/Time), `status` (Status/StatusCode), `crc` (crc32c_t), `statusor` (StatusOr<T>), `strings` (Cord + StrCat API), `civil_tz` (TimeZone/civil), `hash` (flat/node hash maps+sets), `btree` (btree_map/set) | ✅ E ×10 |
@@ -257,8 +257,14 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
    (`can_substitute` SIGSEGVs forming `void&` in a template-id instead of returning
    false), **TC-0007** (`members_of` wrong-instantiates member bodies when it is what
    first instantiates the spec). Driver-verified: repros reproduce, controls clean.
-   **Next: fix the cascade (binder + toolchain track), re-run to E, then open the
-   small serial batch.**
+   **The cascade is FIXED and the run is at ✅ E** (16/16 differential tests, the void
+   spec back in the pack). Fixing it surfaced two more: **TC-0009** (same-headed
+   member-template reflections of a specialization mangled identically as NTTPs —
+   `ODRHash::AddFunctionDecl` no-ops in specialization context; `value()` silently
+   never bound, caught by the run's differential suite on its first post-fix
+   execution — a gap in TC-0004's fix) and **BINDER-0013** (copy ctors were never
+   bound; `init<const T&>` now binds for copyable non-trampolined classes).
+   **Next: open the small serial batch.**
 4. **Enter Phase 2 batch** — after the expected blockers land, dispatch 3–5 repos
    serially under the same prompt. (Phase 1 is closed: fmt landed at E, Tiers 0–2
    banked.)
@@ -267,7 +273,8 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 
 Pending follow-ups (independent of the ramp): **TC-0002 through TC-0005 are upstreamed**
 (bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291, #292/PR #293 — track to
-merge). TC-0003's addendum is CLOSED: minimization promoted it to **TC-0005** (the
+merge), and **TC-0006 through TC-0009 follow the same path** (fixed locally + regression
+tests; per-finding `repros/TC-000N/UPSTREAM.md` tracks each filing). TC-0003's addendum is CLOSED: minimization promoted it to **TC-0005** (the
 qualifier misreport was never proxy-specific — `[[clang::lifetimebound]]`'s
 AttributedType sugar blinded a family of `dyn_cast<FunctionProtoType>` sites; fixed +
 filed). The binder's `sizeof`-gate turned out to be its universal binder-matrix

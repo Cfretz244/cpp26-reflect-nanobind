@@ -7,57 +7,54 @@
   "header_only": true,
   "toolchain_commit": "06b9344",
   "binder_commit": "beda45a",
-  "outcome": "B",
-  "furthest_gate": 1,
+  "outcome": "E",
+  "furthest_gate": 6,
   "gate_results": {
     "3_strategy": "single_stage",
     "1_probe": "pass",
-    "4_compile": "fail"
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
   },
   "subset": {
     "reflect_args": [
       "^^tl::expected<int, std::string>",
       "^^tl::expected<std::string, int>",
+      "^^tl::expected<void, std::string>",
       "^^tl::unexpected<std::string>",
       "^^tl::unexpected<int>",
       "^^tl::bad_expected_access<std::string>",
       "^^extest"
     ],
-    "rationale": "tl::expected<T,E> is the library's whole point, bound head-on as two real specializations (int/std::string value-or-error and the role-swapped std::string/int): default + copy ctors, has_value(), explicit operator bool -> __bool__, the all-defaulted member templates value<U=T>() (real throw path -> bad_expected_access) and swap<OT,OE>(), and the non-template error() overload set. tl::unexpected<std::string>/<int> are listed for their REAL non-template ctors (a Python str/int constructs one directly) + value(); tl::bad_expected_access<std::string> for ctor/error()/what() (its thrown form surfaces in Python as RuntimeError('Bad expected access'), differentially checked). The extest fixture supplies factories (every value/error converting ctor is a template, skipped by design) plus thin wrappers over the all-template fronts: the free operator== family, value_or<U>, and map/and_then with fixed C++ callables. KNOWN OUTCOME B at the pinned toolchain+binder, two layers deep: (1) recorded failure = TC-0008, a codegen ICE -- tl's namespace-scope deduction guide `unexpected(E) -> unexpected<E>` lands in bind_free_operators' define_static_array(members_of(^^tl,...)) walk and the Itanium mangler aborts ('Can't mangle a deduction guide name!'); binding ANY tl class triggers it, no consumer-side dodge. (2) Behind it, visible at -fsyntax-only: BINDER-0012 -- unexpected<E> declares `unexpected() = delete;` and the binder binds every public non-template ctor with no is_deleted filter, so the TU hard-errors ('call to deleted constructor'); the unexpected<E> specs cannot be dropped to dodge it because expected<T,E>'s default-instantiable operator=(unexpected<G>&&) member template makes them signature-reachable anyway. Tests/oracle are written for this surface so the run re-runs green once TC-0008 (or a binder-side deduction-guide filter) and BINDER-0012 land.",
+    "rationale": "tl::expected<T,E> is the library's whole point, bound head-on as three real specializations (int/std::string value-or-error, the role-swapped std::string/int, and the no-value success channel void/std::string): default + copy ctors, has_value(), explicit operator bool -> __bool__, the all-defaulted member templates value<U=T>() (real throw path -> bad_expected_access) and swap<OT,OE>(), and the non-template error() overload set. tl::unexpected<std::string>/<int> are listed for their REAL non-template ctors (a Python str/int constructs one directly) + value(); tl::bad_expected_access<std::string> for ctor/error()/what() (its thrown form surfaces in Python as RuntimeError('Bad expected access'), differentially checked). The extest fixture supplies factories (every value/error converting ctor is a template, skipped by design) plus thin wrappers over the all-template fronts: the free operator== family, value_or<U>, and map/and_then with fixed C++ callables. FORMERLY OUTCOME B behind a five-bug cascade, all fixed -- the run is green end-to-end: TC-0008 (mangler ICE on tl's namespace-scope deduction guide in the binder's namespace walks; the toolchain mangles guide reflections now AND the binder strips guides pre-lift), BINDER-0012 (`unexpected() = delete;` bound as init<>; deleted functions filtered on every path now), TC-0006/TC-0007 (the void spec wrong-rejected by eager member-body instantiation and SEGV'd by can_substitute on swap<OT=void>; it now binds, with value/swap gracefully not-substitutable-for-void), TC-0009 (the four same-headed value() overload templates of a specialization mangled identically as reflection NTTPs -- ODRHash::AddFunctionDecl no-ops in specialization context -- so codegen folded the binder's dispatch bodies and value() silently never bound; found by THIS run's first post-fix execution), and BINDER-0013 (copy ctors were never bound; init<const T&> now binds for copyable non-trampolined classes).",
     "skipped_features": [
-      "expected<void, std::string> (DROPPED from the pack: reflecting it is wrong-rejected -- members_of instantiates member bodies, TC-0007 -- and can_substitute on its swap<OT=void> member template SEGVs the compiler, TC-0006; extest has no void factories so discovery cannot re-add it)",
       "all value/error converting constructors + in_place/unexpect tag ctors (templates, skipped by design; extest factories instead)",
       "monadic and_then/map/transform/or_else and value_or (member templates with a non-defaulted F/U parameter -- not default-instantiable; extest wraps map/and_then/value_or with fixed callables as the differential channel)",
       "emplace (parameter-pack member template, skipped by design)",
       "free operator==/!= family and free swap/make_unexpected (free function templates -- not bindable; extest eq_* wrappers cover equality)",
       "operator*/operator-> accessors (unary deref has no Python dunder; value() is the access path)",
-      "&&/const&&-qualified value()/error()/unexpected::value() overloads (binder qualifier matrix skips rvalue-ref-qualified)"
+      "&&/const&&-qualified value()/error()/unexpected::value() overloads (binder qualifier matrix skips rvalue-ref-qualified)",
+      "expected<void, E>'s value<U=T>() and swap<OT=T,...>() (enable_if'd away for T=void: can_substitute reports not-substitutable -- TC-0006's graceful path -- and the binder skips them; has_value/__bool__/error/ctors are the void surface)"
     ]
   },
   "oracle": {
-    "layers_used": [],
-    "ground_truth_source": ""
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "16 passed in 0.02s"
   },
   "failure": {
-    "code": "B.compile",
-    "first_diagnostics": [
-      "Can't mangle a deduction guide name!",
-      "UNREACHABLE executed at /Users/christopherfretz/git/cpp26-reflect-nanobind/llvm-project/clang/lib/AST/ItaniumMangle.cpp:1774!",
-      "PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace, preprocessed source, and associated run script.",
-      "Stack dump:",
-      "0.\tProgram arguments: /Users/christopherfretz/git/cpp26-reflect-nanobind/toolchain/bin/clang++ -O3 -DNDEBUG -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -fPIC -fvisibility=hidden -fno-stack-protector -Os -std=c++26 -freflection-latest -fentity-proxy-reflection -stdlib=libc++ -DNB_ABORT_ON_LEAK -I /opt/homebrew/opt/python@3.12/Frameworks/Python.framework/Versions/3.12/include/python3.12 -I /Users/christopherfretz/git/cpp26-reflect-nanobind/nanobind/include -I /Users/christopherfretz/git/cpp26-reflect-nanobind/corpus/runs/expected/../../libs/expected/include -Wno-deprecated-declarations -c /Users/christopherfretz/git/cpp26-reflect-nanobind/corpus/runs/expected/binding/binding.cpp -o /Users/christopherfretz/git/cpp26-reflect-nanobind/corpus/runs/expected/binding/build/expected_ext.o"
-    ],
+    "code": null,
+    "first_diagnostics": [],
     "signal": null
   },
   "toolchain_bug": {
-    "status": "suspected",
-    "kind": "compiler-crash",
-    "signature": "unreachable",
-    "finding": ""
+    "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.36,
-    "binding_compile_seconds": 2.18
+    "probe_seconds": 0.39,
+    "binding_compile_seconds": 3.53
   },
   "artifacts": {},
   "notes": ""

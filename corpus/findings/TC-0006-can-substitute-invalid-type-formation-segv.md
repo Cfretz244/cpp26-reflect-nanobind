@@ -1,8 +1,16 @@
 # TC-0006 — can_substitute/substitute SEGV when substitution forms an invalid type (reference to void)
 
-- **Status:** DRAFT — minimized + repro'd; not yet root-caused in the compiler or
-  upstreamed (found during the first unaided corpus run; per the run-agent
-  guardrails the toolchain was not touched)
+- **Status:** FIXED (toolchain) — root-caused and fixed in the pinned
+  llvm-project. The null `Spec` returned by `InstantiateFunctionDeclaration`
+  (SFINAE-context failure) was dereferenced in
+  `MetaActionsImpl::Substitute(FunctionTemplateDecl*…)`; the alias path leaked
+  a hard error out of `CheckTemplateIdType`; the var path tripped the
+  post-`Substitute` assert. Fix: the `MetaActions::Substitute` overloads gain a
+  `SuppressDiagnostics` flag + null-on-failure contract, and the `substitute`
+  metafunction maps null to `can_substitute == false` (NoDiagnose) or a new
+  `metafn_substitution_failed` note. Regression tests
+  `can-substitute-invalid-type-formation.pass.cpp` + a diagnosing case in
+  `substitute.verify.cpp`. Upstream: `repros/TC-0006/UPSTREAM.md`.
 - **Track:** toolchain (clang-p2996, pinned by this repo; same family as the
   bloomberg fork base `837da39eb88c`)
 - **Found via:** `corpus/runs/expected` (TartanLlama/expected v1.3.1). Putting
@@ -71,7 +79,10 @@ Notes from minimization:
 
 ## Impact on the corpus
 
-`corpus/runs/expected` drops `^^tl::expected<void, std::string>` from its bind
-set (recorded in `skipped_features`); `expected<void, E>` is unreachable for the
-binder until this (and TC-0007) land. Any library with `enable_if`-constrained
-member templates over a possibly-void parameter has the same exposure.
+`corpus/runs/expected` originally dropped `^^tl::expected<void, std::string>`
+from its bind set over this (and TC-0007). With both fixed, the void spec is
+back in the pack and the run is at outcome E: the binder's
+`can_substitute({})` probes on `swap<OT=void>`/`value<U=void>` now report
+not-substitutable and the members are gracefully skipped — exactly the
+SFINAE contract. Any library with `enable_if`-constrained member templates
+over a possibly-void parameter had the same exposure.

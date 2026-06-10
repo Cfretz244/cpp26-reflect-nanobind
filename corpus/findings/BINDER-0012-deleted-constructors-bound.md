@@ -1,7 +1,16 @@
 # BINDER-0012 — deleted constructors are bound; any class with one is a TU-wide hard error
 
-- **Status:** DRAFT / open (found by the corpus, not yet fixed — per the run-agent
-  guardrails the binder was not touched)
+- **Status:** FIXED (binder) — `is_deleted` filters added on every binding and
+  signature-scanning path: constructors, methods/operators/conversions,
+  member-template default instantiations (queried on the substituted SPEC —
+  `is_deleted` silently answers false on a Template reflection), entity
+  proxies (queried on the UNDERLYING function), base flattening, free
+  functions, free operators, properties, the widest-integral-conversion
+  contest, and the caster-matrix / user-spec discovery walks (BINDER-0011
+  contract). A class with only deleted ctors binds with no `__init__` →
+  Python `TypeError`. Regression test `test39_deleted_functions_not_bound`;
+  `corpus/runs/expected` validates the field shape (deleted-ctor TypeError
+  differential) at outcome E.
 - **Found via:** `corpus/runs/expected` (Tier 3, TartanLlama/expected v1.3.1).
   `tl::unexpected<E>` declares `unexpected() = delete;`; binding any
   `tl::unexpected<E>` spec — or any `tl::expected<T,E>` spec, which makes

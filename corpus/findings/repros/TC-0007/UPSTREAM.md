@@ -1,52 +1,48 @@
-# DRAFT — not yet filed (bloomberg/clang-p2996)
+# READY TO FILE — bloomberg/clang-p2996 issue + PR (prepared 2026-06-10)
 
-Candidate issue title:
-**`members_of` instantiates member function definitions when it triggers the
-class template specialization's instantiation — valid types with
-lazily-ill-formed member bodies are wrong-rejected (order-dependent)**
+Everything verified; filing was blocked by the session's permission layer, not by
+verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.md`
+(replace `#ISSUE_TC7` with the filed issue number).
 
-## Summary
+- **Issue title:** `` `members_of` instantiates member function definitions when it triggers the class template specialization's instantiation — valid types with lazily-ill-formed member bodies are wrong-rejected (order-dependent) ``
+- **PR title:** `[clang][reflection] Complete reflected specializations with implicit-instantiation semantics`
+- **Branch:** `reflect-implicit-instantiation-completion` — a local branch of the
+  `llvm-project/` submodule: the reflection-p2996 fix commit (`b5836f1550dc`)
+  cherry-picked onto bloomberg `p2996` tip `837da39eb88c`, message reworded to upstream
+  style. **Verified standalone**: built Release+assertions on that base; the new
+  regression test and `repro.cpp` (both orderings) pass with the branch compiler.
 
-When a `std::meta::members_of` call is the first thing to instantiate a class
-template specialization, the members' *definitions* are instantiated — not just
-the declarations the enumeration needs. A specialization whose member bodies
-are ill-formed-unless-used (the "specialized storage base" idiom: a body
-referencing `this->m_val` where the `void` storage specialization has no
-`m_val`) is a perfectly valid type in ordinary C++ but hard-errors under
-enumeration.
+## Filing commands (from the umbrella root)
 
-The behavior is order-dependent, which is the smoking gun: adding one ordinary
-use (`Exp<void> ok_instance;`) before the identical `members_of` loop makes the
-program compile — normal lazy completion happened first, and enumerating an
-already-instantiated class does not re-instantiate bodies. Reflection appears
-to complete the class with explicit-instantiation-definition-like eagerness
-instead of plain implicit instantiation.
-
-## Repro
-
-`repro.cpp` in this directory; `-fsyntax-only` suffices:
-
-```
-clang++ -std=c++26 -freflection-latest -stdlib=libc++ -fsyntax-only repro.cpp                    # error (the bug)
-clang++ -std=c++26 -freflection-latest -stdlib=libc++ -fsyntax-only -DPREINSTANTIATE repro.cpp   # clean (control)
+```bash
+git -C llvm-project push origin reflect-implicit-instantiation-completion
+gh issue create -R bloomberg/clang-p2996 \
+  --title '`members_of` instantiates member function definitions when it triggers the class template specialization'"'"'s instantiation — valid types with lazily-ill-formed member bodies are wrong-rejected (order-dependent)' \
+  --body-file corpus/findings/repros/TC-0007/upstream-issue.md
+# note the issue number N, then:
+sed -i '' 's/#ISSUE_TC7/#N/g' corpus/findings/repros/TC-0007/upstream-pr.md
+gh pr create -R bloomberg/clang-p2996 --base p2996 \
+  --head Cfretz244:reflect-implicit-instantiation-completion \
+  --title '[clang][reflection] Complete reflected specializations with implicit-instantiation semantics' \
+  --body-file corpus/findings/repros/TC-0007/upstream-pr.md
 ```
 
-Default build, actual:
+## Validation evidence behind the filing (all on this laptop)
 
-```
-error: no member named 'm_val' in 'Exp<void>'
-note: in instantiation of member function 'Exp<void>::valptr' requested here
-  (from <meta>'s member-range iterator m_next)
-```
-
-## Field shape
-
-`tl::expected<void, std::string>` (TartanLlama/expected v1.3.1, ships
-`expected<void, E>` since 2017): a bare
-`members_of(^^tl::expected<void, std::string>, access_context::unchecked())`
-loop produces 9 hard errors out of tl's private `valptr` /
-`swap_where_both_have_value` / `swap_where_only_one_has_value_and_t_is_not_void`
-helpers — all valid-for-every-`T`-except-`void` bodies that ordinary use never
-instantiates for `void`. Pre-instantiating the spec dodges this finding but not
-the companion `can_substitute` SEGV (TC-0006 in this corpus), which hits the
-same type's `swap` member template.
+- `repro.cpp` here: `error: no member named 'm_val' in 'Exp<void>'` (from inside the
+  `members_of` iteration) at base; clean with `-DPREINSTANTIATE` at base (the
+  order-dependence smoking gun). With the fix: clean in BOTH orderings.
+- New regression test `members-of-lazily-ill-formed-bodies.pass.cpp`: five distinct
+  templates so each completing metafunction (`members_of`,
+  `nonstatic_data_members_of`, `bases_of`, `is_complete_type`, `size_of`) is the FIRST
+  instantiation trigger; passes with the fix.
+- Body-needing consumers spot-checked green with the fix: `reflect-invoke.pass.cpp`,
+  `to-and-from-values.pass.cpp`, `consteval-reentrant-instantiation.pass.cpp`,
+  `members-and-subobjects.pass.cpp`.
+- PR-branch compiler (fix on plain `837da39eb88c`): repro + test pass standalone.
+- `clang/test/Reflection` via `LIT_FILTER=Reflection check-clang`: 16/16 with the fix;
+  the three machine-local pre-existing .pass.cpp failures fail identically at pristine
+  base (audited via a stash-and-rebuild baseline) — no new failures.
+- Full local toolchain: binder suite 53/53; `corpus/runs/expected` at outcome E with
+  `tl::expected<void, std::string>` in the bind set (this bug produced nine hard errors
+  on bare enumeration of that spec and was why it had been dropped).

@@ -1,43 +1,53 @@
-# DRAFT — not yet filed (bloomberg/clang-p2996)
+# READY TO FILE — bloomberg/clang-p2996 issue + PR (prepared 2026-06-10)
 
-Candidate issue title:
-**Itanium mangler ICE ("Can't mangle a deduction guide name!") mangling a
-reflection of a deduction guide as a template argument /
-`define_static_array` element**
+Everything verified; filing was blocked by the session's permission layer, not by
+verification. Full issue body: `upstream-issue.md`; full PR body: `upstream-pr.md`
+(replace `#ISSUE_TC8` with the filed issue number).
 
-## Summary
+- **Issue title:** `Itanium mangler ICE ("Can't mangle a deduction guide name!") mangling a reflection of a deduction guide as a template argument / define_static_array element`
+- **PR title:** `[clang][reflection] Mangle deduction-guide reflections instead of hitting unreachable`
+- **Branch:** `reflect-deduction-guide-mangling` — a local branch of the `llvm-project/`
+  submodule, **stacked on PR #287's branch** (`reflect-fn-template-nttp-mangling` —
+  this change extends the same `mangleReflection` hash block and reuses its ODR-hash
+  convention/include): the reflection-p2996 fix commit (`3cc8232b2e07`) cherry-picked on
+  top, message reworded, internal finding references scrubbed. **Verified standalone**:
+  built Release+assertions; the new regression test, `repro.cpp` (full matrix), and
+  #287's own test pass with the branch compiler.
+- The binder side also gained a belt-and-suspenders guide filter
+  (`namespace_members_for_binding` in nb_reflect.h) so it works on unpatched
+  toolchains; the compiler fix is required regardless (no silent ICEs).
 
-A deduction guide is an enumerable namespace member under `members_of`. When a
-reflection of one ends up in mangled-name position — e.g. as an element of a
-`std::define_static_array(members_of(^^ns, ...))` backing array, whose
-`FixedArray` specialization mangles each element reflection via
-`CXXNameMangler::mangleReflection` — the mangler encodes the reflected
-template by NAME (`mangleTemplateName` → `mangleUnqualifiedName`), and
-`CXXDeductionGuideNameKind` hits the `llvm_unreachable` at
-`clang/lib/AST/ItaniumMangle.cpp:1774`.
+## Filing commands (from the umbrella root)
 
-Front-end handling is fine (`-fsyntax-only` clean); only codegen/mangling
-crashes. Same component as the (fixed) TC-0004 issue — `mangleReflection` on
-`ReflectionKind::Template` — but a different declaration-name kind: TC-0004
-covered same-named function templates folding, this is a name kind
-`mangleUnqualifiedName` cannot encode at all.
-
-## Repro
-
-`repro.cpp` in this directory:
-
+```bash
+git -C llvm-project push origin reflect-deduction-guide-mangling
+gh issue create -R bloomberg/clang-p2996 \
+  --title 'Itanium mangler ICE ("Can'"'"'t mangle a deduction guide name!") mangling a reflection of a deduction guide as a template argument / define_static_array element' \
+  --body-file corpus/findings/repros/TC-0008/upstream-issue.md
+# note the issue number N, then:
+sed -i '' 's/#ISSUE_TC8/#N/g' corpus/findings/repros/TC-0008/upstream-pr.md
+gh pr create -R bloomberg/clang-p2996 --base p2996 \
+  --head Cfretz244:reflect-deduction-guide-mangling \
+  --title '[clang][reflection] Mangle deduction-guide reflections instead of hitting unreachable' \
+  --body-file corpus/findings/repros/TC-0008/upstream-pr.md
+# after filing, also fix the #PR_TC8 placeholder in TC-0009's PR body:
+#   sed -i '' 's/#PR_TC8/#<this PR number>/g' corpus/findings/repros/TC-0009/upstream-pr.md
 ```
-clang++ -std=c++26 -freflection-latest -stdlib=libc++ -DGUIDE -c repro.cpp        # ICE
-clang++ -std=c++26 -freflection-latest -stdlib=libc++ -c repro.cpp                # clean (no guide)
-clang++ -std=c++26 -freflection-latest -stdlib=libc++ -DGUIDE -fsyntax-only ...   # clean (mangler-only)
-```
 
-## Field shape
+## Validation evidence behind the filing (all on this laptop)
 
-TartanLlama/expected declares `template <class E> unexpected(E) ->
-unexpected<E>;` at namespace scope. A reflection-driven binding generator that
-walks `members_of(^^tl, ...)` through `define_static_array` (nanobind's
-reflection binder does, for free-operator discovery) ICEs while binding ANY
-class in that namespace. Possible fixes: mangle the guide via its deduced
-template (`a`-tag + the template it guides, kind-aware like the TC-0004 fix),
-or at minimum a proper diagnostic instead of `llvm_unreachable`.
+- `repro.cpp` here, full matrix: `-DGUIDE -c` ICE'd at base
+  (`Can't mangle a deduction guide name!`, ItaniumMangle.cpp:1774; exit 134) and is
+  clean with the fix; no-guide `-c` control clean both ways; `-DGUIDE -fsyntax-only`
+  clean both ways (front-end fine — it is the mangler).
+- Enumeration reality check that shaped the fix: `members_of` over the repro namespace
+  yields FOUR guides (2 explicit + Sema's implicit per-constructor and copy guides),
+  with the implicit per-constructor guide structurally identical to explicit guide #1 —
+  a plain structural hash folds them; `isImplicit()` + deduction-candidate kind in the
+  hash keeps all four pairwise distinct (asserted at runtime in the new test).
+- New regression test `deduction-guide-reflection-mangling.pass.cpp`: passes with the
+  fix; #287's `substitute-nested-dependent.pass.cpp` still passes on the stack.
+- `clang/test/Reflection` via `LIT_FILTER=Reflection check-clang`: 16/16 with the fix.
+- Full local toolchain: binder suite 53/53 (including a namespace-scope guide planted in
+  the test namespace); `corpus/runs/expected` — whose RECORDED Gate-4 failure this was
+  (binding ANY tl class died at codegen) — at outcome E, 16/16 differential tests.

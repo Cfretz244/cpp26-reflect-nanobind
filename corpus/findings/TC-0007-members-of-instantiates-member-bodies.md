@@ -1,8 +1,16 @@
 # TC-0007 — members_of instantiates member function bodies when it triggers the class's instantiation
 
-- **Status:** DRAFT — minimized + repro'd; not yet root-caused in the compiler or
-  upstreamed (found during the first unaided corpus run; per the run-agent
-  guardrails the toolchain was not touched)
+- **Status:** FIXED (toolchain) — root-caused and fixed in the pinned
+  llvm-project. `SemaMetaActions::EnsureInstantiated` — the single completion
+  funnel for every type-completing metafunction — completed specializations
+  with `TSK_ExplicitInstantiationDefinition` PLUS
+  `InstantiateClassTemplateSpecializationMembers` (every member body,
+  explicit-instantiation-definition semantics). Fix mirrors
+  `Sema::RequireCompleteTypeImpl`: `TSK_ImplicitInstantiation`, no member
+  sweep, plus the member-class-of-a-template branch the sweep used to cover
+  as a side effect. Regression test
+  `members-of-lazily-ill-formed-bodies.pass.cpp`. Upstream:
+  `repros/TC-0007/UPSTREAM.md`.
 - **Track:** toolchain (clang-p2996, pinned by this repo; same family as the
   bloomberg fork base `837da39eb88c`)
 - **Found via:** `corpus/runs/expected` (TartanLlama/expected v1.3.1). A bare

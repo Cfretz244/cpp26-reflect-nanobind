@@ -1,20 +1,19 @@
 """Differential test for the tl::expected binding (Layer-1 + Layer-3).
 
-Two real expected<T,E> specializations (int/std::string and the role-swapped
-std::string/int) are bound head-on; unexpected<str>/<int> and
-bad_expected_access<str> directly; extest supplies factories (the converting
-ctors are templates) and thin wrappers over the all-template operator== /
-value_or / monadic fronts. oracle_native.cpp drives the IDENTICAL scenarios
-natively and emits every observable; the assertions here compare the bound
-module against that ground truth, plus Layer-3 structure (spec naming, the
-real C++ throw path surfacing as RuntimeError, deleted-ctor TypeError).
+Three real expected<T,E> specializations (int/std::string, the role-swapped
+std::string/int, and the no-value void/std::string) are bound head-on;
+unexpected<str>/<int> and bad_expected_access<str> directly; extest supplies
+factories (the converting ctors are templates) and thin wrappers over the
+all-template operator== / value_or / monadic fronts. oracle_native.cpp drives
+the IDENTICAL scenarios natively and emits every observable; the assertions
+here compare the bound module against that ground truth, plus Layer-3
+structure (spec naming, the real C++ throw path surfacing as RuntimeError,
+deleted-ctor TypeError).
 
-NOTE: at the pinned toolchain+binder this module does not compile (outcome B):
-the recorded failure is TC-0008 (Itanium-mangler ICE on tl's namespace-scope
-deduction guide, hit by the binder's free-operator namespace walk), with
-BINDER-0012 (deleted default ctor of tl::unexpected<E> bound unconditionally)
-right behind it at -fsyntax-only. The suite is written for the intended
-surface so the run re-runs green once those land.
+This surface formerly sat at outcome B behind TC-0008 + BINDER-0012, with the
+void spec dropped for TC-0006/TC-0007 and value() silently unbound by TC-0009
+(found by this run's first post-fix execution); all five are fixed and the
+run is green end-to-end.
 """
 import json as _json
 import pathlib
@@ -32,6 +31,7 @@ E = _json.loads(_E.read_text())
 # renders as String.
 ExpInt = m.expectedIntString          # tl::expected<int, std::string>
 ExpStr = m.expectedStringInt          # tl::expected<std::string, int>
+ExpVoid = m.expectedVoidString        # tl::expected<void, std::string>
 UnexpStr = m.unexpectedString         # tl::unexpected<std::string>
 UnexpInt = m.unexpectedInt            # tl::unexpected<int>
 BadAccess = m.bad_expected_accessString
@@ -131,6 +131,23 @@ def test_bad_expected_access_differential():
     assert bea.what() == E["bea_what"]
 
 
+def test_void_spec_differential():
+    # expected<void, std::string>: the no-value success channel. Reflecting
+    # this spec used to wrong-reject (TC-0007) and SEGV the compiler (TC-0006).
+    vd = ExpVoid()
+    assert vd.has_value() == E["void_def_has"]
+    assert bool(vd) == E["void_def_bool"]
+    vok = m.ok_void()
+    assert vok.has_value() == E["void_ok_has"]
+    verr = m.err_void("void failed")
+    assert verr.has_value() == E["void_err_has"]
+    assert bool(verr) == E["void_err_bool"]
+    assert verr.error() == E["void_err_error"]
+    vcopy = ExpVoid(verr)
+    assert vcopy.has_value() == E["void_copy_has"]
+    assert vcopy.error() == E["void_copy_error"]
+
+
 # --- Layer 3: invariants ---
 
 def test_factories_return_bound_spec_types():
@@ -161,3 +178,15 @@ def test_unbindable_surface_absent():
     # Member templates with non-defaulted parameters must NOT appear.
     for meth in ("value_or", "and_then", "map", "transform", "or_else", "emplace"):
         assert not hasattr(ExpInt, meth), meth
+
+
+def test_void_spec_surface():
+    # value<U=T>() and swap<OT=T,...>() are enable_if'd away for T=void: with
+    # TC-0006 fixed, can_substitute reports not-substitutable (instead of
+    # crashing) and the binder skips them -- they must be absent, while the
+    # void-valid surface is present.
+    for meth in ("has_value", "error"):
+        assert hasattr(ExpVoid, meth), meth
+    assert hasattr(ExpVoid, "__bool__")
+    for meth in ("value", "swap"):
+        assert not hasattr(ExpVoid, meth), meth

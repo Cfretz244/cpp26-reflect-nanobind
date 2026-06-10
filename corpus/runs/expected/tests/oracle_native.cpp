@@ -111,6 +111,21 @@ int main() {
     add_s("bea_error", bea.error());
     add_s("bea_what", bea.what());
 
+    // --- expected<void, std::string>: the no-value success channel ---
+    using EV = tl::expected<void, std::string>;
+    EV vd;
+    add_b("void_def_has", vd.has_value());
+    add_b("void_def_bool", static_cast<bool>(vd));
+    EV vok = extest::ok_void();
+    add_b("void_ok_has", vok.has_value());
+    EV verr = extest::err_void("void failed");
+    add_b("void_err_has", verr.has_value());
+    add_b("void_err_bool", static_cast<bool>(verr));
+    add_s("void_err_error", verr.error());
+    EV vcopy(verr);
+    add_b("void_copy_has", vcopy.has_value());
+    add_s("void_copy_error", vcopy.error());
+
     std::cout << "{";
     for (size_t i = 0; i < kv.size(); ++i) {
         if (i) std::cout << ",";

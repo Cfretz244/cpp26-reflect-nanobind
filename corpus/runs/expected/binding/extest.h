@@ -32,11 +32,16 @@ inline tl::expected<std::string, int> err_str(int code) {
     return tl::make_unexpected(code);
 }
 
-// NOTE deliberately absent: expected<void, std::string> factories. Reflecting that
-// spec is blocked by two toolchain bugs (TC-0007: members_of instantiates member
-// bodies, wrong-rejecting the valid void spec; TC-0006: can_substitute on its
-// swap<OT=void,...> member template SEGVs the compiler), and a factory return type
-// here would drag the spec into the binder's signature-reachability discovery.
+// --- expected<void, E>: the no-value success channel (TC-0006/TC-0007 field
+// validation: reflecting this spec used to wrong-reject -- members_of
+// instantiated the lazily-ill-formed member bodies -- and SEGV the compiler --
+// can_substitute on swap<OT=void>; both toolchain bugs are fixed, and the
+// swap/value member templates now gracefully report not-substitutable-for-void
+// instead). The converting ctors are templates as usual, so factories: ---
+inline tl::expected<void, std::string> ok_void() { return {}; }
+inline tl::expected<void, std::string> err_void(std::string_view msg) {
+    return tl::make_unexpected(std::string(msg));
+}
 
 // --- the real unexpected->expected converting ctor, driven natively ---
 inline tl::expected<int, std::string>

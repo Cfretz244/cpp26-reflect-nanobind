@@ -1,8 +1,17 @@
 # TC-0008 — mangling a deduction-guide reflection ICEs: "Can't mangle a deduction guide name!"
 
-- **Status:** DRAFT — minimized + repro'd; not yet root-caused beyond the mangler
-  frame or upstreamed (found during the first unaided corpus run; per the
-  run-agent guardrails the toolchain was not touched)
+- **Status:** FIXED (toolchain + binder belt-and-suspenders) — fixed in the
+  pinned llvm-project: `mangleReflection`'s Template case now encodes a guide
+  as `"dg"` + the deduced template's name + the TC-0004 `'$'`-bracketed ODR
+  hash, with `isImplicit()` + the deduction-candidate kind folded in (Sema's
+  implicit per-constructor guide is structurally identical to a
+  same-signature explicit guide, and implicit guides enumerate alongside
+  explicit ones once CTAD is used). Regression test
+  `deduction-guide-reflection-mangling.pass.cpp`. The binder ALSO strips
+  guides from its namespace walks before the `define_static_array` lift
+  (`namespace_members_for_binding` in nb_reflect.h — a guide is never
+  bindable), so it works on unpatched toolchains too. Upstream:
+  `repros/TC-0008/UPSTREAM.md`.
 - **Track:** toolchain (clang-p2996, pinned by this repo), Itanium mangler —
   same component family as TC-0004 (`mangleReflection`), different
   declaration-name kind
