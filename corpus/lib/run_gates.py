@@ -89,14 +89,20 @@ def main(run_dir):
     # throw_delegate.cc): paths relative to the run dir, compiled and linked into the
     # module by build_module.sh via the NB_EXTRA_SOURCES env. Recorded in meta.toml.
     extra_sources = [str((run / s).resolve()) for s in meta.get("extra_sources", [])]
-    # Non-header-only via a prebuilt static lib: `link_abseil = true` links the merged Abseil
-    # archive (built by corpus/lib/build_abseil.sh) into both the module and the native oracle.
+    # Non-header-only via a prebuilt static lib. Two forms:
+    #   - generic: `extra_libs = "-L {repo}/build/<slug>-install/lib -l<slug>_merged"`
+    #     (archive built by corpus/lib/build_cmake_lib.sh; `{repo}` expands to the
+    #     repo root so the committed meta stays machine-portable);
+    #   - legacy: `link_abseil = true` links the merged Abseil archive
+    #     (corpus/lib/build_abseil.sh).
+    # Either way the flags apply to BOTH the module link and the native oracle.
     abseil_prefix = os.environ.get("NB_ABSEIL_PREFIX", str(REPO / "build" / "abseil-install"))
-    extra_libs = ""
+    extra_libs = meta.get("extra_libs", "").replace("{repo}", str(REPO))
     if meta.get("link_abseil", False):
         # CoreFoundation: absl's cctz time-zone lookup (transitively in the merged archive)
         # references it on macOS.
-        extra_libs = f"-L {abseil_prefix}/lib -labsl_merged -framework CoreFoundation"
+        extra_libs = (extra_libs + " " if extra_libs else "") + \
+            f"-L {abseil_prefix}/lib -labsl_merged -framework CoreFoundation"
     mod = meta["module_name"]
     strategy = meta.get("strategy", "single_stage")
 

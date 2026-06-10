@@ -333,6 +333,83 @@ status       = "done"          # outcome E: ConcurrentQueue<int>/<string> head-o
                               # (static-const address ODR-use at link; fixed -- its exclude_
                               # workaround is now removable as a residual).
 
+# --- Phase 3 wave 2: compiled / stateful / virtual-heavy tier (8 agents, parallel) ---
+# Compiled libs use the generic prebuilt-archive path: corpus/lib/build_cmake_lib.sh
+# builds lib<slug>_merged.a under build/<slug>-install/; meta `extra_libs` links it
+# into both the module and the native oracle ({repo} expands to the repo root).
+
+[[repo]]
+slug         = "yamlcpp"
+tier         = 3
+header_only  = false
+url          = "https://github.com/jbeder/yaml-cpp"
+pin          = "yaml-cpp-0.9.0"
+include_root = "../../libs/yamlcpp/include"
+status       = "pending"
+
+[[repo]]
+slug         = "simdjson"
+tier         = 3
+header_only  = false
+url          = "https://github.com/simdjson/simdjson"
+pin          = "v4.6.4"
+include_root = "../../libs/simdjson/singleheader"
+status       = "pending"          # amalgamated simdjson.cpp via extra_sources
+
+[[repo]]
+slug         = "httplib"
+tier         = 4
+header_only  = true
+url          = "https://github.com/yhirose/cpp-httplib"
+pin          = "v0.47.0"
+include_root = "../../libs/httplib"
+status       = "pending"
+
+[[repo]]
+slug         = "leveldb"
+tier         = 4
+header_only  = false
+url          = "https://github.com/google/leveldb"
+pin          = "1.23"
+include_root = "../../libs/leveldb/include"
+status       = "pending"
+
+[[repo]]
+slug         = "sqlitecpp"
+tier         = 4
+header_only  = false
+url          = "https://github.com/SRombauts/SQLiteCpp"
+pin          = "3.3.3"
+include_root = "../../libs/sqlitecpp/include"
+status       = "pending"          # bundled sqlite3 inside the merged archive
+
+[[repo]]
+slug         = "taskflow"
+tier         = 4
+header_only  = true
+url          = "https://github.com/taskflow/taskflow"
+pin          = "v4.0.0"
+include_root = "../../libs/taskflow"
+status       = "pending"
+
+[[repo]]
+slug         = "box2d"
+tier         = 4
+header_only  = false
+url          = "https://github.com/erincatto/box2d"
+pin          = "v2.4.2"
+include_root = "../../libs/box2d/include"
+status       = "pending"          # v2.4.x deliberately: v3 is a C API, out of scope
+
+[[repo]]
+slug         = "immer"
+tier         = 4
+header_only  = true
+url          = "https://github.com/arximboldi/immer"
+pin          = "v0.9.1"
+include_root = "../../libs/immer"
+status       = "pending"
+
 # --- ramp backlog (not yet scaffolded) ---
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
 # or [[=reflect::skip]]); container iteration -> future __iter__/make_iterator feature.

@@ -55,3 +55,27 @@
 [submodule "corpus/libs/concurrentqueue"]
 	path = corpus/libs/concurrentqueue
 	url = https://github.com/cameron314/concurrentqueue
+[submodule "corpus/libs/yamlcpp"]
+	path = corpus/libs/yamlcpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "corpus/libs/simdjson"]
+	path = corpus/libs/simdjson
+	url = https://github.com/simdjson/simdjson
+[submodule "corpus/libs/httplib"]
+	path = corpus/libs/httplib
+	url = https://github.com/yhirose/cpp-httplib
+[submodule "corpus/libs/leveldb"]
+	path = corpus/libs/leveldb
+	url = https://github.com/google/leveldb
+[submodule "corpus/libs/sqlitecpp"]
+	path = corpus/libs/sqlitecpp
+	url = https://github.com/SRombauts/SQLiteCpp
+[submodule "corpus/libs/taskflow"]
+	path = corpus/libs/taskflow
+	url = https://github.com/taskflow/taskflow
+[submodule "corpus/libs/box2d"]
+	path = corpus/libs/box2d
+	url = https://github.com/erincatto/box2d
+[submodule "corpus/libs/immer"]
+	path = corpus/libs/immer
+	url = https://github.com/arximboldi/immer
