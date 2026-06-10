@@ -141,6 +141,19 @@ pick them up:
   `llvm-project/libcxx/test/std/experimental/reflection/entity-proxy-member-queries.pass.cpp`.
   Upstreamed as bloomberg/clang-p2996 issue #290 / PR #291. (Rebuild:
   `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
+- **TC-0005 — function-type metafunctions blind to AttributedType sugar**
+  (`clang/lib/AST/ExprConstantMeta.cpp`; promoted from TC-0003's addendum, which had
+  mis-attributed it to entity proxies). `[[clang::lifetimebound]]` on a method (Abseil's
+  `ABSL_ATTRIBUTE_LIFETIME_BOUND` on every accessor, e.g. all four
+  `StatusOr<int>::value()` overloads) wraps its `FunctionProtoType` in `AttributedType`
+  sugar; seven sugar-blind `dyn_cast<FunctionProtoType>` sites made
+  `is_const`/`is_volatile`/`is_lvalue_reference_qualified`/`is_rvalue_reference_qualified`
+  silently answer false and made `return_type_of`/`parameters_of`/`has_ellipsis_parameter`
+  reject the function's type outright. All now desugar via `getAs<FunctionProtoType>`
+  (as `is_noexcept` always did). Repro: `corpus/findings/repros/TC-0005/`; regression
+  test `llvm-project/libcxx/test/.../attributed-function-type-queries.pass.cpp`.
+  Upstreamed as bloomberg/clang-p2996 issue #292 / PR #293. (Rebuild:
+  `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 - **TC-0004 — same-named function-template reflections as NTTPs mangled identically**
   (`clang/lib/AST/ItaniumMangle.cpp`, `mangleReflection`, `ReflectionKind::Template`). A
   reflected template mangled as its *name only*; function templates overload, so a dispatcher

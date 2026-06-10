@@ -101,8 +101,9 @@ features + four toolchain fixes, taking the corpus to **17 runs, all E**:
   `pair<iterator,bool>` return (no Python representation; population via fixtures).
 - **Toolchain track:** **TC-0003** (entity-proxy metafunction ICEs + proxy-mangling
   defects — fixed locally and **upstreamed** as bloomberg/clang-p2996 #290 / PR #291;
-  qualifier misreport through proxies still open, worked around binder-side;
-  fresh minimization evidence in the finding) and **TC-0004** (**fixed locally** — was
+  its qualifier-misreport addendum was minimized into **TC-0005** — lifetimebound
+  AttributedType sugar, not proxies — fixed + upstreamed as #292 / PR #293) and
+  **TC-0004** (**fixed locally** — was
   recorded as predicate misreports; minimization showed same-named function-template
   reflections as NTTPs mangled identically and codegen folded the dispatch instantiations.
   Mangler fix + standalone repro + regression tests landed; the binder's dispatch-level
@@ -176,7 +177,16 @@ Fixes landed and pinned along the way:
   using-declarator mangles all its shadow proxies identically — not the
   class-template-specialization shape originally blamed). Regression test added
   (`entity-proxy-member-queries.pass.cpp`); the `is_rvalue_reference_qualified`
-  misreport through proxies is still worked around binder-side.
+  misreport through proxies was minimized into **TC-0005** (below) and fixed.
+- **TC-0005** (**fixed locally**; **upstreamed** as bloomberg/clang-p2996 #292 / PR #293;
+  promoted from TC-0003's addendum) function-type metafunctions were blind to
+  AttributedType sugar: `[[clang::lifetimebound]]` methods (Abseil's
+  `ABSL_ATTRIBUTE_LIFETIME_BOUND` accessors) silently reported all qualifiers false
+  and their TYPE was rejected by `return_type_of`/`parameters_of` — proxies were
+  incidental. Seven `dyn_cast<FunctionProtoType>` sites now desugar via `getAs`, as
+  `is_noexcept` always did. Regression test
+  (`attributed-function-type-queries.pass.cpp`); binder workaround comments rewritten
+  (the `sizeof`-gate is the binder-matrix mechanism on every path, nothing to remove).
 - **TC-0004** (**fixed locally**) originally recorded as `substitute()` predicate
   misreports under nested-dependent instantiation (silently dropped
   `raw_hash_map::operator[]`); the standalone repro showed the real mechanism —
@@ -210,8 +220,10 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
-Pending follow-ups (independent of the ramp): **TC-0002, TC-0003, and TC-0004 are
-upstreamed** (bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291 — track to
-merge); minimize and root-cause TC-0003's still-open addendum (proxy qualifier misreport
-on StatusOr; fresh evidence in the finding), file it separately, and remove the binder's
-`reflect_bind_proxy` gate workaround once fixed.
+Pending follow-ups (independent of the ramp): **TC-0002 through TC-0005 are upstreamed**
+(bloomberg/clang-p2996 #286/PR #287, #288/PR #289, #290/PR #291, #292/PR #293 — track to
+merge). TC-0003's addendum is CLOSED: minimization promoted it to **TC-0005** (the
+qualifier misreport was never proxy-specific — `[[clang::lifetimebound]]`'s
+AttributedType sugar blinded a family of `dyn_cast<FunctionProtoType>` sites; fixed +
+filed). The binder's `sizeof`-gate turned out to be its universal binder-matrix
+mechanism, not a bespoke workaround — its stale rationale comments were rewritten.

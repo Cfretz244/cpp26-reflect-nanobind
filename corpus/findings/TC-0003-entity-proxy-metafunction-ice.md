@@ -95,6 +95,17 @@ asked of the shadow declaration, or transparently unwrap).
    function type" (`sizeof` on the undefined primary is a substitution failure),
    which filters volatile/`&&` shapes without trusting the decl predicates.
 
+   **RESOLVED — promoted to [TC-0005](TC-0005-attributed-function-type-predicate-misreport.md)
+   and fixed.** Minimization showed proxies (and instantiated class templates)
+   are incidental: the trigger is `ABSL_ATTRIBUTE_LIFETIME_BOUND` =
+   `[[clang::lifetimebound]]` on the methods, whose `AttributedType` sugar
+   blinded a family of sugar-blind `dyn_cast<FunctionProtoType>` sites
+   (qualifier predicates silently false; `return_type_of`/`parameters_of` on the
+   function's type wrongly rejected). The "plain non-template fixture reports
+   correctly" observation held only because the fixture lacked the attribute.
+   The binder's `sizeof`-gate turned out to be the same mechanism every binding
+   path uses (nothing to remove); its stale workaround comments were rewritten.
+
    *Re-probed during the TC-0004 root-cause (still OPEN, sharper picture now):*
    this is NOT the TC-0004 mangling collapse (the TC-0004 fix is scoped to
    function-template reflections and does not touch this path; the misreport
