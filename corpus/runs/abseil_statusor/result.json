@@ -5,8 +5,8 @@
   "pinned_commit": "20250814.2",
   "tier": 6,
   "header_only": false,
-  "toolchain_commit": "71dd1f5",
-  "binder_commit": "3def4ac",
+  "toolchain_commit": "651ff7a",
+  "binder_commit": "89676a8",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -25,12 +25,12 @@
       "^^absl::StatusCode",
       "^^sotest"
     ],
-    "rationale": "absl::StatusOr<T> bound as three real specializations (int/std::string/double): ok(), status() (returns const Status& so Status+StatusCode are bound in-module), IgnoreError(). All of StatusOr's value/converting CONSTRUCTORS are templates (enable_if'd U&&), which the binder skips by design, so the sotest fixture namespace supplies ok_*/err_* factories (the Duration/Time pattern). FINDING: value()/operator*/operator-> are declared in the PRIVATE base internal_statusor::OperatorBase<T> and re-exported via using-declarations -- invisible to the binder (using-decls are not enumerable members; private bases are correctly not flattened), so value access goes through get_* fixture accessors (which still exercise the real throw-on-error path).",
+    "rationale": "absl::StatusOr<T> bound as three real specializations (int/std::string/double): ok(), status() (returns const Status& so Status+StatusCode are bound in-module), IgnoreError(), and value() -- bound HEAD-ON through its using-redeclaration from the PRIVATE internal_statusor::OperatorBase<T> base via entity-proxy support (BINDER-0009, -fentity-proxy-reflection; found+fixed TC-0003: three toolchain bugs around entity proxies). All of StatusOr's value/converting CONSTRUCTORS are templates (enable_if'd U&&), which the binder skips by design, so the sotest fixture namespace supplies ok_*/err_* factories (the Duration/Time pattern); get_* accessors remain as a differential cross-check channel.",
     "skipped_features": [
-      "value()/operator*/operator-> (using-redeclared from a PRIVATE base; not enumerable -- get_* fixtures instead; candidate binder investigation alongside Wave-2 base flattening)",
+      "operator*/operator-> re-exports (unary deref has no Python dunder; value() is the access path)",
       "value construction/assignment from Python literals (all converting ctors are templates; factories instead)",
-      "value_or/emplace/AssignStatus (member templates, skipped by design)",
-      "rvalue-ref-qualified &&-overloads (skipped by design)"
+      "value_or/emplace/AssignStatus (member templates needing explicit args or packs; Assign* re-exports have template underlyings -- skipped by design)",
+      "rvalue-ref-qualified &&-overloads (filtered via the binder-spec completeness gate; the decl predicate misreports through proxies, see TC-0003 addendum)"
     ]
   },
   "oracle": {
@@ -38,7 +38,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "7 passed in 0.02s"
+    "pytest_summary": "7 passed in 0.01s"
   },
   "failure": {
     "code": null,
@@ -49,8 +49,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.43,
-    "binding_compile_seconds": 9.78
+    "probe_seconds": 1.37,
+    "binding_compile_seconds": 9.51
   },
   "artifacts": {},
   "notes": ""

@@ -52,7 +52,7 @@ A tier is "ramped past" only when **≥1 library in it reaches `E`** (not `E-wea
 | 3 | inheritance; shared_ptr; log-level enums | **spdlog**; (`tl::expected`) | ⏭️ **next** |
 | 4 | virtual override → two-stage codegen | `_fixture_virtual` | ✅ E |
 | 5 | stress ceiling; expression templates | **Eigen** (`Matrix<double,3,3>`); a header-only Boost piece | ⬜ frontier |
-| ★ | **special case — breadth of fully-specialized concrete data structures** | **Abseil** 20250814.2 — themed runs: `containers` (InlinedVector), `numeric` (int128/uint128), `time` (Duration/Time), `status` (Status/StatusCode) | ✅ E ×4 |
+| ★ | **special case — breadth of fully-specialized concrete data structures** | **Abseil** 20250814.2 — themed runs: `containers` (InlinedVector), `numeric` (int128/uint128), `time` (Duration/Time), `status` (Status/StatusCode), `crc` (crc32c_t), `statusor` (StatusOr<T>), `strings` (Cord + StrCat API), `civil_tz` (TimeZone/civil), `hash` (flat/node hash maps+sets), `btree` (btree_map/set) | ✅ E ×10 |
 
 Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (abseil → spdlog → eigen).
 
@@ -76,11 +76,34 @@ Infrastructure + fixes this established:
   module and the native oracle. The earlier per-`.cc` `extra_sources` path remains for tiny closures.
 - Three binder fixes landed (re-pinned `nanobind @ ee245e6`): **BINDER-0006** array data members
   skipped; **BINDER-0007** free `operator<<(ostream&,T)` → `__str__` (genuine shifts still
-  `__lshift__`); non-copy-assignable members → `def_ro`. All 43 reflection tests pass.
-- **Deferred (BINDER-0008):** `flat_hash_map`/`flat_hash_set`/`btree_*` compile+link+import but
-  explode into ~35 `container_internal` types and their query APIs are member-template-only;
-  `FixedArray` hits an Abseil-internal `AsValueType` instantiation. A clean binding needs
-  internal-namespace skipping + member-function-template support.
+  `__lshift__`); non-copy-assignable members → `def_ro`.
+
+**The buildout (second Abseil campaign, June 2026).** Six more themed runs + four binder
+features + four toolchain fixes, taking the corpus to **17 runs, all E**:
+- **Easy wave:** `abseil_crc` (crc32c_t direct + crctest), `abseil_statusor` (StatusOr<int/
+  string/double> specs; found the private-base using-re-export gap → BINDER-0009),
+  `abseil_strings` (Cord head-on + strtest over the variadic StrCat/StrSplit API; found+fixed
+  **BINDER-0010** by-value move-only params), `abseil_civil_tz` (TimeZone + nested CivilInfo +
+  real `civil_time<tag>` internal-namespace specs).
+- **Binder Change 1 — reachability-only discovery + base flattening:** a type binds only when
+  reachable (seed or public-member signature); bases and a spec's own template args never
+  qualify (no name-convention filters, per design decision). Unbound facade chains flatten
+  onto the derived class; an in-set ancestor wires through unbound links as the Python base.
+- **Binder Change 2 — member fn templates + entity proxies:** all-defaulted member templates
+  bind via default instantiation (the heterogeneous-lookup shape); `using Base::f;`
+  re-exports (incl. from PRIVATE bases — StatusOr's `value()`) bind through entity proxies
+  (**requires `-fentity-proxy-reflection`**, not implied by `-freflection-latest`).
+- **Containers head-on (BINDER-0008 closed):** `abseil_hash` (flat_hash_map/set,
+  node_hash_map) and `abseil_btree` (btree_map/set) at E — full query surface
+  (contains/count/find/erase/at/equal_range/lower_bound/`__getitem__`) bound directly, no
+  policy-type explosion. Residuals: `FixedArray` (Abseil-internal `AsValueType` hard error —
+  absl-side), container iteration (future `__iter__`/make_iterator feature), `insert()`'s
+  `pair<iterator,bool>` return (no Python representation; population via fixtures).
+- **Toolchain track:** **TC-0003** (entity-proxy metafunction ICEs + proxy-mangling ICE —
+  fixed locally; qualifier misreport through proxies worked around binder-side) and
+  **TC-0004** (substitute() results misreport predicates under nested-dependent
+  instantiation — the binder hoists substitution to the dispatch level; minimization
+  skeleton recorded for upstreaming).
 
 ## Phasing (and where fan-out begins)
 
@@ -109,11 +132,13 @@ standalone `repro.cpp`, fingerprinted (so N repos hitting one ICE dedup to one
 item), and fixed at the source via the `llvm-project` submodule (re-pinned).
 `corpus/aggregate/toolchain_bugs.md` is the impact-ranked upstreaming queue.
 
-## Status snapshot (as of the Abseil expansion)
+## Status snapshot (as of the Abseil buildout)
 
-11 corpus runs, **all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
-`json`, `_fixture_virtual`, `fmt`, **`abseil_containers`**, **`abseil_numeric`**,
-**`abseil_time`**, **`abseil_status`**. Fixes landed and pinned along the way:
+**17 corpus runs, all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
+`json`, `_fixture_virtual`, `fmt`, and TEN Abseil themed runs — `abseil_containers`,
+`abseil_numeric`, `abseil_time`, `abseil_status`, **`abseil_crc`**, **`abseil_statusor`**,
+**`abseil_strings`**, **`abseil_civil_tz`**, **`abseil_hash`**, **`abseil_btree`**.
+Fixes landed and pinned along the way:
 
 - **BINDER-0001** templated members → skipped · **BINDER-0002** anonymous-union
   members → skipped · **BINDER-0003** spec-name enum NTTP (open, cosmetic; visible on
@@ -124,13 +149,26 @@ item), and fixed at the source via the `llvm-project` submodule (re-pinned).
   **BINDER-0007** (**fixed**, Abseil) free `operator<<(std::ostream&,T)` → Python
   `__str__` (genuine shifts still `__lshift__`) · non-copy-assignable members → `def_ro`
   (move-only `node_handle` no longer breaks `def_rw`). All re-pinned (`nanobind @ ee245e6`).
-- **BINDER-0008** (open, Abseil) hash/btree containers explode into `container_internal`
-  types + member-template-only query APIs; `FixedArray` Abseil-internal `AsValueType`.
+- **BINDER-0008** (**closed**, Abseil buildout) hash/btree containers bound head-on via
+  reachability-only discovery + base flattening (Change 1) and default-instantiation
+  member-fn-template binding (Change 2); `FixedArray` residual is Abseil-side
+  (`AsValueType` zero-length array, retested) · also in the buildout: unary free
+  operators → `__neg__`/`__pos__`/`__invert__` · widest integral conversion wins
+  `__int__` · **BINDER-0009** (**fixed**) `using`-redeclarations (incl. from PRIVATE
+  bases) bind via entity proxies · **BINDER-0010** (**fixed**) by-value move-only
+  params skipped gracefully (Cord::Append(CordBuffer) was a TU-wide hard error).
 - **TC-0001** Apple type-aware-allocation operators missing from from-source
   libc++abi → vendor shim compiled + exported (**fixed**).
 - **TC-0002** clang Sema use-after-free under heavy reflection (the real cause of
   the apparent "raise-the-budget ICE"; originally misdiagnosed as an SLoc ceiling) →
   re-acquire the eval-context record across reentrant consteval (**fixed**).
+- **TC-0003** (**fixed locally**, Abseil buildout) entity-proxy sharp edges: four
+  metafunction ICEs (`is_constructor` et al. on proxies) + the Itanium-mangler ICE on
+  proxy reflections from class-template specializations; the
+  `is_rvalue_reference_qualified` misreport through proxies is worked around binder-side.
+- **TC-0004** (**open**, worked around) `substitute()` results misreport predicates under
+  nested-dependent instantiation (silently dropped `raw_hash_map::operator[]`); binder
+  hoists substitution to the dispatch level; minimization skeleton recorded.
 - **LIB-0001** (new, fmt) fmt's `detail::allocator<T>` calls unqualified global
   `malloc`/`free` without `<cstdlib>`; strict two-phase lookup rejects it. Triage
   `library` (latent fmt bug, not toolchain/binder) → consumer-side `<cstdlib>`-first
@@ -145,10 +183,12 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 
 ## Immediate next steps
 
-1. **Abseil special case** — ✅ four themed runs at E (containers/numeric/time/status) on a
-   prebuilt-absl `link_abseil` path; three binder fixes landed + re-pinned. **Next:** clean
-   hash/btree binding (BINDER-0008) — skip `container_internal` transitive types + add
-   member-function-template support so `flat_hash_map`/`btree_map` query APIs bind.
+1. **Abseil buildout** — ✅ ten themed runs at E; BINDER-0008 closed (reachability
+   discovery + member-fn-template + entity-proxy support landed); four toolchain fixes.
+   **Residuals:** container iteration (`__iter__`/`make_iterator` binder feature — would
+   also make `begin`/`lower_bound`/`Chunks()` surfaces usable), `FixedArray` (absl-side),
+   a friendly-naming pass for spec-derived Python names (BINDER-0003 family;
+   `flat_hash_mapIntStringHashInt`, `civil_timeDay_tag`).
 2. **Enter Phase 2** — dispatch one subagent on `spdlog` (Tier 3: inheritance,
    shared_ptr, log-level enums) end-to-end; if it produces a schema-valid
    `result.json` unaided and its tests genuinely assert behavior, open a small serial
@@ -156,6 +196,7 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
-A pending follow-up (independent of the ramp): minimize **TC-0002** (the Sema UAF) to
-a standalone reproducer with no nanobind/json, for an upstream bloomberg/clang-p2996
-issue.
+Pending follow-ups (independent of the ramp): minimize **TC-0002** (the Sema UAF) and
+**TC-0004** (nested-dependent substitute misreport; skeleton in its finding) to
+standalone reproducers for upstream bloomberg/clang-p2996 issues; upstream the local
+**TC-0003** entity-proxy fixes.

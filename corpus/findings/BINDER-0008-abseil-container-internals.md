@@ -1,6 +1,21 @@
 # BINDER-0008 — Abseil hash/btree containers & FixedArray: internal-type explosion + template-only APIs
 
-- **Status:** OPEN — deferred (the clean container surface needs more than the current binder)
+- **Status:** CLOSED (items 1 + 2; item 3 is an Abseil-side residual). Landed as two binder
+  changes during the Abseil buildout:
+  1. **Reachability-based discovery + base flattening** — a type binds only when reachable
+     (seed or public-member-signature); bases and a spec's own template args never qualify.
+     The ~35-type `container_internal` explosion collapsed to the handful of
+     signature-reachable internals; unbound facade ancestry flattens onto the container.
+  2. **Member function templates via default substitution** — the heterogeneous query APIs
+     (`template <class K = key_type> contains/find/count/erase/at/operator[]`) bind via
+     their default instantiation (with the TC-0004 dispatch-level-substitution workaround).
+  Proof: `corpus/runs/abseil_hash` (flat_hash_map/set, node_hash_map) and
+  `corpus/runs/abseil_btree` (btree_map/set) at outcome **E** with full query-surface
+  differentials incl. `__getitem__`.
+  3. **FixedArray residual (still blocked, retested after both changes):** binding
+     `absl::FixedArray<int>` instantiates the Abseil-internal `AsValueType` helper, which
+     hard-errors (`fixed_array.h:431`: returns `int(*)[0]` where `int*` is expected). An
+     Abseil-side fix or source annotation is required; not a binder issue.
 - **Found via:** the Abseil expansion (`corpus/runs/abseil_containers`); InlinedVector binds
   cleanly and carries the run to E, the hash/btree maps and FixedArray are excluded.
 - **Files:** `nanobind/include/nanobind/nb_reflect.h` (transitive class discovery; member-template

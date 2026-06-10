@@ -52,10 +52,12 @@ two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst`
   anymore. Both `toolchain/` and `toolchain-build/` are git-ignored; rebuild instructions
   are below. (`~/llvm-toolchain` is the same compiler built earlier and may still exist, but
   is no longer required.) Native target AArch64.
-- **Reflection flags**: `-std=c++26 -freflection-latest -stdlib=libc++`, plus (mandatory on
-  macOS) `-isysroot "$(xcrun --show-sdk-path)"`. A from-source clang does not bake in the
-  SDK path. `-freflection-latest` is the umbrella flag enabling P2996 + parameter reflection
-  + expansion statements + annotations (P3394) + the rest.
+- **Reflection flags**: `-std=c++26 -freflection-latest -fentity-proxy-reflection
+  -stdlib=libc++`, plus (mandatory on macOS) `-isysroot "$(xcrun --show-sdk-path)"`. A
+  from-source clang does not bake in the SDK path. `-freflection-latest` is the umbrella flag
+  enabling P2996 + parameter reflection + expansion statements + annotations (P3394) + the
+  rest — but NOT entity-proxy reflection (`using`-shadow enumeration), which the binder
+  requires and must be passed explicitly.
 - **Python**: Homebrew **`python3.12`** (`/opt/homebrew/bin/python3.12`). The system
   `/usr/bin/python3` lacks dev headers — do not use it.
 - **Build state lives inside this repo** (both git-ignored, recreate from scratch any time):
@@ -160,19 +162,25 @@ $TC/bin/clang++ -std=c++26 -freflection-latest -stdlib=libc++ \
 
 Implemented in the binder: classes/ctors/data/static/methods (+ overloads), full
 function-type qualifier matching (`const`/`noexcept`/`&`; skips `volatile`/`&&`/variadic),
-operators→dunders (member + binary free operators, incl. reversed dunders), enums, single +
-multiple inheritance (flattening), virtual overrides (two-tier trampolines), annotation-driven
-control (skip/rename/doc/rv_policy/keep_alive; doc covers classes/enums too),
-keyword-argument names (P3096 → nb::arg, incl. constructors; default-argument *values* are a
-C++26 standard gap, not bindable), STL type-caster coverage (codegen emits the needed
-<nanobind/stl/*.h> includes; header-only path static_asserts the missing one), properties
-(annotated getter/setter pairs → def_prop_rw/ro), and templates (class-template
-*specializations* auto-discovered from signatures to a fixpoint + listed explicitly in the
-`reflect_<...>` pack; CamelCase Python names like `Box<int>`→`BoxInt`; codegen emits trampolines
-for spec'd templates with virtuals; free-function-template specs supported explicitly). Remaining:
-per-arg ownership transfer, member function templates, trampoline hardening. The binder's git
-history on `mk-reflect` has one commit per feature; `nanobind/docs/reflection.rst` is the
-user-facing reference.
+operators→dunders (member + unary/binary free operators, incl. reversed dunders; widest
+integral conversion wins `__int__`), enums, inheritance under the **reachability rule** (a
+base is the real Python base only when independently in the bind set — looked up through
+unbound links; everything else **flattens**, incl. whole internal facade chains), virtual
+overrides (two-tier trampolines), annotation-driven control (skip/rename/doc/rv_policy/
+keep_alive; doc covers classes/enums too), keyword-argument names (P3096 → nb::arg, incl.
+constructors; default-argument *values* are a C++26 standard gap, not bindable), STL
+type-caster coverage (codegen emits the needed <nanobind/stl/*.h> includes; header-only path
+static_asserts the missing one), properties (annotated getter/setter pairs → def_prop_rw/ro),
+templates (class-template *specializations* auto-discovered from public-member signatures to
+a fixpoint — a spec's own template args do NOT qualify — + listed explicitly in the
+`reflect_<...>` pack; CamelCase Python names like `Box<int>`→`BoxInt`), **member function
+templates** with all-defaulted parameters (default instantiation under the template's name —
+hash/btree heterogeneous query APIs incl. `operator[]`→`__getitem__`), and
+**using-redeclarations** via entity proxies (incl. from PRIVATE bases, e.g. StatusOr's
+`value()`; needs `-fentity-proxy-reflection`). Remaining: per-arg ownership transfer,
+container `__iter__`/make_iterator, member templates needing explicit args, trampoline
+hardening, friendly spec naming. The binder's git history on `mk-reflect` has one commit per
+feature; `nanobind/docs/reflection.rst` is the user-facing reference.
 
 ## Gotchas (carried over; see submodule CLAUDE.md files for detail)
 

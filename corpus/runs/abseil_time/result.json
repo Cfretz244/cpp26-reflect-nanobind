@@ -5,8 +5,8 @@
   "pinned_commit": "20250814.2",
   "tier": 6,
   "header_only": false,
-  "toolchain_commit": "71dd1f5",
-  "binder_commit": "3def4ac",
+  "toolchain_commit": "651ff7a",
+  "binder_commit": "89676a8",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -44,8 +44,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.79,
-    "binding_compile_seconds": 2.49
+    "probe_seconds": 0.76,
+    "binding_compile_seconds": 2.4
   },
   "artifacts": {},
   "notes": ""
