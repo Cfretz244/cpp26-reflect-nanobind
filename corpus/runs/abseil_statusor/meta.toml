@@ -8,6 +8,11 @@ include_root = "../../libs/abseil"
 main_headers = ["absl/status/statusor.h"]
 module_name  = "abseil_statusor_ext"
 strategy     = "single_stage"
+
+# Raised for the binder's completeness-aware signature gates (the BINDER-0014
+# bind-time half, landed by the eigen run): is_complete_type probes per
+# signature type pushed the default budget over for StatusOr's surface.
+extra_cflags = ["-fconstexpr-steps=100000000"]
 link_abseil  = true
 
 reflect_args     = ["^^absl::StatusOr<int>", "^^absl::StatusOr<std::string>", "^^absl::StatusOr<double>", "^^absl::Status", "^^absl::StatusCode", "^^sotest"]

@@ -28,3 +28,6 @@
 [submodule "corpus/libs/expected"]
 	path = corpus/libs/expected
 	url = https://github.com/TartanLlama/expected
+[submodule "corpus/libs/eigen"]
+	path = corpus/libs/eigen
+	url = https://gitlab.com/libeigen/eigen

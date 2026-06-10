@@ -20,6 +20,13 @@
 namespace nb = nanobind;
 
 NB_MODULE(spdlog_ext, m) {
+    // stdout_sink_base<console_mutex> (the intermediate of the sink chain) is
+    // listed EXPLICITLY: its only signature self-mentions are its deleted
+    // copy/move operators, and deleted functions pull nothing into the bind
+    // set (BINDER-0012) -- without the explicit opt-in it would flatten
+    // instead of being the real Python base the run's inheritance theme pins.
     nb::reflect_<^^spdlog::logger, ^^spdlog::level, ^^spdlog::pattern_time_type,
-                 ^^spdlog::sinks::sink, ^^spdlog::sinks::stdout_sink_mt, ^^logtest>(m);
+                 ^^spdlog::sinks::sink,
+                 ^^spdlog::sinks::stdout_sink_base<spdlog::details::console_mutex>,
+                 ^^spdlog::sinks::stdout_sink_mt, ^^logtest>(m);
 }

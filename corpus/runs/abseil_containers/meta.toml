@@ -8,6 +8,10 @@ include_root = "../../libs/abseil"
 main_headers = ["absl/container/inlined_vector.h"]
 module_name  = "abseil_ext"
 strategy     = "single_stage"
+
+# Raised for the binder's completeness-aware signature gates (the BINDER-0014
+# bind-time half, landed by the eigen run).
+extra_cflags = ["-fconstexpr-steps=100000000"]
 link_abseil  = true                       # -labsl_merged (+ CoreFoundation) via NB_EXTRA_LIBS
 
 reflect_args     = ["^^absl::InlinedVector<int, 4>", "^^absl::InlinedVector<double, 2>"]

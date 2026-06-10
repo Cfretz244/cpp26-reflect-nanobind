@@ -8,6 +8,10 @@ include_root = "../../libs/abseil"
 main_headers = ["absl/time/civil_time.h", "absl/time/time.h"]
 module_name  = "abseil_civil_tz_ext"
 strategy     = "single_stage"
+
+# Raised for the binder's completeness-aware signature gates (the BINDER-0014
+# bind-time half, landed by the eigen run).
+extra_cflags = ["-fconstexpr-steps=100000000"]
 link_abseil  = true
 
 reflect_args     = ["^^absl::TimeZone", "^^absl::TimeZone::CivilInfo", "^^absl::Time", "^^absl::Duration", "^^absl::CivilSecond", "^^absl::CivilDay", "^^absl::CivilYear", "^^tztest"]

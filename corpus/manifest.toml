@@ -209,15 +209,34 @@ header_only  = true
 url          = "https://github.com/TartanLlama/expected"
 pin          = "v1.3.1"
 include_root = "../../libs/expected/include"
-status       = "pending"      # PHASE 2: first unaided subagent run (corpus/lib/AGENT_PROMPT.md)
-                              # -> outcome B (schema-valid, guardrails held, repros verified):
-                              # TC-0008 deduction-guide-reflection mangler ICE blocks Gate 4;
-                              # behind it BINDER-0012 (deleted ctors bound), TC-0006
-                              # (can_substitute SEGV on void& formation), TC-0007 (members_of
-                              # wrong-instantiates member bodies). Re-run after fixes land;
-                              # differential tests are committed and latent.
+status       = "done"         # outcome E (re-gated by the eigen run's full-corpus sweep after
+                              # TC-0006..0009 landed): all 16 latent differential tests pass.
+                              # History: the PHASE 2 unaided subagent run landed outcome B and
+                              # the four-bug cascade (TC-0008 mangler ICE; behind it
+                              # BINDER-0012, TC-0006, TC-0007); fixes landed, this re-run banks
+                              # the green. (-fconstexpr-steps raised for the BINDER-0014 gates.)
+
+[[repo]]
+slug         = "eigen"
+tier         = 5
+header_only  = true
+url          = "https://gitlab.com/libeigen/eigen"
+pin          = "5.0.1"
+include_root = "../../libs/eigen"
+status       = "done"         # outcome E: Vector3d/Matrix3d (Matrix<double,3,1>/<3,3>) HEAD-ON,
+                              # CRTP facade chains as REAL Python bases (8-deep MRO); the run
+                              # that built nb::exclude_ + completeness gates (BINDER-0014 --
+                              # expression-template discovery diverges, NestByValue/SparseView
+                              # walk/bind hard errors, shape-asserting lazily-ill-formed member
+                              # bodies excluded per-member by reflection). Found+fixed TC-0010
+                              # (re-opened-namespace reflection equality), TC-0011 (namespace
+                              # walk vs out-of-line member defs -- crashed and gutted
+                              # members_of(^^Eigen)), TC-0012 (is_complete_type alias sugar);
+                              # LIB-0002 (DenseBase::trace declared, never defined). eigentest
+                              # fixture supplies eager-value arithmetic (Eigen operators are
+                              # templates returning excluded expression types); L1 differential
+                              # incl. inverse/solve/sym-eigenvalues and byte-for-byte __str__.
 
 # --- ramp backlog (not yet scaffolded) ---
-# [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
 # or [[=reflect::skip]]); container iteration -> future __iter__/make_iterator feature.

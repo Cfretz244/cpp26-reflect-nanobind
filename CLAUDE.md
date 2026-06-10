@@ -215,6 +215,34 @@ pick them up:
   issue #300 / PR #301 (stacked on PR #299). (Rebuild for any of TC-0006..0009:
   `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
 
+- **TC-0010 — reflections of a re-opened namespace compared unequal across redeclarations**
+  (`clang/lib/AST/APValue.cpp`, `profileReflection`). `^^ns` wraps the namespace's first
+  declaration; `parent_of(^^member)` wraps the block that declared the member; the
+  `ReflectionKind::Namespace` case profiled the raw decl pointer (unlike Template, which
+  canonicalizes), so `parent_of(x) == ^^ns` silently answered false for anything declared
+  after the first block. Field shape: Eigen re-opens `Eigen::internal` everywhere, so the
+  binder's namespace-level `nb::exclude_` never matched. Fix profiles the canonical decl
+  (a NamespaceAliasDecl stays distinct from its target). Repro:
+  `corpus/findings/repros/TC-0010/`; regression test
+  `namespace-reflection-equality-reopened.pass.cpp`. Upstream draft prepared.
+- **TC-0011 — namespace members_of derailed by out-of-line member definitions**
+  (`clang/lib/AST/ExprConstantMeta.cpp`, `isReflectableDecl` + `findIterableMember`). A
+  re-opened namespace block BEGINNING with an out-of-line class-member definition (Eigen's
+  EulerAngles.h shape) made the walk yield the dependent definition PATTERN as a "member"
+  (whose reflection crashes display/mangling: `isa<> used on a null pointer`) and then
+  silently DROP every remaining member (69 of 125 Eigen members). Fix: such definitions are
+  rejected (semantic ctx is a CXXRecordDecl, lexical differs) and stepping from one walks
+  the LEXICAL chain. Repro: `corpus/findings/repros/TC-0011/`; regression test
+  `namespace-members-out-of-line-defs.pass.cpp`. Upstream draft prepared.
+- **TC-0012 — is_complete_type blind to alias sugar** (`clang/lib/AST/ExprConstantMeta.cpp`).
+  `findTypeDecl` on a TypedefType returns the alias decl, for which EnsureInstantiated is a
+  no-op, so an instantiable-but-never-instantiated spec named through an alias (spdlog's
+  `stdout_sink_mt`, member typedefs) read as incomplete — order-dependently. Bit the
+  binder's new completeness gates (BINDER-0014). Fix desugars like `members_of` does.
+  Repro: `corpus/findings/repros/TC-0012/`; regression test
+  `is-complete-type-alias-sugar.pass.cpp`. Upstream draft prepared. (Rebuild for any of
+  TC-0010..0012: `ninja -C toolchain-build clang && ninja -C toolchain-build install-clang`.)
+
 ## Build & test the binder (the main loop) — verified from scratch
 
 ```bash
@@ -234,7 +262,7 @@ DYLD_LIBRARY_PATH=$TC/lib PYTHONPATH=$PWD/build/tests \
   .venv/bin/python -m pytest nanobind/tests/test_reflect.py \
   nanobind/tests/test_reflect_codegen.py -W error::RuntimeWarning
 ```
-All 53 reflection tests pass. (`test_reflect_codegen_ext` exercises the two-stage codegen:
+All 54 reflection tests pass. (`test_reflect_codegen_ext` exercises the two-stage codegen:
 CMake builds a generator, runs it to emit a trampoline header, then builds the module that
 includes it.)
 
@@ -272,8 +300,12 @@ hash/btree heterogeneous query APIs incl. `operator[]`→`__getitem__`), and
 `value()`; needs `-fentity-proxy-reflection`), **deleted-function filtering** on every
 binding/scanning path (a class with only deleted ctors binds with no `__init__` → TypeError;
 BINDER-0012), **Python-side copy construction** (`init<const T&>` for copyable non-trampolined
-classes; BINDER-0013), and **deduction-guide stripping** in the namespace walks (guides are
-never bindable and pre-TC-0008 toolchains can't mangle their reflections). Remaining: per-arg
+classes; BINDER-0013), **deduction-guide stripping** in the namespace walks (guides are
+never bindable and pre-TC-0008 toolchains can't mangle their reflections), and **call-site
+exclusions + completeness gates** (BINDER-0014, the eigen run: `nb::exclude_<...>` makes
+templates/types/namespaces/individual members opaque on every path — what tames Eigen's
+divergent expression-template discovery and its lazily-ill-formed shape-asserting member
+bodies; non-completable specs are auto-skipped). Remaining: per-arg
 ownership transfer, container `__iter__`/make_iterator, member templates needing explicit
 args, trampoline hardening, friendly spec naming. The binder's git history on `mk-reflect`
 has one commit per feature; `nanobind/docs/reflection.rst` is the user-facing reference.
