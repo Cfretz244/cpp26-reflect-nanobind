@@ -163,7 +163,9 @@ Fixes landed and pinned along the way:
   libc++abi → vendor shim compiled + exported (**fixed**).
 - **TC-0002** clang Sema use-after-free under heavy reflection (the real cause of
   the apparent "raise-the-budget ICE"; originally misdiagnosed as an SLoc ceiling) →
-  re-acquire the eval-context record across reentrant consteval (**fixed**).
+  re-acquire the eval-context record across reentrant consteval (**fixed**; follow-up
+  audit hardened `CheckLValueToRValueConversionOperand`, added a standalone repro +
+  regression test, and upstreamed it as bloomberg/clang-p2996 #288 / PR #289).
 - **TC-0003** (**fixed locally**, Abseil buildout) entity-proxy sharp edges: four
   metafunction ICEs (`is_constructor` et al. on proxies) + the Itanium-mangler ICE on
   proxy reflections from class-template specializations; the
@@ -201,8 +203,7 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
 3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
-Pending follow-ups (independent of the ramp): minimize **TC-0002** (the Sema UAF) to a
-standalone reproducer for an upstream bloomberg/clang-p2996 issue; **TC-0004 is
-upstreamed** (issue bloomberg/clang-p2996#286, PR #287 — track to merge); upstream the
+Pending follow-ups (independent of the ramp): **TC-0002 and TC-0004 are upstreamed**
+(bloomberg/clang-p2996 #286/PR #287 and #288/PR #289 — track to merge); upstream the
 local **TC-0003** entity-proxy fixes and minimize its still-open addendum (proxy
 qualifier misreport on StatusOr; fresh evidence in the finding).

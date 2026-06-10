@@ -107,7 +107,10 @@ pick them up:
   `HandleImmediateInvocations` / the tail of `PopExpressionEvaluationContext`. Manifested as a
   non-deterministic crash (garbage/ASCII pointer) once `-fconstexpr-steps` was raised enough to
   finish evaluating; **this is why raising the step budget appeared to "ICE" the compiler.** Fix
-  re-acquires the record after reentrant evaluation. (Rebuild: `ninja -C toolchain-build clang`
+  re-acquires the record after reentrant evaluation; a follow-up audit hardened one more
+  same-family site (`CheckLValueToRValueConversionOperand`) and added a standalone repro
+  (`corpus/findings/repros/TC-0002/`) + regression test. Upstreamed as bloomberg/clang-p2996
+  issue #288 / PR #289. (Rebuild: `ninja -C toolchain-build clang`
   then `ninja -C toolchain-build install-clang`.)
 - **TC-0001 — missing Apple type-aware allocation operators in from-source libc++abi**
   (`libcxxabi/src/CMakeLists.txt` + `libcxxabi/lib/new-delete.exp`). Recent clang targeting macOS
