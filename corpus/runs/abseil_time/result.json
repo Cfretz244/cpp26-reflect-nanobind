@@ -6,7 +6,7 @@
   "tier": 6,
   "header_only": false,
   "toolchain_commit": "71dd1f5",
-  "binder_commit": "c1debbd",
+  "binder_commit": "3f5cf77",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {

@@ -40,7 +40,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "9 passed in 0.02s"
+    "pytest_summary": "9 passed in 0.01s"
   },
   "failure": {
     "code": null,
@@ -51,8 +51,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.76,
-    "binding_compile_seconds": 4.4
+    "probe_seconds": 0.79,
+    "binding_compile_seconds": 4.72
   },
   "artifacts": {},
   "notes": ""
