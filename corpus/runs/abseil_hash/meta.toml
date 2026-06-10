@@ -1,0 +1,16 @@
+# Per-run descriptor for Abseil (20250814.2) hash containers. Consumed by run_gates.py.
+slug         = "abseil_hash"
+tier         = 6                          # Abseil special case (themed: hash containers)
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"               # commit 0cf0a5c9
+include_root = "../../libs/abseil"
+main_headers = ["absl/container/flat_hash_map.h", "absl/container/flat_hash_set.h", "absl/container/node_hash_map.h"]
+module_name  = "abseil_hash_ext"
+strategy     = "single_stage"
+link_abseil  = true
+extra_cflags = ["-fconstexpr-steps=1000000000"]   # three-container bind-set fixpoint over the raw_hash_set surface
+
+reflect_args     = ["^^absl::flat_hash_map<int, std::string>", "^^absl::flat_hash_set<int>", "^^absl::node_hash_map<int, std::string>", "^^hmtest"]
+subset_rationale = "The BINDER-0008 payoff: absl::flat_hash_map/flat_hash_set/node_hash_map bound HEAD-ON. Reachability discovery (binder Change 1) keeps the container_internal policy explosion out (no FlatHashMapPolicy/Hash/Eq/Alloc types; only signature-reachable internals like node_handle and the raw_hash_map/raw_hash_set ancestry, which becomes the Python base chain). Default-instantiable member templates (binder Change 2 + the TC-0004 dispatch-level substitution workaround) bind the heterogeneous query surface directly: contains/count/find/erase/at/equal_range and operator[] -> __getitem__ (C++ semantics: default-inserts on miss). size/empty/clear/capacity/bucket_count/load_factor/rehash/reserve bind as plain methods. The hmtest fixture supplies only VALUE-SETTING population (put/add): insert()'s pair<iterator,bool> return has no Python representation (iterators are C++-only), and __getitem__ cannot express assignment."
+skipped_features = ["insert/extract from Python (returns pair<iterator,bool>/node_handle; iterator types have no Python value semantics -- population via hmtest::put/add or d[k] default-insert)", "emplace/try_emplace/insert_or_assign/lazy_emplace (parameter-pack member templates, skipped by design)", "begin/end iteration (iterator-returning; a future __iter__/make_iterator feature)", "btree containers (sibling run abseil_btree)", "FixedArray (still blocked -- internal AsValueType instantiation; see BINDER-0008)"]

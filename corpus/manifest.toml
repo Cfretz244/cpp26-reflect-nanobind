@@ -164,7 +164,31 @@ status       = "done"         # outcome E: CivilDay/Second/Year = real internal-
                               # TimeZone + nested CivilInfo direct (const char* def_ro);
                               # tztest wraps FromCivil/ToCivil*/Format/LoadTimeZone->optional.
 
+[[repo]]
+slug         = "abseil_hash"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: flat_hash_map/set + node_hash_map HEAD-ON (BINDER-0008
+                              # payoff): contains/count/at/erase/__getitem__ via default-instantiable
+                              # member templates; no policy explosion (reachability discovery);
+                              # hmtest put/add for population (pair<iterator,bool> not expressible).
+
+[[repo]]
+slug         = "abseil_btree"
+tier         = 6
+header_only  = false
+url          = "https://github.com/abseil/abseil-cpp"
+pin          = "20250814.2"
+include_root = "../../libs/abseil"
+status       = "done"         # outcome E: btree_map/btree_set head-on (ordered half); query surface
+                              # incl. lower/upper_bound + __getitem__; order differentially observed
+                              # via bttest first_key/first_elem (iteration is a future __iter__).
+
 # --- ramp backlog (not yet scaffolded) ---
 # [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
-# next abseil step: clean hash/btree binding (BINDER-0008: skip container_internal + member-fn templates)
+# abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
+# or [[=reflect::skip]]); container iteration -> future __iter__/make_iterator feature.
