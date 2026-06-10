@@ -1,11 +1,12 @@
 """Differential test for the Abseil StatusOr<T> binding (Layer-1 differential + Layer-3).
 
 Three real specializations (StatusOr<int>/StatusOr<std::string>/StatusOr<double>) bind
-directly: ok(), status() -> bound absl::Status, IgnoreError(). Construction goes through
-the sotest factory fixtures (StatusOr's converting ctors are templates, skipped by
-design), and value access through get_* fixtures (value()/operator* are using-redeclared
-from a PRIVATE base -- invisible to the binder; the fixtures call the real value(), so
-the throw-on-error path is the real one). oracle_native.cpp drives the identical surface.
+directly: ok(), status() -> bound absl::Status, IgnoreError(), and -- since the binder
+gained entity-proxy support (BINDER-0009, -fentity-proxy-reflection) -- value() itself,
+bound through its using-redeclaration from the PRIVATE internal_statusor::OperatorBase
+base. Construction still goes through the sotest factories (StatusOr's converting ctors
+are templates, skipped by design); the get_* fixtures remain as a cross-check channel.
+oracle_native.cpp drives the identical surface.
 """
 import json as _json
 import pathlib
@@ -23,7 +24,8 @@ E = _json.loads(_E.read_text())
 def test_ok_int_differential():
     oi = m.ok_int(42)
     assert oi.ok() == E["oi_ok"]
-    assert m.get_int(oi) == E["oi_value"]
+    assert oi.value() == E["oi_value"]          # bound via entity proxy
+    assert m.get_int(oi) == E["oi_value"]       # fixture channel agrees
     assert oi.status().raw_code() == E["oi_code"]       # kOk == 0
     assert oi.status().code() == m.StatusCode.kOk
 
@@ -39,7 +41,7 @@ def test_err_int_differential():
 def test_string_specialization_differential():
     os_ = m.ok_str("hello statusor")
     assert os_.ok() == E["os_ok"]
-    assert m.get_str(os_) == E["os_value"]
+    assert os_.value() == E["os_value"]
     es = m.err_str(m.StatusCode.kInvalidArgument, "bad string")
     assert es.ok() == E["es_ok"]
     assert es.status().raw_code() == E["es_raw"]
@@ -49,7 +51,7 @@ def test_string_specialization_differential():
 def test_double_specialization_differential():
     od = m.ok_dbl(2.5)
     assert od.ok() == E["od_ok"]
-    assert m.get_dbl(od) == E["od_value"]
+    assert od.value() == E["od_value"]
     ed = m.err_dbl(m.StatusCode.kInternal, "bad double")
     assert ed.ok() == E["ed_ok"]
     assert ed.status().raw_code() == E["ed_raw"]
@@ -65,7 +67,10 @@ def test_default_ctor_is_unknown_error():
 # --- Layer 3: structural invariants ---
 
 def test_value_on_error_raises():
-    # value() on an error StatusOr throws absl::BadStatusOrAccess -> Python exception.
+    # value() on an error StatusOr throws absl::BadStatusOrAccess -> Python exception,
+    # both through the directly bound proxy and the fixture channel.
+    with pytest.raises(Exception):
+        m.err_int(m.StatusCode.kNotFound, "nope").value()
     with pytest.raises(Exception):
         m.get_int(m.err_int(m.StatusCode.kNotFound, "nope"))
 

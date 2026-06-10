@@ -20,7 +20,7 @@ export PYINC="$("$VENV_PY" -c 'import sysconfig; print(sysconfig.get_path("inclu
 export EXT_SUFFIX="$("$VENV_PY" -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))')"
 
 # The mandatory reflection + libc++ flags (see CLAUDE.md). Used by probe, compile, link.
-export REFLECT_FLAGS="-std=c++26 -freflection-latest -stdlib=libc++"
+export REFLECT_FLAGS="-std=c++26 -freflection-latest -fentity-proxy-reflection -stdlib=libc++"
 export ISYSROOT_FLAGS="-isysroot $SDKROOT_PATH"
 
 # Toolchain commit + binder commit, recorded into every result.json for the feedback loop.

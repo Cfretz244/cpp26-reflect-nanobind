@@ -1,7 +1,13 @@
 # BINDER-0009 — using-redeclared base members are invisible without entity-proxy reflection
 
-- **Status:** OPEN — upgrade path identified (`-fentity-proxy-reflection` + proxy resolution
-  in the member walk); planned alongside the Wave-2/3 binder work.
+- **Status:** FIXED — the binder requires `-fentity-proxy-reflection` and binds
+  using-redeclarations through their entity proxies (`reflect_bind_proxy`): re-exports from
+  private/protected bases bind by splice-calling THROUGH the proxy (a public member of the
+  derived class); public-base re-exports are recognized as flattening-covered and skipped
+  (no duplicate overloads). `absl::StatusOr<T>::value()` now binds head-on. Landing this
+  surfaced THREE toolchain bugs (metafunction ICEs, a mangler ICE, a qualifier misreport)
+  — see TC-0003. Template and data-member re-exports from inaccessible bases stay
+  unsupported (documented).
 - **Found via:** `corpus/runs/abseil_statusor`. `absl::StatusOr<T>` declares `value()` /
   `operator*` / `operator->` in the **private** base `internal_statusor::OperatorBase<T>`
   (statusor_internal.h:477+) and re-exports them publicly with `using
