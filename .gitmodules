@@ -31,3 +31,27 @@
 [submodule "corpus/libs/eigen"]
 	path = corpus/libs/eigen
 	url = https://gitlab.com/libeigen/eigen
+[submodule "corpus/libs/tomlplusplus"]
+	path = corpus/libs/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus
+[submodule "corpus/libs/cli11"]
+	path = corpus/libs/cli11
+	url = https://github.com/CLIUtils/CLI11
+[submodule "corpus/libs/date"]
+	path = corpus/libs/date
+	url = https://github.com/HowardHinnant/date
+[submodule "corpus/libs/unordered_dense"]
+	path = corpus/libs/unordered_dense
+	url = https://github.com/martinus/unordered_dense
+[submodule "corpus/libs/pugixml"]
+	path = corpus/libs/pugixml
+	url = https://github.com/zeux/pugixml
+[submodule "corpus/libs/tinyobjloader"]
+	path = corpus/libs/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader
+[submodule "corpus/libs/fast_float"]
+	path = corpus/libs/fast_float
+	url = https://github.com/fastfloat/fast_float
+[submodule "corpus/libs/concurrentqueue"]
+	path = corpus/libs/concurrentqueue
+	url = https://github.com/cameron314/concurrentqueue

@@ -38,6 +38,27 @@ existing run as a template — `corpus/runs/spdlog` for a header-only library,
   invariants (surface present, inheritance/isinstance, exception types). Import-only
   or hasattr-only assertions are not an acceptable core.
 
+## Parallel dispatch (Phase 3 fan-out)
+
+When the dispatcher says "Gate 0 already done", you are one of several sibling agents
+running CONCURRENTLY in this same working tree. Three deltas apply:
+
+- **Skip Gate 0.** The driver already added the submodule at the pin and registered the
+  manifest entry (concurrent `git submodule add` races on `.gitmodules` and the index).
+  Start at Gate 1. Never run a git command that mutates state (add/commit/checkout/
+  submodule); read-only git (status/log/show) is fine.
+- **Touch NOTHING outside `corpus/runs/<slug>/**`.** This was always the rule; under
+  parallel dispatch it is load-bearing — another agent's run dir, `corpus/findings/`,
+  and `corpus/manifest.toml` are all off-limits, no exceptions.
+- **Draft findings go INSIDE your run dir**, as `corpus/runs/<slug>/findings_draft/*.md`
+  (this replaces the `corpus/findings/LIB-*.md` draft path above). Do NOT assign
+  TC-/BINDER-/LIB- numbers — parallel agents would collide; the driver assigns canonical
+  numbers at triage. Each draft must carry a header line `dedup_key: <stable-slug>`
+  (name the root-cause signature, not your library — e.g.
+  `mangler-ice-spliced-lambda-signature`, not `mylib-crash`) so the driver can cluster
+  the same bug found by several agents, plus the smallest trigger you isolated and the
+  first diagnostics.
+
 ## Guardrails
 
 - Modify ONLY `corpus/libs/<slug>` (the submodule add), `corpus/runs/<slug>/**`,

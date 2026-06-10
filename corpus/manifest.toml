@@ -237,6 +237,80 @@ status       = "done"         # outcome E: Vector3d/Matrix3d (Matrix<double,3,1>
                               # templates returning excluded expression types); L1 differential
                               # incl. inverse/solve/sym-eigenvalues and byte-for-byte __str__.
 
+# --- Phase 3 wave 1: parallel fan-out (8 agents, dispatched together) ---
+
+[[repo]]
+slug         = "tomlplusplus"
+tier         = 3
+header_only  = true
+url          = "https://github.com/marzer/tomlplusplus"
+pin          = "v3.4.0"
+include_root = "../../libs/tomlplusplus/include"
+status       = "pending"
+
+[[repo]]
+slug         = "cli11"
+tier         = 3
+header_only  = true
+url          = "https://github.com/CLIUtils/CLI11"
+pin          = "v2.6.2"
+include_root = "../../libs/cli11/include"
+status       = "pending"
+
+[[repo]]
+slug         = "date"
+tier         = 2
+header_only  = true
+url          = "https://github.com/HowardHinnant/date"
+pin          = "v3.0.4"
+include_root = "../../libs/date/include"
+status       = "pending"
+
+[[repo]]
+slug         = "unordered_dense"
+tier         = 3
+header_only  = true
+url          = "https://github.com/martinus/unordered_dense"
+pin          = "v4.8.1"
+include_root = "../../libs/unordered_dense/include"
+status       = "pending"
+
+[[repo]]
+slug         = "pugixml"
+tier         = 3
+header_only  = false
+url          = "https://github.com/zeux/pugixml"
+pin          = "v1.15"
+include_root = "../../libs/pugixml/src"
+status       = "pending"          # one .cpp via extra_sources
+
+[[repo]]
+slug         = "tinyobjloader"
+tier         = 2
+header_only  = true
+url          = "https://github.com/tinyobjloader/tinyobjloader"
+pin          = "v1.0.7"
+include_root = "../../libs/tinyobjloader"
+status       = "pending"          # header-only w/ TINYOBJLOADER_IMPLEMENTATION TU macro
+
+[[repo]]
+slug         = "fast_float"
+tier         = 2
+header_only  = true
+url          = "https://github.com/fastfloat/fast_float"
+pin          = "v8.2.8"
+include_root = "../../libs/fast_float/include"
+status       = "pending"
+
+[[repo]]
+slug         = "concurrentqueue"
+tier         = 3
+header_only  = true
+url          = "https://github.com/cameron314/concurrentqueue"
+pin          = "v1.0.5"
+include_root = "../../libs/concurrentqueue"
+status       = "pending"
+
 # --- ramp backlog (not yet scaffolded) ---
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
 # or [[=reflect::skip]]); container iteration -> future __iter__/make_iterator feature.

@@ -206,8 +206,10 @@ def main(run_dir):
         r["furthest_gate"] = 6
         return finish(run, r)
 
+    # Per-run cache dir: parallel-dispatch agents run pytest concurrently, so the
+    # cache must not be a shared path.
     t = sh([str(VENV_PY), "-m", "pytest", str(test_py), "-q",
-            "-o", "cache_dir=/tmp/.pytest_corpus"],
+            "-o", f"cache_dir={run / 'tests' / 'build' / '.pytest_cache'}"],
            env={**run_env(), "PYTHONPATH": str(build_dir)})
     r["gate_results"]["6_correct"] = "pass" if t.returncode == 0 else "fail"
     # parse "N passed" / "N failed"
