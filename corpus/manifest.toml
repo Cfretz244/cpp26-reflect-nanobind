@@ -187,8 +187,23 @@ status       = "done"         # outcome E: btree_map/btree_set head-on (ordered 
                               # incl. lower/upper_bound + __getitem__; order differentially observed
                               # via bttest first_key/first_elem (iteration is a future __iter__).
 
+[[repo]]
+slug         = "spdlog"
+tier         = 3
+header_only  = true
+url          = "https://github.com/gabime/spdlog"
+pin          = "v1.17.0"
+include_root = "../../libs/spdlog/include"
+status       = "done"         # outcome E: logger head-on (log/levels/pattern/clone/sinks);
+                              # sink hierarchy = real Python bases (stdout_sink_mt ->
+                              # stdout_sink_base<console_mutex> -> abstract sink, no ctor:
+                              # BINDER-0011 found+fixed, + caster-matrix over-collection);
+                              # logtest CaptureSink makes output observable; byte-for-byte
+                              # L1 differential on formatted text. SPDLOG_USE_STD_FORMAT
+                              # (bundled-fmt string_view_t has no caster).
+
 # --- ramp backlog (not yet scaffolded) ---
-# [[repo]] slug="spdlog"       tier=3  url="https://github.com/gabime/spdlog"
+# [[repo]] slug="expected"     tier=3  url="https://github.com/TartanLlama/expected"  (Phase-2 subagent candidate)
 # [[repo]] slug="eigen"        tier=5  url="https://gitlab.com/libeigen/eigen"
 # abseil residual: FixedArray (Abseil-internal AsValueType zero-length-array; needs an absl-side fix
 # or [[=reflect::skip]]); container iteration -> future __iter__/make_iterator feature.

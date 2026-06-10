@@ -1,0 +1,20 @@
+# Per-run descriptor for spdlog v1.17.0. Consumed by run_gates.py.
+slug         = "spdlog"
+tier         = 3                          # inheritance + shared_ptr + log-level enums
+header_only  = true                       # SPDLOG_HEADER_ONLY mode (no SPDLOG_COMPILED_LIB)
+url          = "https://github.com/gabime/spdlog"
+pin          = "v1.17.0"                  # commit 79524ddd
+include_root = "../../libs/spdlog/include"
+main_headers = ["spdlog/spdlog.h", "spdlog/sinks/ostream_sink.h", "spdlog/sinks/stdout_sinks.h"]
+module_name  = "spdlog_ext"
+strategy     = "single_stage"
+
+reflect_args     = ["^^spdlog::logger", "^^spdlog::level", "^^spdlog::pattern_time_type", "^^spdlog::sinks::sink", "^^spdlog::sinks::stdout_sink_mt", "^^logtest"]
+subset_rationale = "spdlog::logger is the library's central class, bound head-on: ctors (name / name+sink_ptr), the non-template log(level, string_view) overloads, set_level/level/should_log/name/set_pattern/flush/flush_on/flush_level, sinks() -> vector<shared_ptr<sink>> (the shared_ptr theme), and clone() -> shared_ptr<logger>. spdlog::level is the namespace carrying the level_enum plus to_string_view/to_short_c_str/from_str (the log-level-enum theme, differentially checked). sinks::sink is the abstract base and sinks::stdout_sink_mt a real concrete sink whose unbound intermediate stdout_sink_base<console_mutex> must FLATTEN while in-set sink wires through as the Python base (the inheritance theme). The logtest fixture owns an ostringstream-backed ostream_sink and hands it out as shared_ptr<sinks::sink>, so Python-driven logging is captured as text and compared byte-for-byte against the native oracle driving the identical sequence. Built with SPDLOG_USE_STD_FORMAT (a first-class spdlog config) so string_view_t/format_string_t are the std types the nanobind casters cover; the default bundled-fmt mode's fmt::basic_string_view has no caster."
+skipped_features = [
+  "templated log front-ends (logger::info/warn/... take std::format_string<Args...> -- consteval first param, intrinsically not bindable; the non-template log(level, string_view) overloads are the bindable surface)",
+  "Python-implemented custom sinks (sink's pure virtuals need a two-stage trampoline; virtual-override path already proven by _fixture_virtual, kept out of this run)",
+  "set_formatter(unique_ptr<formatter>) -- by-value move-only param, skipped per BINDER-0010",
+  "sinks_init_list ctor (initializer_list has no Python representation)",
+  "ostream_sink bound directly (ctor takes std::ostream& -- no caster; wrapped by the logtest CaptureSink fixture instead)",
+]

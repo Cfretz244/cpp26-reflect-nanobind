@@ -22,3 +22,6 @@
 [submodule "corpus/libs/abseil"]
 	path = corpus/libs/abseil
 	url = https://github.com/abseil/abseil-cpp
+[submodule "corpus/libs/spdlog"]
+	path = corpus/libs/spdlog
+	url = https://github.com/gabime/spdlog

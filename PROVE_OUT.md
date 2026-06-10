@@ -49,12 +49,30 @@ A tier is "ramped past" only when **≥1 library in it reaches `E`** (not `E-wea
 | 0 | pipeline bring-up; data/ctors/by-value/free-ops | `_fixture_pod`, `_fixture_recursive`, **linalg** v2.2 | ✅ E |
 | 1 | value types + operators + enums + STL casters | **glm** 1.0.1, **nlohmann/json** v3.11.3 | ✅ E |
 | 2 | free-function / format-heavy; kwargs; member-fn-template gap | **fmt** 11.2.0 (`FMT_HEADER_ONLY`) | ✅ E |
-| 3 | inheritance; shared_ptr; log-level enums | **spdlog**; (`tl::expected`) | ⏭️ **next** |
+| 3 | inheritance; shared_ptr; log-level enums | **spdlog** v1.17.0; (`tl::expected`) | ✅ E |
 | 4 | virtual override → two-stage codegen | `_fixture_virtual` | ✅ E |
 | 5 | stress ceiling; expression templates | **Eigen** (`Matrix<double,3,3>`); a header-only Boost piece | ⬜ frontier |
 | ★ | **special case — breadth of fully-specialized concrete data structures** | **Abseil** 20250814.2 — themed runs: `containers` (InlinedVector), `numeric` (int128/uint128), `time` (Duration/Time), `status` (Status/StatusCode), `crc` (crc32c_t), `statusor` (StatusOr<T>), `strings` (Cord + StrCat API), `civil_tz` (TimeZone/civil), `hash` (flat/node hash maps+sets), `btree` (btree_map/set) | ✅ E ×10 |
 
-Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (abseil → spdlog → eigen).
+Concrete queue: `corpus/manifest.toml` `# --- ramp backlog ---` (tl::expected → eigen).
+
+**Tier 3 — spdlog (June 2026).** spdlog v1.17.0 at E, handled directly (libraries are not
+yet "flying by"; Phase 2's first unaided subagent run is still pending). `spdlog::logger`
+bound head-on (ctors incl. `(string, sink_ptr)`, the non-template `log(level, string_view)`
+overloads, set_level/should_log/set_pattern/flush/sinks()/clone), `spdlog::level` namespace
+(enum + `to_string_view`/`from_str`), and the sink hierarchy as REAL Python bases:
+`stdout_sink_mt` → `stdout_sink_base<console_mutex>` → abstract `sink`. A `logtest`
+CaptureSink fixture (ostringstream-backed `ostream_sink` handed out as `shared_ptr<sink>`)
+makes logger output observable from Python; the L1 differential compares formatted output
+byte-for-byte against the native oracle driving the identical scenario (pattern, level
+filtering, clone-shares-sinks). Built under `SPDLOG_USE_STD_FORMAT` (a first-class spdlog
+config): default bundled-fmt mode's `string_view_t` = `fmt::basic_string_view`, which no
+caster covers. Found+fixed **BINDER-0011**: (1) abstract classes got `nb::init` bound (TU
+hard error; now no ctors unless a trampoline is registered — then init constructs the
+Alias), and (2) the STL-caster matrix collected signatures of methods the binder never
+binds (`[[=reflect::skip]]` / BINDER-0010 move-only-by-value, e.g.
+`sink::set_formatter(unique_ptr<formatter>)`) — the walk now mirrors the bind-path skip
+predicates.
 
 **Special case — Abseil (four themed runs at E).** Abseil's value here is *quantity of complex,
 fully-specialized concrete data types* bound head-on. Four themed sibling runs share one submodule
@@ -136,12 +154,13 @@ standalone `repro.cpp`, fingerprinted (so N repos hitting one ICE dedup to one
 item), and fixed at the source via the `llvm-project` submodule (re-pinned).
 `corpus/aggregate/toolchain_bugs.md` is the impact-ranked upstreaming queue.
 
-## Status snapshot (as of the Abseil buildout)
+## Status snapshot (as of the spdlog run)
 
-**17 corpus runs, all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
-`json`, `_fixture_virtual`, `fmt`, and TEN Abseil themed runs — `abseil_containers`,
-`abseil_numeric`, `abseil_time`, `abseil_status`, **`abseil_crc`**, **`abseil_statusor`**,
-**`abseil_strings`**, **`abseil_civil_tz`**, **`abseil_hash`**, **`abseil_btree`**.
+**18 corpus runs, all E**: `_fixture_pod`, `_fixture_recursive`, `linalg`, `glm`,
+`json`, `_fixture_virtual`, `fmt`, **`spdlog`** (Tier 3 banked), and TEN Abseil themed
+runs — `abseil_containers`, `abseil_numeric`, `abseil_time`, `abseil_status`,
+`abseil_crc`, `abseil_statusor`, `abseil_strings`, `abseil_civil_tz`, `abseil_hash`,
+`abseil_btree`.
 Fixes landed and pinned along the way:
 
 - **BINDER-0001** templated members → skipped · **BINDER-0002** anonymous-union
@@ -153,6 +172,12 @@ Fixes landed and pinned along the way:
   **BINDER-0007** (**fixed**, Abseil) free `operator<<(std::ostream&,T)` → Python
   `__str__` (genuine shifts still `__lshift__`) · non-copy-assignable members → `def_ro`
   (move-only `node_handle` no longer breaks `def_rw`). All re-pinned (`nanobind @ ee245e6`).
+- **BINDER-0011** (**fixed**, spdlog) abstract classes bound `nb::init` (any abstract
+  interface in the bind set was a TU-wide hard error) → ctor pass now skipped for
+  abstract classes WITHOUT a registered trampoline (with one, init constructs the Alias
+  — the Python-subclass path, codegen tests cover it); plus the STL-caster matrix
+  over-collected: signatures of never-bound methods (skip-annotated / BINDER-0010
+  move-only-by-value) no longer demand casters (`nanobind @ beda45a`).
 - **BINDER-0008** (**closed**, Abseil buildout) hash/btree containers bound head-on via
   reachability-only discovery + base flattening (Change 1) and default-instantiation
   member-fn-template binding (Change 2); `FixedArray` residual is Abseil-side
@@ -203,7 +228,8 @@ Fixes landed and pinned along the way:
 
 Submodule pins carry these: `nanobind @ mk-reflect`, `llvm-project @
 reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
-`corpus/libs/fmt @ 11.2.0`, `corpus/libs/abseil @ 20250814.2`.
+`corpus/libs/fmt @ 11.2.0`, `corpus/libs/abseil @ 20250814.2`,
+`corpus/libs/spdlog @ v1.17.0`.
 
 ## Immediate next steps
 
@@ -213,11 +239,14 @@ reflection-p2996`, `corpus/libs/json @ Cfretz244/json corpus-reflect-skip`,
    also make `begin`/`lower_bound`/`Chunks()` surfaces usable), `FixedArray` (absl-side),
    a friendly-naming pass for spec-derived Python names (BINDER-0003 family;
    `flat_hash_mapIntStringHashInt`, `civil_timeDay_tag`).
-2. **Enter Phase 2** — dispatch one subagent on `spdlog` (Tier 3: inheritance,
-   shared_ptr, log-level enums) end-to-end; if it produces a schema-valid
-   `result.json` unaided and its tests genuinely assert behavior, open a small serial
-   batch. (Phase 1 is closed: fmt landed at E, Tiers 0–2 banked.)
-3. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
+2. **spdlog (Tier 3)** — ✅ E, handled directly (one more direct run before fan-out, per
+   the not-yet-flying-by call). BINDER-0011 found+fixed. **Residual:** Python-side custom
+   sinks (sink's pure virtuals via a two-stage trampoline) deliberately out of scope.
+3. **Enter Phase 2** — dispatch one subagent on a fresh repo (`tl::expected` is the
+   queued Tier-3 candidate; Eigen stays the Tier-5 frontier) end-to-end; if it produces
+   a schema-valid `result.json` unaided and its tests genuinely assert behavior, open a
+   small serial batch. (Phase 1 is closed: fmt landed at E, Tiers 0–2 banked.)
+4. **Phase 3** — expand the manifest to the long tail and raise concurrency, run by
    tier (easy first to bank wins), feeding A/B clusters back to the binder.
 
 Pending follow-ups (independent of the ramp): **TC-0002 through TC-0005 are upstreamed**

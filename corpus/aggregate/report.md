@@ -1,12 +1,12 @@
 # Corpus report
 
-Total runs: **17**
+Total runs: **18**
 
 ## Outcomes (overall)
 
 | outcome | count | meaning |
 |---|---|---|
-| E | 17 | clean success (behavioral) |
+| E | 18 | clean success (behavioral) |
 
 ## Outcomes by tier
 
@@ -15,6 +15,7 @@ Total runs: **17**
 | 0 | 3 | 0 | 0 | 0 | 0 | 0 |
 | 1 | 2 | 0 | 0 | 0 | 0 | 0 |
 | 2 | 1 | 0 | 0 | 0 | 0 | 0 |
+| 3 | 1 | 0 | 0 | 0 | 0 | 0 |
 | 4 | 1 | 0 | 0 | 0 | 0 | 0 |
 | 6 | 10 | 0 | 0 | 0 | 0 | 0 |
 
@@ -28,6 +29,7 @@ Total runs: **17**
 | glm | 1 | E | 6 | single_stage | 1.0.1 |   |
 | json | 1 | E | 6 | two_stage | v3.11.3 |   |
 | fmt | 2 | E | 6 | single_stage | 11.2.0 |   |
+| spdlog | 3 | E | 6 | single_stage | v1.17.0 |   |
 | _fixture_virtual | 4 | E | 6 | two_stage |  |   |
 | abseil_btree | 6 | E | 6 | single_stage | 20250814.2 |   |
 | abseil_civil_tz | 6 | E | 6 | single_stage | 20250814.2 |   |
