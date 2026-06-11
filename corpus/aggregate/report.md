@@ -49,7 +49,7 @@ Total runs: **36**
 | leveldb | 4 | E | E | E | pass | 6 | single_stage | 1.23 |  surface_diff: 0 mismatch(es), 14 top-level object(s) compared; |
 | sqlitecpp | 4 | E | E | E | pass | 6 | single_stage | 3.3.3 |  surface_diff: 0 mismatch(es), 15 top-level object(s) compared; |
 | taskflow | 4 | E | E | E | pass | 6 | single_stage | v4.0.0 |  surface_diff: 0 mismatch(es), 5 top-level object(s) compared; |
-| eigen | 5 | E | E | - | skip | 6 | single_stage | 5.0.1 |   |
+| eigen | 5 | E | E | E | pass | 6 | single_stage | 5.0.1 |  surface_diff: 0 mismatch(es), 32 top-level object(s) compared; |
 | abseil_btree | 6 | E | E | E | pass | 6 | single_stage | 20250814.2 |  surface_diff: 0 mismatch(es), 24 top-level object(s) compared; |
 | abseil_civil_tz | 6 | E | E | E | pass | 6 | single_stage | 20250814.2 |  surface_diff: 0 mismatch(es), 17 top-level object(s) compared; |
 | abseil_containers | 6 | E | E | E | pass | 6 | single_stage | 20250814.2 |  surface_diff: 0 mismatch(es), 2 top-level object(s) compared; |
@@ -63,5 +63,5 @@ Total runs: **36**
 
 ## Emit lane (production-toolchain source codegen)
 
-Runs with an emit lane: **35** / 36; outcomes: E=35
+Runs with an emit lane: **36** / 36; outcomes: E=36
 
