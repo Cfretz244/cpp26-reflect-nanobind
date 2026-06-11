@@ -54,12 +54,21 @@ This is independent of immer: any library binding a container-like class with an
 `Type(args...)` (where the class is constructible from `Args...`) would select the intended
 ctor; `init<>` already gates on `std::is_constructible_v<Type, Args...>`.
 
-## Workaround in this run
+## Resolution (BINDER-0026, landed)
 
-The 2-arg fill constructor `vector(size_type, T)` is excluded per-member via `nb::exclude_`
-(enumerated from `members_of`), so the rest of the persistent-container surface binds. The
-default ctor and the persistent push_back/set chain are unaffected. Recorded in
-skipped_features.
+Fixed in the binder: reflected constructors now construct with PARENS via `reflect_init`
+(`nanobind/include/nanobind/nb_paren_init.h`), whose `reflect_construct_at<T>` does
+`new (p) T(args...)` (parens) when `is_constructible_v<T, Args...>`, falling back to braces
+only for the aggregate case. Parens select exactly the reflected overload, so the fill ctor
+`vector(size_type, T)` binds correctly -- `Type(n, v)` is the fill ctor, never the
+`initializer_list` ctor. Both backends emit it: the constexpr lane through `reflect_init`
+directly, the emit lane renders `cls.def(::nanobind::detail::reflect_init<unsigned long,
+int>(), ...)` into the generated source (built by Apple Clang with no toolchain).
+
+The per-member `nb::exclude_` workaround for the fill ctor was REMOVED in the emit-lane wave;
+the fill ctor is now bound and Python-callable, and `IVec(3, 7)` -> `[7, 7, 7]` is asserted on
+both backends by `tests/test_bindings.py::test_vector_fill_ctor_uses_parens_not_initializer_list`.
+(Only the `immer::detail` namespace exclusion remains.)
 
 ## First diagnostics
 

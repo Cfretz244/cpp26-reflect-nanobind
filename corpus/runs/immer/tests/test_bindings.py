@@ -88,6 +88,20 @@ def test_vector_at_out_of_range_raises():
         v.at(9)
 
 
+def test_vector_fill_ctor_uses_parens_not_initializer_list():
+    """BINDER-0026: reflected ctors construct with PARENS (reflect_init), not braces.
+
+    immer::vector<int> carries BOTH a fill ctor `vector(size_type n, T v={})` and an
+    `initializer_list<int>` ctor. nb::init's braced `Type{n, v}` would hijack toward the
+    initializer_list ctor and narrow `size_type -> int` (a hard error); reflect_init's
+    parenthesized `Type(n, v)` selects exactly the fill ctor. The bound module exposes the
+    fill ctor and it must produce n copies of v -- NOT a single-element list of {n}.
+    """
+    v = IVec(3, 7)
+    assert contents(v) == [7, 7, 7]      # fill ctor: 3 copies of 7, not [3]
+    assert v.size() == 3
+
+
 def test_vector_string_persistent_differential():
     s2 = SVec().push_back("alpha").push_back("beta")
     s2b = s2.set(0, "ALPHA")
