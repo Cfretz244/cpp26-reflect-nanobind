@@ -18,3 +18,6 @@ skipped_features = [
   "sinks_init_list ctor (initializer_list has no Python representation)",
   "ostream_sink bound directly (ctor takes std::ostream& -- no caster; wrapped by the logtest CaptureSink fixture instead)",
 ]
+
+[emit]
+enabled = true

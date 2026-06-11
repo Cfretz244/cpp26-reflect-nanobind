@@ -4,8 +4,6 @@
 // stdout_sink_base<console_mutex> flattens, sink wires through as the Python base); the
 // logtest CaptureSink fixture makes logger output observable from Python.
 // logtest.h comes first: it selects SPDLOG_USE_STD_FORMAT before any spdlog header.
-#include "logtest.h"
-
 #include <nanobind/nb_reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
@@ -14,8 +12,7 @@
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/chrono.h>
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_sinks.h>
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
@@ -25,8 +22,5 @@ NB_MODULE(spdlog_ext, m) {
     // copy/move operators, and deleted functions pull nothing into the bind
     // set (BINDER-0012) -- without the explicit opt-in it would flatten
     // instead of being the real Python base the run's inheritance theme pins.
-    nb::reflect_<^^spdlog::logger, ^^spdlog::level, ^^spdlog::pattern_time_type,
-                 ^^spdlog::sinks::sink,
-                 ^^spdlog::sinks::stdout_sink_base<spdlog::details::console_mutex>,
-                 ^^spdlog::sinks::stdout_sink_mt, ^^logtest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }
