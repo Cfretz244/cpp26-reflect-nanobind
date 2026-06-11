@@ -17,10 +17,10 @@
 // instantiating an incomplete std::ostream caster (BINDER-0007).
 #include <nanobind/nb_reflect.h>
 
-#include "absl/container/inlined_vector.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(abseil_ext, m) {
-    nb::reflect_<^^absl::InlinedVector<int, 4>, ^^absl::InlinedVector<double, 2>>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

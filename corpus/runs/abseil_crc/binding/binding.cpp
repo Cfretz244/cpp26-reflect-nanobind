@@ -5,10 +5,10 @@
 #include <nanobind/nb_reflect.h>
 #include <nanobind/stl/string_view.h>
 
-#include "crctest.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(abseil_crc_ext, m) {
-    nb::reflect_<^^absl::crc32c_t, ^^crctest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

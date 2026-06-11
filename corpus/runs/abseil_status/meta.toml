@@ -13,3 +13,6 @@ link_abseil  = true
 reflect_args     = ["^^absl::Status", "^^absl::StatusCode"]
 subset_rationale = "absl::Status is Abseil's canonical error type — a concrete class bound head-on: ok()/code()/raw_code()/message()/ToString()/Update(), constructed from (StatusCode, string_view). absl::StatusCode is a real scoped enum (kOk/kNotFound/kInvalidArgument/...) bound with all values. Exercises the std::string_view and std::optional casters (message() -> string_view; GetPayload -> optional<Cord>). Differentially checked vs native Abseil on code/message/ToString."
 skipped_features = ["payload API (SetPayload/GetPayload/ErasePayload over absl::Cord) not exercised in tests — bound but Cord round-tripping is out of scope for this run", "message() returns absl::string_view (= std::string_view here); requires <nanobind/stl/string_view.h>"]
+
+[emit]
+enabled = true

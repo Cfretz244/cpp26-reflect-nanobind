@@ -5,10 +5,10 @@
 #include <nanobind/nb_reflect.h>
 #include <nanobind/stl/string.h>
 
-#include "timetest.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(abseil_time_ext, m) {
-    nb::reflect_<^^absl::Duration, ^^absl::Time, ^^timetest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

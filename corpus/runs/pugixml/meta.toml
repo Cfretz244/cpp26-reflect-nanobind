@@ -49,3 +49,6 @@ skipped_features = [
   "default-argument VALUES (load_string's options=parse_default, the as_* getters' def, child/attribute's etc.) are a C++26 reflection gap (P3096 exposes has_default_argument but not the value); the tests pass every defaulted arg explicitly, matching the native oracle's C++ defaults so both sides drive identical calls",
   "append_buffer/load_buffer (const void*/void* contents) bound but not exercised; the unspecified_bool_type conversion operator is skipped by reflect_bind_conversion (function-pointer result, no numeric dunder)",
 ]
+
+[emit]
+enabled = true

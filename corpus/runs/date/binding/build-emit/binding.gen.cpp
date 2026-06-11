@@ -8,6 +8,12 @@
 #include <ostream>
 #include <sstream>
 #include <utility>
+#include <nanobind/stl/chrono.h>
+#include <nanobind/stl/chrono.h>
+#include <nanobind/stl/chrono.h>
+#include <nanobind/stl/chrono.h>
+#include <nanobind/stl/chrono.h>
+#include <nanobind/stl/chrono.h>
 #include <nanobind/stl/string.h>
 
 namespace nb = nanobind;

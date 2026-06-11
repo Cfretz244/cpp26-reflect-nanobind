@@ -9,6 +9,10 @@
 #include <nanobind/nb_reflect.h>
 #include "binding_args.h"
 #include <nanobind/stl/string.h>
+// BINDER-0029 made the caster walk see date's chrono-typed signatures
+// (sys_days/local_days time_points), so the header-only diagnostic now
+// demands the chrono caster this TU always needed:
+#include <nanobind/stl/chrono.h>
 
 namespace nb = nanobind;
 

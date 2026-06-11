@@ -13,3 +13,6 @@ link_abseil  = true
 reflect_args     = ["^^absl::crc32c_t", "^^crctest"]
 subset_rationale = "absl::crc32c_t is a trivial strongly-typed value class bound head-on: default/explicit-uint32 constructors, explicit operator uint32_t -> __int__ (the value channel), and the namespace-scope operator<< -> __str__ ('%08x' hex). The computation/arithmetic API (ComputeCrc32c/ExtendCrc32c/ExtendCrc32cByZeroes/ConcatCrc32c/RemoveCrc32cPrefix/RemoveCrc32cSuffix) is free functions in ^^absl, so a crctest fixture namespace thin-wraps them (reflecting all of ^^absl is not tractable); four of them resolve to compiled code in libabsl_merged.a. Differential: CRC values, extend == compute-of-concat, concat/remove identities vs the native oracle."
 skipped_features = ["MemcpyCrc32c (void* buffer API has no clean Python mapping)", "operator==/!= are hidden friends (not enumerable namespace members); equality is exercised via the fixture eq() and the __int__ channel", "AbslStringify friend template (member template, skipped by design)"]
+
+[emit]
+enabled = true

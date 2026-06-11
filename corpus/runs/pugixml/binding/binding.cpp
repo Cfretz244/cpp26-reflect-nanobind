@@ -14,31 +14,10 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 
-#include "pugitest.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(pugixml_ext, m) {
-    nb::reflect_<^^pugi::xml_node,
-                 ^^pugi::xml_attribute,
-                 ^^pugi::xml_document,
-                 ^^pugi::xml_parse_result,
-                 ^^pugi::xml_node_type,
-                 ^^pugi::xml_encoding,
-                 ^^pugi::xml_parse_status,
-                 ^^pugitest,
-                 ^^nb::exclude_<^^pugi::xml_writer, ^^std::basic_ostream,
-                                ^^std::basic_istream,
-                                ^^pugi::xml_node_struct,
-                                ^^pugi::xml_attribute_struct,
-                                ^^pugi::xml_node_iterator,
-                                ^^pugi::xml_attribute_iterator,
-                                ^^pugi::xml_named_node_iterator,
-                                ^^pugi::xml_object_range,
-                                ^^pugi::xml_text,
-                                ^^pugi::xml_tree_walker,
-                                ^^pugi::xpath_node,
-                                ^^pugi::xpath_node_set,
-                                ^^pugi::xpath_query,
-                                ^^pugi::xpath_variable_set>>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }
