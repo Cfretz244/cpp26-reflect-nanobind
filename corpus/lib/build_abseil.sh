@@ -19,12 +19,22 @@
 #   build/abseil-install/lib/      libabsl_*.a + the merged libabsl_merged.a
 #
 # Idempotent: skips straight to success if libabsl_merged.a already exists (pass --force to rebuild).
+# --prod: build with the PRODUCTION compiler (Apple Clang + system libc++)
+# into build/abseil-install-prod/ for the emit lane (run_gates.py rewrites a
+# link_abseil run's link line to the -prod prefix mechanically).
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 
+PROD=0
+if [ "${1:-}" = "--prod" ]; then PROD=1; shift; fi
 ABSL_SRC="$CORPUS_ROOT/libs/abseil"
-BUILD_DIR="$REPO_ROOT/build/abseil-build"
-PREFIX="${NB_ABSEIL_PREFIX:-$REPO_ROOT/build/abseil-install}"
+if [ "$PROD" = "1" ]; then
+  BUILD_DIR="$REPO_ROOT/build/abseil-build-prod"
+  PREFIX="${NB_ABSEIL_PREFIX_PROD:-$REPO_ROOT/build/abseil-install-prod}"
+else
+  BUILD_DIR="$REPO_ROOT/build/abseil-build"
+  PREFIX="${NB_ABSEIL_PREFIX:-$REPO_ROOT/build/abseil-install}"
+fi
 MERGED="$PREFIX/lib/libabsl_merged.a"
 
 if [ "${1:-}" != "--force" ] && [ -f "$MERGED" ]; then
@@ -38,11 +48,18 @@ if [ ! -f "$ABSL_SRC/CMakeLists.txt" ]; then
 fi
 
 # --- configure ---
+if [ "$PROD" = "1" ]; then
+  CXX_FOR_ABSL="$PROD_CXX"
+  CXXFLAGS_FOR_ABSL="-isysroot $SDKROOT_PATH -fPIC"
+else
+  CXX_FOR_ABSL="$TC/bin/clang++"
+  CXXFLAGS_FOR_ABSL="-stdlib=libc++ -nostdinc++ -isystem $TC/include/c++/v1 -isysroot $SDKROOT_PATH -fPIC"
+fi
 cmake -S "$ABSL_SRC" -B "$BUILD_DIR" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_CXX_COMPILER="$TC/bin/clang++" \
+  -DCMAKE_CXX_COMPILER="$CXX_FOR_ABSL" \
   -DCMAKE_CXX_STANDARD=17 \
-  -DCMAKE_CXX_FLAGS="-stdlib=libc++ -nostdinc++ -isystem $TC/include/c++/v1 -isysroot $SDKROOT_PATH -fPIC" \
+  -DCMAKE_CXX_FLAGS="$CXXFLAGS_FOR_ABSL" \
   -DCMAKE_EXE_LINKER_FLAGS="-L $TC/lib -Wl,-rpath,$TC/lib" \
   -DCMAKE_INSTALL_PREFIX="$PREFIX" \
   -DABSL_ENABLE_INSTALL=ON \

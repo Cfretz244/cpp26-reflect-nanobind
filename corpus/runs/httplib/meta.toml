@@ -40,3 +40,11 @@ skipped_features = [
   "char-pointer-and-length Post/Put/Patch overloads (const char* body, size_t content_length) -- the std::string-body overloads cover the same behavior bindably",
   "default-argument VALUES (def='' / id=0 on get_header_value etc., status=Found_302 on set_redirect) are a C++26 reflection gap; the tests pass defaulted args explicitly, matching the native oracle's C++ defaults",
 ]
+
+[emit]
+enabled = true
+# stage-2 (production compile) extra_cflags default to the constexpr lane's
+# extra_cflags minus reflection-only flags; -fconstexpr-steps=33554432 is
+# reflection-only (stripped automatically), so no override is needed. httplib.h
+# is header-only and all-inline, so there are no extra library sources to
+# recompile with the production compiler.

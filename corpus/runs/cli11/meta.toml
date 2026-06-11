@@ -21,3 +21,12 @@ skipped_features = [
   "typed option binding (add_option(name, T& variable) / add_flag(name, T& variable)): templated on the bound C++ variable's type -- a consteval/template front that cannot reference a Python value, so not bindable; the string-collecting Option.results() path is the bindable equivalent and is what the differential checks",
   "Validator / Formatter / Config subobjects, callbacks (std::function setters), subcommand trees beyond add_subcommand presence: deep auxiliary surface, out of the parse-correctness focus",
 ]
+
+[emit]
+enabled = true
+# Stage 2 (production compile) inherits the constexpr extra_cflags minus the
+# reflection-only flags -> just -Wno-deprecated-declarations (CLI11 uses some
+# deprecated std bits). No std override (header-only, C++17 default works), no
+# extra sources (header-only), no surface_diff_ignore. The fluent raw-pointer
+# returns get explicit nb::rv_policy::reference / reference_internal extras in
+# the generated source (BINDER-0017, rendered through the shared classifier).

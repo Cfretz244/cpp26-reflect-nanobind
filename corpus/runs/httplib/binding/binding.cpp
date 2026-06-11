@@ -29,9 +29,10 @@
 // still cannot represent (BINDER-0014): the Headers (unordered_multimap) / Params (multimap)
 // associative containers (no multimap caster -- headers go through the string get_header_value
 // / set_header accessors), and the streaming / multipart / internal-impl surface.
-#include "httptest.h"
-
+//
+// Bind set defined once in binding_args.h (shared with the emit-lane generator).
 #include <nanobind/nb_reflect.h>
+#include "binding_args.h"
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
@@ -43,26 +44,5 @@
 namespace nb = nanobind;
 
 NB_MODULE(httplib_ext, m) {
-    nb::reflect_<
-        ^^httplib::Request,
-        ^^httplib::Response,
-        ^^httplib::Result,
-        ^^httplib::Client,
-        ^^httplib::Error,
-        ^^httplib::StatusCode,
-        ^^httptest,
-        ^^nb::exclude_<
-            ^^std::multimap,
-            ^^std::unordered_multimap,
-            ^^std::chrono::time_point,
-            ^^httplib::MultipartFormData,
-            ^^httplib::UploadFormData,
-            ^^httplib::FormDataProvider,
-            ^^httplib::DataSink,
-            ^^httplib::ContentReader,
-            ^^httplib::Stream,
-            ^^httplib::UserData,
-            ^^httplib::ClientImpl,
-            ^^httplib::Range>
-    >(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }
