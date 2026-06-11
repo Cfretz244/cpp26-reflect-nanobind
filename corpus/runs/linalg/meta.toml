@@ -13,3 +13,6 @@ strategy     = "single_stage"
 reflect_args     = ["^^linalg::vec<float,3>"]
 subset_rationale = "linalg is entirely templates; vec<float,3> is the only concrete auto-bindable surface (data x/y/z, ctors, operator[]). Free-function API is function templates (not auto-bound)."
 skipped_features = ["free-function templates (dot/length/normalize/...)", "mat<> types"]
+
+[emit]
+enabled = true

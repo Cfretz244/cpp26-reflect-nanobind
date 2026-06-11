@@ -17,3 +17,6 @@ skipped_features = [
   "LoadObjWithCallback / callback_t (function-pointer callback struct -- no Python representation)",
   "ParseTextureNameAndOption / LoadMtl (out-param free functions, same shape as LoadObj; the .obj path is the bound surface)",
 ]
+
+[emit]
+enabled = true

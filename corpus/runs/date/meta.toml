@@ -18,3 +18,6 @@ skipped_features = [
   "date::format()/operator<< as bound entities -- function templates over CharT/Traits/Streamable, not bindable; formatted output is exercised through the datefix format_*() std::string wrappers",
   "the chrono duration typedefs days/months/years and sys_days/local_days as bound types -- chrono time_points/durations have no nanobind caster; arithmetic that needs them is reached through the value-type operators (day +/- days etc. take a bound operand) or the datefix serial-day bridge",
 ]
+
+[emit]
+enabled = true

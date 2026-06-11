@@ -4,10 +4,10 @@
 // The rich free-function API (dot/length/normalize/...) is *function templates*, which the
 // binder does not auto-discover; a couple are exposed explicitly as wrappers in test space.
 #include <nanobind/nb_reflect.h>
-#include "linalg.h"
+#include "binding_args.h"
 
 namespace nb = nanobind;
 
 NB_MODULE(linalg_ext, m) {
-    nb::reflect_<^^linalg::vec<float, 3>>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

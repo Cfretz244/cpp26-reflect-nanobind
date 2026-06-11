@@ -5,18 +5,13 @@
 // operator< ..., operator+/- with days/months/years) map to Python dunders. The datefix
 // fixture bridges only what the real API can't hand to Python: the sys_days serial-day
 // round-trip (chrono time_point, no caster) and date::format() (a function template).
-#include "datefix.h"
-
+// Bind set defined once in binding_args.h (shared with the emit-lane generator).
 #include <nanobind/nb_reflect.h>
+#include "binding_args.h"
 #include <nanobind/stl/string.h>
 
 namespace nb = nanobind;
 
 NB_MODULE(date_ext, m) {
-    nb::reflect_<
-        ^^date::year, ^^date::month, ^^date::day,
-        ^^date::weekday,
-        ^^date::year_month, ^^date::month_day,
-        ^^date::year_month_day,
-        ^^datefix>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

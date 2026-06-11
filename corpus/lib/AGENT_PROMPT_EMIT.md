@@ -51,6 +51,12 @@ iterate with that reviewer until approval.
 3. **Iterate** `python corpus/lib/run_gates.py corpus/runs/<slug>` until the
    combined outcome is E (all three legs + surface). `--mode emit` re-runs
    just your lane while debugging; always finish with a full (default) run.
+   **Long-command rule**: any compile that can run minutes silently (the full
+   gate on a heavy run, a raised-step generator build) must be run with output
+   streaming (`... 2>&1 | tee /tmp/<slug>_gate.log`) and, when you expect
+   >5 minutes, split into its stages (run `corpus/lib/build_module_emit.sh`
+   directly first, then the gate) so each command finishes quickly -- a
+   stalled-looking session gets killed by a watchdog.
 4. **Verify the constexpr lane is untouched**: its lane outcome must equal the
    pre-wave result.json's.
 
