@@ -1,5 +1,10 @@
 // refl.cpp — build with: clang++ -std=c++26 -freflection-latest -stdlib=libc++ ...
+//            or with:    g++ -std=c++26 -freflection ...
+#if __has_include(<meta>)
+#include <meta>
+#else
 #include <experimental/meta>
+#endif
 #include <print>
 
 using namespace std::meta;

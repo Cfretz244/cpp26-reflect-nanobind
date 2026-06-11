@@ -14,7 +14,11 @@
 // construction — there is no second, hand-maintained schema to drift out of
 // sync. A human-readable JSON writer is included to make the output legible.
 
+#if __has_include(<meta>)
+#include <meta>
+#else
 #include <experimental/meta>
+#endif
 #include <type_traits>
 #include <cstdint>
 #include <cstring>
