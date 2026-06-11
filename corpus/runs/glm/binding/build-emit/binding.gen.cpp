@@ -15,8 +15,8 @@ namespace nbgen {
 
 template <long double, class = void> struct value_probe;
 
-// Forward declarations (a derived class's bind function calls its
-// base's regardless of definition order).
+// Forward declarations (a derived class's bind function calls
+// its base's regardless of definition order).
 template <class Self = ::glm::vec<3, float, ::glm::qualifier::packed_highp>> static void nbgen_bind___glm__vec_L3_Cfloat_C__glm__qualifier__packed_highp_R(nb::module_ &m);
 template <class Self = ::glm::vec<4, float, ::glm::qualifier::packed_highp>> static void nbgen_bind___glm__vec_L4_Cfloat_C__glm__qualifier__packed_highp_R(nb::module_ &m);
 

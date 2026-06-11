@@ -351,10 +351,24 @@ never bindable and pre-TC-0008 toolchains can't mangle their reflections), and *
 exclusions + completeness gates** (BINDER-0014, the eigen run: `nb::exclude_<...>` makes
 templates/types/namespaces/individual members opaque on every path — what tames Eigen's
 divergent expression-template discovery and its lazily-ill-formed shape-asserting member
-bodies; non-completable specs are auto-skipped). Remaining: per-arg
-ownership transfer, container `__iter__`/make_iterator, member templates needing explicit
-args, trampoline hardening, friendly spec naming. The binder's git history on `mk-reflect`
-has one commit per feature; `nanobind/docs/reflection.rst` is the user-facing reference.
+bodies; non-completable specs are auto-skipped), and **the emit backend (Phase 4)**:
+`nb::write_bindings<Rs...>(path, module_name, preamble)` (nb_reflect_emit.h +
+nb_reflect_spell.h) renders the SAME binding decisions -- via the shared value-form
+classifiers factored into nb_reflect.h -- as ONE self-contained plain-C++17/20 nanobind
+TU that a PRODUCTION compiler builds (Apple Clang + system libc++ here): P2996 is needed
+only at generation time. Trampolines are opt-in pack markers
+(`nb::trampoline_<^^Cls...>` / `nb::trampoline_all_`, inert in the constexpr lane);
+compiler-answered probes (static-const by-value, `__str__` streamability) are emitted
+verbatim. Corpus runs with an `[emit]` meta table validate THREE-WAY (native oracle +
+constexpr module + emit module must agree, plus a Gate 6b surface diff —
+`corpus/lib/run_gates.py`, schema v2); the prod prerequisites are
+`corpus/lib/build_nanobind_prod.sh` (+ `--prod` archive variants for compiled libs).
+Migrated so far: the 3 fixtures, glm, json — all `constexpr=E emit=E surface=pass`;
+the remaining 31 follow the `AGENT_PROMPT_EMIT.md` wave protocol. Remaining binder
+roadmap: per-arg ownership transfer, container `__iter__`/make_iterator, member
+templates needing explicit args, trampoline hardening, friendly spec naming. The
+binder's git history on `mk-reflect` has one commit per feature;
+`nanobind/docs/reflection.rst` is the user-facing reference.
 
 ## Gotchas (carried over; see submodule CLAUDE.md files for detail)
 

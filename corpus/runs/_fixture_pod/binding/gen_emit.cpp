@@ -3,10 +3,8 @@
 #include "binding_args.h"
 
 int main(int argc, char** argv) {
-    return nanobind::write_bindings(
-               argv[1], nanobind::emit_bindings<CORPUS_REFLECT_ARGS>(
-                            "pod_fixture_ext",
-                            "#include \"binding_includes.h\"\n"))
+    return nanobind::write_bindings<CORPUS_REFLECT_ARGS>(
+               argv[1], "pod_fixture_ext", "#include \"binding_includes.h\"\n")
                ? 0
                : 1;
 }

@@ -16,8 +16,8 @@ namespace nbgen {
 
 template <long double, class = void> struct value_probe;
 
-// Forward declarations (a derived class's bind function calls its
-// base's regardless of definition order).
+// Forward declarations (a derived class's bind function calls
+// its base's regardless of definition order).
 template <class Self = ::shapes::Shape> static void nbgen_bind___shapes__Shape(nb::module_ &m);
 template <class Self = ::shapes::Circle> static void nbgen_bind___shapes__Circle(nb::module_ &m);
 

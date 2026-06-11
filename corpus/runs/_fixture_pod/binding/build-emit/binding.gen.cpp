@@ -15,8 +15,8 @@ namespace nbgen {
 
 template <long double, class = void> struct value_probe;
 
-// Forward declarations (a derived class's bind function calls its
-// base's regardless of definition order).
+// Forward declarations (a derived class's bind function calls
+// its base's regardless of definition order).
 template <class Self = ::podfix::Point> static void nbgen_bind___podfix__Point(nb::module_ &m);
 template <class Self = ::podfix::Axis> static void nbgen_bind___podfix__Axis(nb::module_ &m);
 

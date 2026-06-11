@@ -61,8 +61,18 @@ struct char_traits<unsigned char>
 
 // Enable the opt-in skip annotations inside json (see NLOHMANN_JSON_NB_SKIP in
 // json.hpp). Only the binding TUs do this; a plain `#include <nlohmann/json.hpp>`
-// (e.g. the Gate-1 probe) leaves json standalone and unannotated.
-#define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
+// (e.g. the Gate-1 probe) leaves json standalone and unannotated. Guarded on
+// P3394 support: the emit lane's GENERATED TU re-includes this header under
+// the production compiler, where the annotations (already consumed at
+// generation time) must compile away.
+#if defined(__has_feature)
+#  if __has_feature(annotation_attributes)
+#    define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
+#  endif
+#endif
+#ifndef NLOHMANN_JSON_NB_SKIP
+#  define NLOHMANN_JSON_NB_SKIP
+#endif
 
 #include <nlohmann/json.hpp>
 
