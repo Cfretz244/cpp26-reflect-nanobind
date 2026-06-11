@@ -21,3 +21,6 @@ skipped_features = [
   "swap (free function + member swap_internal) and the move constructor -- move-only/by-ref-self plumbing, not part of the producer/consumer differential",
   "BlockingConcurrentQueue -- its wait_dequeue blocks a thread; single-threaded differential uses the non-blocking ConcurrentQueue (blocking header still compiles in the Gate-1 probe)",
 ]
+
+[emit]
+enabled = true

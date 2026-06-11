@@ -30,3 +30,6 @@ skipped_features = [
   "source_region::path + the source_path_ptr-taking parse_error ctors -- std::shared_ptr<const std::string> (excluded; shared_ptr<T> binding needs T to be a bound class, but std::string has a type caster).",
   "table/array mutation (insert/emplace/push_back), node_view operator[] proxies, and the constrained template ctors of date/time/date_time -- template-heavy / proxy / template-ctor fronts; the run is parse/read oriented.",
 ]
+
+[emit]
+enabled = true

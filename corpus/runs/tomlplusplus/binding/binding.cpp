@@ -22,31 +22,16 @@
 // own parse/coerce/format code (see tomlfix.h). The differential drives the SAME document
 // natively and from Python and compares real bound objects (date/time/date_time fields,
 // node_type enum values, parse_error line/column) plus coerced scalars and round-trip text.
-#include "tomlfix.h"
-
+// Bind set defined once in binding_args.h (shared with the emit-lane generator).
 #include <nanobind/nb_reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
+#include "binding_args.h"
 
 namespace nb = nanobind;
 
 NB_MODULE(tomlpp_ext, m) {
-    nb::reflect_<
-        ^^toml::node_type,
-        ^^toml::date,
-        ^^toml::time,
-        ^^toml::time_offset,
-        ^^toml::date_time,
-        ^^toml::source_position,
-        ^^toml::source_region,
-        ^^toml::parse_error,
-        ^^tomlfix,
-        // source_region::path / the source_path_ptr-taking parse_error ctors use
-        // std::shared_ptr<const std::string>; shared_ptr<T> binding needs T to be a bound
-        // class, but std::string has a type caster. No other shared_ptr is in this surface,
-        // so make the template opaque: path / those ctors are skipped, begin/end stay bound.
-        ^^nb::exclude_<^^std::shared_ptr>
-    >(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

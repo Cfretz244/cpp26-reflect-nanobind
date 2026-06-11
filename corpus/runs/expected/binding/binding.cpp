@@ -8,7 +8,7 @@
 // converting ctors are templates) and thin wrappers over the all-template
 // operator== / value_or / monadic fronts.
 //
-// This surface formerly sat at outcome B behind a four-bug cascade, all fixed:
+// This surface formerly sat at outcome B behind a five-bug cascade, all fixed:
 //   - TC-0008 (codegen ICE): tl's namespace-scope deduction guide
 //     `unexpected(E) -> unexpected<E>` in bind_free_operators' namespace walk
 //     crashed the Itanium mangler; fixed in the toolchain (guides now mangle)
@@ -25,21 +25,18 @@
 //     expected<T,E> specialization mangled identically as reflection NTTPs
 //     (ODRHash::AddFunctionDecl no-ops in specialization context), so codegen
 //     folded the binder's dispatch bodies and value() never bound.
-// See corpus/findings/TC-000{6,7,8,9}-*.md and BINDER-0012-*.md.
+//   - BINDER-0013: copy ctors were never bound; init<const T&> now binds for
+//     copyable non-trampolined classes.
+// See corpus/findings/TC-000{6,7,8,9}-*.md and BINDER-001{2,3}-*.md.
+//
+// Bind set defined once in binding_args.h (shared with the emit-lane generator).
 #include <nanobind/nb_reflect.h>
+#include "binding_args.h"
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
-
-#include "extest.h"
 
 namespace nb = nanobind;
 
 NB_MODULE(expected_ext, m) {
-    nb::reflect_<^^tl::expected<int, std::string>,
-                 ^^tl::expected<std::string, int>,
-                 ^^tl::expected<void, std::string>,
-                 ^^tl::unexpected<std::string>,
-                 ^^tl::unexpected<int>,
-                 ^^tl::bad_expected_access<std::string>,
-                 ^^extest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

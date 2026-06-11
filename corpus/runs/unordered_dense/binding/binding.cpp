@@ -11,12 +11,10 @@
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/optional.h>
 
-#include "udtest.h"
+#include "binding_args.h"
 
 namespace nb = nanobind;
 
 NB_MODULE(unordered_dense_ext, m) {
-    nb::reflect_<^^ankerl::unordered_dense::map<int, std::string>,
-                 ^^ankerl::unordered_dense::set<int>,
-                 ^^udtest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

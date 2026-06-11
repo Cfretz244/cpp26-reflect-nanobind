@@ -26,3 +26,10 @@ skipped_features = [
   "&&/const&&-qualified value()/error()/unexpected::value() overloads (binder qualifier matrix skips rvalue-ref-qualified)",
   "expected<void, E>'s value<U=T>() and swap<OT=T,...>() (enable_if'd away for T=void: can_substitute reports not-substitutable -- TC-0006's graceful path -- and the binder skips them; has_value/__bool__/error/ctors are the void surface)",
 ]
+
+[emit]
+enabled = true
+# stage-2 (production compile) extra_cflags default to the constexpr lane's
+# extra_cflags minus reflection-only flags; -fconstexpr-steps is reflection-only
+# (stripped automatically) and -Wno-deprecated-declarations is harmless for the
+# Apple-Clang compile of plain generated source, so no override is needed.

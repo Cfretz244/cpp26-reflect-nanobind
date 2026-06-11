@@ -6,8 +6,8 @@
   "tier": 3,
   "header_only": true,
   "toolchain_commit": "8005e38",
-  "binder_commit": "f05dadf",
-  "prod_compiler": "",
+  "binder_commit": "75e47e7",
+  "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -32,7 +32,33 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 447.48
+        "binding_compile_seconds": 16.67
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "6 passed in 0.01s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 94.81,
+        "generated_tu_lines": 199,
+        "generated_tu_bytes": 69078
       },
       "oracle": {
         "layers_used": [
@@ -44,7 +70,7 @@
     }
   },
   "surface_diff": {
-    "status": "skip",
+    "status": "pass",
     "mismatches": []
   },
   "subset": {
@@ -78,9 +104,12 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.55,
-    "constexpr_binding_compile_seconds": 447.48
+    "probe_seconds": 0.6,
+    "constexpr_binding_compile_seconds": 16.67,
+    "emit_binding_compile_seconds": 94.81,
+    "emit_generated_tu_lines": 199,
+    "emit_generated_tu_bytes": 69078
   },
   "artifacts": {},
-  "notes": ""
+  "notes": "surface_diff: 0 mismatch(es), 6 top-level object(s) compared; "
 }

@@ -18,39 +18,14 @@
 // as constants but have no storage unless defined out-of-line, which moodycamel never does).
 // These constants are not part of the producer/consumer differential, so they are excluded
 // here on both specs; see findings_draft/binder-static-const-member-address-odr-use.md.
-#include "cqtest.h"
-
+// Bind set defined once in binding_args.h (shared with the emit-lane generator).
 #include <nanobind/nb_reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
-
-#include <concurrentqueue.h>
+#include "binding_args.h"
 
 namespace nb = nanobind;
-namespace sm = std::meta;
-
-namespace {
-
-// Collect the address-taken, never-defined static const config constants of the two queue
-// specs into an nb::exclude_<...> marker so the binder skips binding them.
-consteval std::meta::info cq_excluded_marker() {
-    std::vector<std::meta::info> args;
-    for (sm::info Q : {^^moodycamel::ConcurrentQueue<int>,
-                       ^^moodycamel::ConcurrentQueue<std::string>}) {
-        for (auto mem : sm::members_of(Q, sm::access_context::unchecked())) {
-            if (nb::detail::is_using_proxy(mem)) continue;
-            if (sm::is_static_member(mem) && sm::is_variable(mem))
-                args.push_back(sm::reflect_constant(mem));
-        }
-    }
-    return sm::substitute(^^nb::exclude_, args);
-}
-
-}  // namespace
 
 NB_MODULE(concurrentqueue_ext, m) {
-    nb::reflect_<^^moodycamel::ConcurrentQueue<int>,
-                 ^^moodycamel::ConcurrentQueue<std::string>,
-                 cq_excluded_marker(),
-                 ^^cqtest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

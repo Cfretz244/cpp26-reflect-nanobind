@@ -33,3 +33,6 @@ skipped_features = [
   "tf::Future<void> (Executor::run result), tf::Graph, tf::FlowBuilder, tf::WorkerInterface -- excluded; internal / templated / non-bindable types surfaced through the fixture's run() instead.",
   "default-argument VALUES (Executor's N = hardware_concurrency()) are a C++26 reflection gap; the fixture/tests pass an explicit worker count so both sides drive identical ctors.",
 ]
+
+[emit]
+enabled = true

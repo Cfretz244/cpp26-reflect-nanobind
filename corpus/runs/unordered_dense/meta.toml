@@ -19,3 +19,6 @@ skipped_features = [
   "extract/replace/values()/reserve/rehash (value_container_type / node-handle returns with no Python value semantics)",
   "constructors taking bucket_count/Hash/KeyEqual/allocator (defaulted/initializer_list/iterator-range forms have no Python representation; default-construct + populate is the bound path)",
 ]
+
+[emit]
+enabled = true

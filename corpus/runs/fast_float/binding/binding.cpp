@@ -8,16 +8,13 @@
 // The actual parse entry points are free function templates over pointer pairs + an out-param
 // reference (no Python representation), so the fixture namespace wraps the four concrete
 // instantiations (double/float/int64/uint64) as string-in -> {value, consumed, ok, ec}-out.
-#include "fixture.h"
-
+// Bind set defined once in binding_args.h (shared with the emit-lane generator).
 #include <nanobind/nb_reflect.h>
+#include "binding_args.h"
 #include <nanobind/stl/string.h>
 
 namespace nb = nanobind;
 
 NB_MODULE(fast_float_ext, m) {
-    nb::reflect_<^^fast_float::chars_format,
-                 ^^fast_float::parse_options_t<char>,
-                 ^^fast_float::from_chars_result_t<char>,
-                 ^^fixture>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

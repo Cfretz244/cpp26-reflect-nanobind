@@ -26,14 +26,10 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-#include "fmttest.h"      // brings <cstdlib> (LIB-0001) then <fmt/format.h>
-#include <fmt/color.h>    // the real fmt enums reflected below
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(fmt_ext, m) {
-    nb::reflect_<^^fmt::color, ^^fmt::terminal_color, ^^fmt::emphasis,
-                 ^^fmt::format_int,
-                 ^^fmt::to_string<int>, ^^fmt::to_string<double>, ^^fmt::to_string<long long>,
-                 ^^fmttest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

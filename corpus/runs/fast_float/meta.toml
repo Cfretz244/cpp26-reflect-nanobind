@@ -19,3 +19,6 @@ skipped_features = [
   "integer_times_pow10 free functions (uint64/int64 mantissa * 10^exp -> double): a numeric utility orthogonal to the from_chars parsing theme this run pins; not bound.",
   "the std::float16_t/bfloat16_t/float32_t/float64_t from_chars instantiations: extended-float types whose Python representation is just double; double+float cover the rounding behavior differentially.",
 ]
+
+[emit]
+enabled = true
