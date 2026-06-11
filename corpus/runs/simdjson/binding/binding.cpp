@@ -19,36 +19,11 @@
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
 
-#include "simdjsontest.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 namespace dom = simdjson::dom;
 
 NB_MODULE(simdjson_ext, m) {
-    nb::reflect_<
-        ^^simdjson::dom::element,
-        ^^simdjson::dom::array,
-        ^^simdjson::dom::object,
-        ^^simdjson::dom::element_type,
-        ^^simdjson::error_code,
-        ^^simdjsontest,
-        // Opaque: everything the DOM mentions that Python cannot represent, so the head-on
-        // classes' result/iterator/parser-returning members are skipped (BINDER-0014).
-        ^^nb::exclude_<
-            ^^simdjson::simdjson_result,            // the value-or-error monad (every nav/coerce return)
-            ^^simdjson::dom::parser,                // move-only entry point; results alias its buffers
-            ^^simdjson::dom::document,              // move-only; unique_ptr members
-            ^^simdjson::dom::document_stream,       // many-document streaming front
-            ^^simdjson::dom::key_value_pair,        // object iterator value_type
-            ^^simdjson::padded_string,              // parse input front (fixture takes std::string)
-            ^^simdjson::padded_string_view,
-            ^^simdjson::internal::tape_ref,         // private tape handle in every DOM class
-            ^^std::basic_ostream                     // dump_raw_tape / operator<< sink
-            // NOTE: std::vector is NOT excluded -- the fixture's array_values/object_keys return
-            // std::vector<element>/<string> (covered by <nanobind/stl/vector.h>). The DOM classes'
-            // own vector fronts (at_path_with_wildcard -> simdjson_result<vector<element>>) are
-            // already cut by excluding simdjson_result; get_values returns vector<element>& (an
-            // lvalue ref to its out-param) and binds harmlessly.
-        >
-    >(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

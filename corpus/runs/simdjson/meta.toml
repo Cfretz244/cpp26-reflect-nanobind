@@ -49,3 +49,6 @@ skipped_features = [
   "at_path/at_path_with_wildcard (JSONPath) and the deprecated at(string_view) overload -- JSONPath returns std::vector<element>/results; at_pointer (RFC 6901) covers pointer navigation head-on",
   "default-argument VALUES (parse's realloc_if_needed, allocate's max_depth, parse_many's batch_size) are a C++26 reflection gap (P3096 exposes has_default_argument, not the value); not exercised -- the fixture's helpers take no defaulted args",
 ]
+
+[emit]
+enabled = true
