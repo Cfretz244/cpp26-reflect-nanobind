@@ -10,6 +10,7 @@ header_only = true
 url         = ""
 pin         = ""
 status      = "done"          # outcome E (single-stage pipeline proof)
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
 
 [[repo]]
 slug        = "_fixture_virtual"
@@ -18,6 +19,7 @@ header_only = true
 url         = ""
 pin         = ""
 status      = "done"          # outcome E (two-stage codegen / virtual override proof)
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
 
 [[repo]]
 slug        = "_fixture_recursive"
@@ -26,6 +28,7 @@ header_only = true
 url         = ""
 pin         = ""
 status      = "done"          # outcome E (recursive type Node{vector<Node>}; coverage, not a bug repro)
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
 
 [[repo]]
 slug         = "linalg"
@@ -35,6 +38,7 @@ url          = "https://github.com/sgorsten/linalg"
 pin          = "v2.2"
 include_root = "../../libs/linalg"
 status       = "done"         # outcome E after BINDER-0001 fix (was B)
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
 
 [[repo]]
 slug         = "glm"
@@ -44,6 +48,7 @@ url          = "https://github.com/g-truc/glm"
 pin          = "1.0.1"
 include_root = "../../libs/glm"
 status       = "done"         # outcome E (vec3/vec4 ctor+index surface); BINDER-0002/0003 found
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
 
 [[repo]]
 slug         = "json"
@@ -53,6 +58,7 @@ url          = "https://github.com/nlohmann/json"
 pin          = "v3.11.3"
 include_root = "../../libs/json/single_include"
 status       = "done"         # outcome E: real ^^nlohmann::json binds + L1 differential passes.
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # Required THREE source fixes (NOT the originally-claimed SLoc ceiling):
                               # TC-0002 = a clang Sema use-after-free (re-acquire Rec across reentrant
                               # consteval); BINDER-0005 = nanobind concat() ADL-hijack; TC-0001 =
@@ -67,6 +73,7 @@ url          = "https://github.com/fmtlib/fmt"
 pin          = "11.2.0"
 include_root = "../../libs/fmt/include"
 status       = "done"         # outcome E: real fmt enums (color/terminal_color/emphasis) bind +
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # L1 differential; fmt's all-template format API exercised via concrete
                               # fmttest wrappers (kwargs, string/vector casters, fmt::join, member-fn-
                               # template gap). LIB-0001 (fmt's unqualified malloc/free) worked around
@@ -84,6 +91,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::InlinedVector<int,4>+<double,2> direct, full surface,
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # L1 differential incl. small-buffer spill. hash/btree/FixedArray
                               # deferred (BINDER-0008).
 
@@ -95,6 +103,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::int128/uint128 direct; arithmetic/bitwise/comparison
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # dunders + str() (BINDER-0007 fix); L1 differential on 128-bit results.
 
 [[repo]]
@@ -105,6 +114,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::Duration/Time direct (operators->dunders, ->__str__
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # "1m30s"); timetest fixtures supply factory/conversion free functions.
 
 [[repo]]
@@ -115,6 +125,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::Status + StatusCode enum direct (ok/code/message/
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # raw_code); L1 differential. string_view/optional casters.
 
 [[repo]]
@@ -125,6 +136,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::crc32c_t direct (__int__ via explicit uint32_t
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # conversion, __str__ hex via namespace operator<<); crctest fixture
                               # wraps compute/extend/concat/remove_* free fns (4 compiled symbols).
 
@@ -136,6 +148,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: StatusOr<int/string/double> specs direct (ok/status/
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # IgnoreError); sotest factories (ctors are templates) + get_*
                               # accessors (value() using-redeclared from a PRIVATE base --
                               # invisible to members_of; real throw path still exercised).
@@ -148,6 +161,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: absl::Cord direct (ctor/Append/Prepend/Remove*/Subcord/
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # Compare/StartsWith/EndsWith/__str__) + strtest wrappers over the
                               # variadic-template StrCat/StrJoin/StrSplit/SimpleAtoi/ascii API.
                               # Found+fixed BINDER-0010 (by-value move-only param hard error).
@@ -160,6 +174,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: CivilDay/Second/Year = real internal-namespace
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # civil_time<tag> specs bound (fields/normalization/__iadd__);
                               # TimeZone + nested CivilInfo direct (const char* def_ro);
                               # tztest wraps FromCivil/ToCivil*/Format/LoadTimeZone->optional.
@@ -172,6 +187,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: flat_hash_map/set + node_hash_map HEAD-ON (BINDER-0008
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # payoff): contains/count/at/erase/__getitem__ via default-instantiable
                               # member templates; no policy explosion (reachability discovery);
                               # hmtest put/add for population (pair<iterator,bool> not expressible).
@@ -184,6 +200,7 @@ url          = "https://github.com/abseil/abseil-cpp"
 pin          = "20250814.2"
 include_root = "../../libs/abseil"
 status       = "done"         # outcome E: btree_map/btree_set head-on (ordered half); query surface
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # incl. lower/upper_bound + __getitem__; order differentially observed
                               # via bttest first_key/first_elem (iteration is a future __iter__).
 
@@ -195,6 +212,7 @@ url          = "https://github.com/gabime/spdlog"
 pin          = "v1.17.0"
 include_root = "../../libs/spdlog/include"
 status       = "done"         # outcome E: logger head-on (log/levels/pattern/clone/sinks);
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # sink hierarchy = real Python bases (stdout_sink_mt ->
                               # stdout_sink_base<console_mutex> -> abstract sink, no ctor:
                               # BINDER-0011 found+fixed, + caster-matrix over-collection);
@@ -210,6 +228,7 @@ url          = "https://github.com/TartanLlama/expected"
 pin          = "v1.3.1"
 include_root = "../../libs/expected/include"
 status       = "done"         # outcome E (re-gated by the eigen run's full-corpus sweep after
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # TC-0006..0009 landed): all 16 latent differential tests pass.
                               # History: the PHASE 2 unaided subagent run landed outcome B and
                               # the four-bug cascade (TC-0008 mangler ICE; behind it
@@ -224,6 +243,7 @@ url          = "https://gitlab.com/libeigen/eigen"
 pin          = "5.0.1"
 include_root = "../../libs/eigen"
 status       = "done"         # outcome E: Vector3d/Matrix3d (Matrix<double,3,1>/<3,3>) HEAD-ON,
+emit_status = "pending"  # emit lane (three-way validation, Phase 4)
                               # CRTP facade chains as REAL Python bases (8-deep MRO); the run
                               # that built nb::exclude_ + completeness gates (BINDER-0014 --
                               # expression-template discovery diverges, NestByValue/SparseView
@@ -247,6 +267,7 @@ url          = "https://github.com/marzer/tomlplusplus"
 pin          = "v3.4.0"
 include_root = "../../libs/tomlplusplus/include"
 status       = "done"          # outcome E: date/time/offset/date_time + node_type enum + parse_error/source_region
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # head-on; tomlfix carries parse/coerce/format (node tree was blocked by
                               # BINDER-0015/0016 reports -- 0015 fixed, tree revisit is a residual);
                               # 46-observable L1 differential incl. byte-for-byte serialization.
@@ -259,6 +280,7 @@ url          = "https://github.com/CLIUtils/CLI11"
 pin          = "v2.6.2"
 include_root = "../../libs/cli11/include"
 status       = "done"          # outcome E (was D): App/Option head-on via the string-collecting option
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # API + ParseError hierarchy; found BINDER-0017 (raw-ptr-return
                               # take_ownership double-free, THE wave-1 blocker) + BINDER-0015 shape
                               # (char** fronts). Re-gated green after the rv_policy default fix.
@@ -271,6 +293,7 @@ url          = "https://github.com/HowardHinnant/date"
 pin          = "v3.0.4"
 include_root = "../../libs/date/include"
 status       = "done"          # outcome E: calendrical value types + operator/ DSL + comparisons +
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # format() head-on; datefix bridges sys_days serial round-trip (chrono
                               # time_point has no caster). Clean run, no findings.
 
@@ -282,6 +305,7 @@ url          = "https://github.com/martinus/unordered_dense"
 pin          = "v4.8.1"
 include_root = "../../libs/unordered_dense/include"
 status       = "done"          # outcome E: map<int,string>/set<int> head-on (detail::table specs),
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # query surface + __getitem__ default-insert differential; flagged the
                               # harness static_assert-as-ICE false positive (classifier fixed).
 
@@ -293,6 +317,7 @@ url          = "https://github.com/zeux/pugixml"
 pin          = "v1.15"
 include_root = "../../libs/pugixml/src"
 status       = "done"          # outcome E: xml_document/node/attribute/parse_result + 3 enums head-on,
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # REAL inheritance (document -> node); found BINDER-0019 (incomplete
                               # pImpl pointer gate). extra_sources=pugixml.cpp; 15-test differential
                               # incl. byte-for-byte serialization + malformed-XML error path.
@@ -305,6 +330,7 @@ url          = "https://github.com/tinyobjloader/tinyobjloader"
 pin          = "v1.0.7"
 include_root = "../../libs/tinyobjloader"
 status       = "done"          # outcome E (was B): attrib_t/shape_t/mesh_t/index_t/material_t head-on;
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # found BINDER-0018 (typedef-anon-struct naming, THE blocker -- every
                               # public type is `typedef struct {...} name_t;`). Re-gated green after
                               # the reached-through-alias naming fix.
@@ -317,6 +343,7 @@ url          = "https://github.com/fastfloat/fast_float"
 pin          = "v8.2.8"
 include_root = "../../libs/fast_float/include"
 status       = "done"          # outcome E: chars_format enum + parse_options_t<char> +
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # from_chars_result_t<char> head-on; fixture wraps the pointer-pair/
                               # out-param from_chars fronts (126 oracle keys incl. subnormals, hex
                               # floats, overflow errc). BINDER-0021 noted (open design note).
@@ -329,6 +356,7 @@ url          = "https://github.com/cameron314/concurrentqueue"
 pin          = "v1.0.5"
 include_root = "../../libs/concurrentqueue"
 status       = "done"          # outcome E: ConcurrentQueue<int>/<string> head-on (enqueue/try_enqueue/
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # size_approx/is_lock_free), FIFO differential; found BINDER-0020
                               # (static-const address ODR-use at link; fixed -- its exclude_
                               # workaround is now removable as a residual).
@@ -346,6 +374,7 @@ url          = "https://github.com/jbeder/yaml-cpp"
 pin          = "yaml-cpp-0.9.0"
 include_root = "../../libs/yamlcpp/include"
 status       = "done"          # outcome E: YAML::Node head-on (Type/size/Scalar/__getitem__ via
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # non-template operator[]) + NodeType enum + Mark + Dump/Clone; yamlfix
                               # concretizes as<T>/keyed access (member templates). Found BINDER-0022
                               # (enum name collision, fixed). First extra_libs archive consumer.
@@ -358,6 +387,7 @@ url          = "https://github.com/simdjson/simdjson"
 pin          = "v4.6.4"
 include_root = "../../libs/simdjson/singleheader"
 status       = "done"          # outcome E: dom::element/array/object + element_type/error_code enums
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # head-on; Doc fixture anchors parser lifetime + unwraps
                               # simdjson_result<T>. Exposed TC-0015 (guide-spec mangling) via the
                               # namespace-alias leak that became BINDER-0028 (both fixed).
@@ -370,6 +400,7 @@ url          = "https://github.com/yhirose/cpp-httplib"
 pin          = "v0.47.0"
 include_root = "../../libs/httplib"
 status       = "done"          # outcome E: REAL Client driven over loopback against a real Server
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # (EchoServer fixture owns thread+handlers only); Request/Response/
                               # Result + Error/StatusCode enums head-on; 15-test differential incl.
                               # closed-port error path. BINDER-0027 noted (open).
@@ -382,6 +413,7 @@ url          = "https://github.com/google/leveldb"
 pin          = "1.23"
 include_root = "../../libs/leveldb/include"
 status       = "done"          # outcome E: Status/Slice/Options/WriteBatch/CompressionType head-on;
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # DB via KVStore forwarding handle -- LIB-0003: leveldb builds
                               # -fno-rtti, typeinfo absent, head-on DB binding impossible. Also
                               # flagged the non-owning-view ctor dangling hazard (BINDER-0029 open
@@ -395,6 +427,7 @@ url          = "https://github.com/SRombauts/SQLiteCpp"
 pin          = "3.3.3"
 include_root = "../../libs/sqlitecpp/include"
 status       = "done"          # outcome E: Database/Statement/Column/Transaction/Exception head-on,
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # in-memory DB differential incl. rollback + UNIQUE-violation path.
                               # Found BINDER-0023 (const void* hard error) + BINDER-0024 (member+
                               # static same-name import abort), both fixed; co-found TC-0014.
@@ -407,6 +440,7 @@ url          = "https://github.com/taskflow/taskflow"
 pin          = "v4.0.0"
 include_root = "../../libs/taskflow"
 status       = "done"          # outcome E (v4.0.0): Taskflow/Task/Executor head-on; Diamond fixture
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # wires the graph (emplace/precede are callable templates) + order-
                               # constraint differential. Found BINDER-0025 (T& returns copy-policy
                               # abort, fixed) + LIB-0004 (missing <bit> include).
@@ -419,6 +453,7 @@ url          = "https://github.com/erincatto/box2d"
 pin          = "v2.4.2"
 include_root = "../../libs/box2d/include"
 status       = "done"          # outcome E (was B): b2Vec2/b2World/b2Body/defs/enums head-on, 90-step
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # byte-identical physics differential. THE toolchain-bug magnet:
                               # TC-0014 (DescriptionOf builtin templates -- every global-namespace
                               # class ICEd) + TC-0016 (members_of truncated by Python.h, free
@@ -432,6 +467,7 @@ url          = "https://github.com/arximboldi/immer"
 pin          = "v0.9.1"
 include_root = "../../libs/immer"
 status       = "done"          # outcome E: vector<int>/<string> + map<int,int> + set<int> specs
+emit_status = "done"  # emit lane (three-way validation, Phase 4)
                               # head-on, NO fixture; persistent-semantics differential (originals
                               # unchanged after every update). Found BINDER-0026 (init-list ctor
                               # hijack via braced nb::init, fixed); immer::detail excluded.
