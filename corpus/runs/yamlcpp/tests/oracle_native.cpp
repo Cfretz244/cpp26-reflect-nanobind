@@ -81,6 +81,12 @@ int main() {
     i("nt_sequence", static_cast<long long>(YAML::NodeType::Sequence));
     i("nt_map", static_cast<long long>(YAML::NodeType::Map));
 
+    // enum ground-truth (EmitterStyle::value -- the BINDER-0022 collision twin,
+    // bound parent-qualified as "EmitterStyle_value")
+    i("es_default", static_cast<long long>(YAML::EmitterStyle::Default));
+    i("es_block", static_cast<long long>(YAML::EmitterStyle::Block));
+    i("es_flow", static_cast<long long>(YAML::EmitterStyle::Flow));
+
     // Dump round-trip text (byte-for-byte)
     s("dump", YAML::Dump(root));
 

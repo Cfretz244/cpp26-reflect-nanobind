@@ -16,6 +16,14 @@ extra_libs   = "-L {repo}/build/sqlitecpp-install/lib -lsqlitecpp_merged"
 # here for the Gate-4 binding compile exactly as the json/pugixml heavy runs do.
 extra_cflags = ["-fconstexpr-steps=33554432"]
 
+[emit]
+enabled = true
+# Stage 2 (production compile of the generated TU) links the PRODUCTION merged
+# archive: run_gates.py rewrites the extra_libs -install/lib prefix to
+# -install-prod/lib automatically (build/sqlitecpp-install-prod/lib/
+# libsqlitecpp_merged.a, Apple Clang + system libc++). Default stage-2 std/cflags
+# (constexpr extra_cflags minus the reflection-only -fconstexpr-steps) suffice.
+
 reflect_args = [
   "^^SQLite::Database",
   "^^SQLite::Statement",

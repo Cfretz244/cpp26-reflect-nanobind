@@ -5,9 +5,9 @@
   "pinned_commit": "20250814.2",
   "tier": 6,
   "header_only": false,
-  "toolchain_commit": "8005e38",
-  "binder_commit": "f05dadf",
-  "prod_compiler": "",
+  "toolchain_commit": "ff46ef7",
+  "binder_commit": "3b6cb28",
+  "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -32,7 +32,33 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 7.89
+        "binding_compile_seconds": 7.65
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "9 passed in 0.01s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 17.79,
+        "generated_tu_lines": 214,
+        "generated_tu_bytes": 28743
       },
       "oracle": {
         "layers_used": [
@@ -44,7 +70,7 @@
     }
   },
   "surface_diff": {
-    "status": "skip",
+    "status": "pass",
     "mismatches": []
   },
   "subset": {
@@ -82,9 +108,12 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.85,
-    "constexpr_binding_compile_seconds": 7.89
+    "probe_seconds": 0.8,
+    "constexpr_binding_compile_seconds": 7.65,
+    "emit_binding_compile_seconds": 17.79,
+    "emit_generated_tu_lines": 214,
+    "emit_generated_tu_bytes": 28743
   },
   "artifacts": {},
-  "notes": ""
+  "notes": "surface_diff: 0 mismatch(es), 17 top-level object(s) compared; "
 }

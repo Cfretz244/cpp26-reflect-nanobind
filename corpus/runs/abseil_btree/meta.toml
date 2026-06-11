@@ -14,3 +14,6 @@ extra_cflags = ["-fconstexpr-steps=1000000000"]   # btree_container ancestry bin
 reflect_args     = ["^^absl::btree_map<int, std::string>", "^^absl::btree_set<int>", "^^bttest"]
 subset_rationale = "absl::btree_map/btree_set bound HEAD-ON (the ordered half of BINDER-0008). The container_internal btree_map_container/btree_set_container/btree_container ancestry becomes the flattened/Python-base chain via reachability discovery; the heterogeneous query surface (contains/count/find/erase/at/equal_range/lower_bound/upper_bound and operator[] -> __getitem__ with C++ default-insert semantics) binds via default-instantiable member templates with the TC-0004 dispatch-level substitution. bttest supplies value-setting population (insert's pair<iterator,bool> return is not Python-expressible)."
 skipped_features = ["ordered ITERATION from Python (begin/lower_bound return iterator types; a future __iter__/make_iterator feature -- order is exercised natively in the oracle only)", "insert/extract/merge from Python (iterator/node_handle returns)", "emplace/try_emplace/insert_or_assign (parameter-pack member templates, skipped by design)"]
+
+[emit]
+enabled = true

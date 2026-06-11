@@ -100,6 +100,24 @@ def test_nodetype_enum_values():
     assert NT.Map.value == E["nt_map"]
 
 
+def test_emitterstyle_collision_parent_qualified():
+    # BINDER-0022: YAML::NodeType::value and YAML::EmitterStyle::value share the
+    # unqualified Python name "value". NodeType::value is registered first (the pack
+    # order) so it keeps the bare module attribute `value`; EmitterStyle::value, the
+    # second registration, must bind parent-qualified as `EmitterStyle_value` instead
+    # of clobbering it. This identical fallback must appear in BOTH modules (constexpr
+    # + emit); the surface diff (Gate 6b) cross-checks name-for-name.
+    assert m.value is NT                      # bare "value" stays NodeType
+    assert hasattr(m, "EmitterStyle_value")   # the collision twin, parent-qualified
+    ES = m.EmitterStyle_value
+    assert ES is not NT                        # distinct enum types
+    assert ES.Default.value == E["es_default"]
+    assert ES.Block.value == E["es_block"]
+    assert ES.Flow.value == E["es_flow"]
+    # NodeType's own members are untouched by the second registration
+    assert NT.Map.value == E["nt_map"]
+
+
 def test_dump_roundtrip_byte_for_byte(root):
     assert m.Dump(root) == E["dump"]
 

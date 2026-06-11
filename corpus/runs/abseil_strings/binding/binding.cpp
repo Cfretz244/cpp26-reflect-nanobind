@@ -9,10 +9,10 @@
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/optional.h>
 
-#include "strtest.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(abseil_strings_ext, m) {
-    nb::reflect_<^^absl::Cord, ^^strtest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

@@ -13,3 +13,6 @@ link_abseil  = true
 reflect_args     = ["^^absl::Cord", "^^strtest"]
 subset_rationale = "absl::Cord -- Abseil's flagship rope/string data structure, a large concrete class -- bound head-on: explicit Cord(string_view) ctor, Append/Prepend (the const Cord&/string_view overloads; the string-like T&& overloads are member templates, skipped by design), RemovePrefix/RemoveSuffix, Subcord, size/empty/Clear, Compare/StartsWith/EndsWith, TryFlat -> optional<string_view>, Flatten, operator<< -> __str__. The classic string FREE-function API is variadic/range templates (StrCat's AlphaNum pack, StrJoin, StrSplit) so the strtest fixture exposes concrete-arity wrappers (cat2/cat3/cat_int/join/split/to_int/upper/lower) -- exercising the string, string_view, vector<string>, and optional casters. absl::string_view == std::string_view here (alias)."
 skipped_features = ["string-like Append/Prepend(T&&) overloads (member templates, skipped by design)", "CordBuffer paths (Append(CordBuffer)/GetAppendBuffer; move-only buffer type out of scope)", "Chunks()/Chars() iteration ranges (nested non-template classes are not auto-discovered; not exercised)", "hidden-friend operator==/!= (not enumerable namespace members; Compare()==0 is the equality channel)", "SetExpectedChecksum/ExpectedChecksum (optional<uint32> niche)"]
+
+[emit]
+enabled = true

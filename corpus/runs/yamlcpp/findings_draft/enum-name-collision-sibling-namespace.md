@@ -52,19 +52,21 @@ No compile/import error -- silent. Surfaces only behaviorally: the bound
 `Type()` value cannot be compared against any module-level enum member, and the
 clobbered enum's members are simply absent.
 
-## Suggested direction (not applied)
+## Resolution (BINDER-0022 -- landed in the binder)
 
-A reflected enum (and class) whose unqualified name collides with an
-already-registered module attribute should be disambiguated (e.g. a
-namespace-qualified Python name `NodeType_value` / `EmitterStyle_value`, mirroring
-the CamelCase spec-naming the binder already does for template specializations),
-or at minimum the binder should not silently let the second registration clobber
-the first.
+`reflect_enum` and `reflect_class` now consult the module dict at bind time and,
+when the plain unqualified name is already taken, register the entity under a
+parent-qualified Python name `"<Parent>_<name>"` instead of silently clobbering
+(`parent_qualified_name<R>(name)` + a runtime `hasattr(m, name) ? qual : name`
+guard; `reflect_enum` also gained the `is_valid` idempotence guard so a re-reached
+enum does not re-register / trip the collision path). The EMIT backend renders the
+identical runtime `nb::hasattr(...) ? qual : name` line (nb_reflect_emit.h's
+`emit_enum_def_text` + class twin), so both modules expose the same pair of names.
 
-## Run workaround
-
-This run keeps NodeType::value head-on (it is the differential's primary enum --
-`Node::Type()`) and drops `EmitterStyle::value` from the reflect_ pack so `m.value`
-is unambiguously NodeType (Undefined/Null/Scalar/Sequence/Map). EmitterStyle is
-recorded in skipped_features. No test was weakened: the differential asserts on
-`Node::Type()` enum identity and members directly.
+For this run: NodeType::value is first in the reflect_ pack -> keeps the bare
+module attribute `value` (the differential's primary enum, `Node::Type()`);
+EmitterStyle::value is second -> binds parent-qualified as `EmitterStyle_value`.
+test_bindings.py::test_emitterstyle_collision_parent_qualified asserts both names
+and the distinct enum identities against the native oracle's EmitterStyle ground
+truth; Gate 6b's surface diff cross-checks the pair name-for-name across the two
+backends. No test was weakened; EmitterStyle is no longer in skipped_features.

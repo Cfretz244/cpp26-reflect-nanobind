@@ -39,11 +39,30 @@ bind_dir="$(cd "$(dirname "$gen_src")" && pwd)"
 # Text rendering is inherently step-hungry (every member's spelling and
 # binding line is built in consteval), so the generator gets a raised
 # constexpr budget by default; a run's NB_GEN_CFLAGS comes later and wins.
+# NB_EXTRA_SOURCES compile here too (plain C++26, toolchain libc++): a
+# fixture header's inline functions can reference library symbols that live
+# in the .cpp (simdjson's error_codes/to_chars), and the generator
+# EXECUTABLE must link even though it never calls them.
+gen_extra_objs=()
+if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
+  i=0
+  for esrc in $NB_EXTRA_SOURCES; do
+    eobj="$out_dir/gen_extra_${i}.o"
+    "$TC/bin/clang++" \
+      -std=c++26 -stdlib=libc++ -O2 -DNDEBUG -arch arm64 $ISYSROOT_FLAGS \
+      -nostdinc++ -isystem "$TC/include/c++/v1" \
+      -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" \
+      -c "$esrc" -o "$eobj" \
+      || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
+    gen_extra_objs+=("$eobj")
+    i=$((i + 1))
+  done
+fi
 "$TC/bin/clang++" $REFLECT_FLAGS $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
   -fconstexpr-steps=1000000000 \
   -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
-  "$gen_src" -o "$gen_bin" \
+  "$gen_src" ${gen_extra_objs[@]+"${gen_extra_objs[@]}"} -o "$gen_bin" \
   || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
 
 # --- stage 1b: run it to render the binding TU ---

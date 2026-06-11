@@ -5,12 +5,10 @@
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/pair.h>
 
-#include "bttest.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(abseil_btree_ext, m) {
-    nb::reflect_<^^absl::btree_map<int, std::string>,
-                 ^^absl::btree_set<int>,
-                 ^^bttest>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }
