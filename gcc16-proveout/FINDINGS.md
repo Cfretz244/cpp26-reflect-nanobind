@@ -130,9 +130,18 @@ valid on both compilers; clang suite unaffected.
 1. Sweep the corpus (36 runs) under GCC in the container — the real
    robustness test (Eigen/json-scale consteval walks, `-fconstexpr-ops-limit`
    headroom, GCC-native ICEs).
-2. Decide the using-redeclaration story: drop the feature on GCC, or emulate
-   (per-class `using`-target scan via bases_of + name lookup is NOT
-   expressible in P2996 final for private bases).
+2. ~~Decide the using-redeclaration story~~ DECIDED (2026-06-11): the feature
+   will not be depended on. Verified that entity proxies were NOT adopted
+   into C++26 — P3687R1 offered EWG "adopt entity proxies" (poll 2a) vs
+   "make ^^ ill-formed on a using-declarator, defer to a future delivery
+   vehicle" (poll 2b); 2b is what landed (P2996R13 revision history records
+   the ill-formed rule, and GCC 16.1's members_of enumerates nothing for a
+   using-declaration — probed directly). The clang fork implements proxies
+   as an opt-in post-C++26 extension (-fentity-proxy-reflection, not implied
+   by -freflection-latest) in its role as reference implementation.
+   Consequence: using-redeclaration binding (BINDER-0009/test38) is to be
+   treated as fork-only legacy and removed or quarantined; with it gone, GCC
+   16 has NO feature gap vs the fork.
 3. File GCC-1/GCC-2 (and minimized GCC-3/4 questions) upstream.
 4. Merge `gcc16-spike` → `mk-reflect` after a full clang corpus re-gate
    (memory: corpus-regate-after-changes).
