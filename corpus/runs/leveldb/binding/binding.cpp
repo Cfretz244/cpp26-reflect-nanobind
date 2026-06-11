@@ -18,31 +18,13 @@
 // verbatim to the genuine DB::Put/Get/Delete/Write, and which also bridges DB::Open's DB**
 // and DB::Get's std::string* out-parameters (un-drivable from Python). No behavior is wrapped.
 //
-// The exclude_ pack makes the unbound surface opaque on every path (BINDER-0014): the
-// option structs' forward-declared collaborator pointers (Comparator/Env/Cache/FilterPolicy/
-// Logger), the polymorphic Snapshot handle (ReadOptions::snapshot -- itself RTTI-absent),
-// and WriteBatch::Handler (a pure-virtual visitor needing a Python override we do not surface).
+// The bind set + exclude_ pack live in binding_args.h (shared with the emit generator).
 #include <nanobind/nb_reflect.h>
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 #include <nanobind/stl/string.h>
-
-#include "leveldbtest.h"
 
 namespace nb = nanobind;
 
 NB_MODULE(leveldb_ext, m) {
-    nb::reflect_<^^leveldb::Status,
-                 ^^leveldb::Slice,
-                 ^^leveldb::Options,
-                 ^^leveldb::ReadOptions,
-                 ^^leveldb::WriteOptions,
-                 ^^leveldb::WriteBatch,
-                 ^^leveldb::CompressionType,
-                 ^^leveldbtest,
-                 ^^nb::exclude_<^^leveldb::Comparator,
-                                ^^leveldb::Env,
-                                ^^leveldb::Cache,
-                                ^^leveldb::FilterPolicy,
-                                ^^leveldb::Logger,
-                                ^^leveldb::Snapshot,
-                                ^^leveldb::WriteBatch::Handler>>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

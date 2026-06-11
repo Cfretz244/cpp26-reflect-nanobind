@@ -15,6 +15,13 @@ strategy     = "single_stage"
 extra_cflags = ["-fconstexpr-steps=100000000"]
 link_abseil  = true
 
+[emit]
+enabled = true
+# Stage-2 prod cflags default to constexpr extra_cflags minus reflection flags
+# (here that strips -fconstexpr-steps, leaving nothing). The abseil prod archive
+# (build/abseil-install-prod/lib/libabsl_merged.a, Apple Clang + system libc++)
+# is linked automatically by run_gates.py via link_abseil = true.
+
 reflect_args     = ["^^absl::StatusOr<int>", "^^absl::StatusOr<std::string>", "^^absl::StatusOr<double>", "^^absl::Status", "^^absl::StatusCode", "^^sotest"]
 subset_rationale = "absl::StatusOr<T> bound as three real specializations (int/std::string/double): ok(), status() (returns const Status& so Status+StatusCode are bound in-module), IgnoreError(), and value() -- bound HEAD-ON through its using-redeclaration from the PRIVATE internal_statusor::OperatorBase<T> base via entity-proxy support (BINDER-0009, -fentity-proxy-reflection; found+fixed TC-0003: three toolchain bugs around entity proxies). All of StatusOr's value/converting CONSTRUCTORS are templates (enable_if'd U&&), which the binder skips by design, so the sotest fixture namespace supplies ok_*/err_* factories (the Duration/Time pattern); get_* accessors remain as a differential cross-check channel."
 skipped_features = ["operator*/operator-> re-exports (unary deref has no Python dunder; value() is the access path)", "value construction/assignment from Python literals (all converting ctors are templates; factories instead)", "value_or/emplace/AssignStatus (member templates needing explicit args or packs; Assign* re-exports have template underlyings -- skipped by design)", "rvalue-ref-qualified &&-overloads (filtered via the binder-spec completeness gate; the decl predicate misreports through proxies, see TC-0003 addendum)"]

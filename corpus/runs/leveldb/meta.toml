@@ -17,6 +17,15 @@ extra_libs   = "-L {repo}/build/leveldb-install/lib -lleveldb_merged"
 # json/pugixml/abseil heavy runs do. Raised here for the Gate 4 binding compile.
 extra_cflags = ["-fconstexpr-steps=33554432"]
 
+[emit]
+enabled = true
+# Stage-2 prod cflags default to constexpr extra_cflags minus reflection flags
+# (here that strips -fconstexpr-steps, leaving nothing). The leveldb prod archive
+# is built -fno-rtti (LIB-0003), but the bound set excludes every polymorphic
+# RTTI-absent type (DB/Snapshot/...), so the generated TU links RTTI-clean against
+# it -- the constexpr lane already compiles the same bind set WITH RTTI and links
+# the archive fine. No extra_cflags override needed.
+
 reflect_args     = [
   "^^leveldb::Status",
   "^^leveldb::Slice",
