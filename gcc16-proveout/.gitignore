@@ -1,0 +1,4 @@
+build-nanobind/
+venv/
+probes/ex_*.cpp
+*.o
