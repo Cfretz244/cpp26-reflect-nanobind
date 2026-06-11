@@ -1,7 +1,7 @@
-// Generator: walks the shapes namespace and writes trampoline source (+ any needed STL
-// caster includes) for every class with overridable virtuals to argv[1]. Run at build time.
+// Constexpr-lane trampoline generator (two-stage): writes trampoline source
+// (+ STL caster includes) for every class with overridable virtuals.
 #include <nanobind/nb_reflect_codegen.h>
-#include "shapes.h"
+#include "binding_includes.h"
 
 namespace nb = nanobind;
 

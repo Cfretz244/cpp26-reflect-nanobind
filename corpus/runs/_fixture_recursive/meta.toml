@@ -10,3 +10,6 @@ strategy     = "single_stage"
 reflect_args     = ["^^tree::Node"]
 subset_rationale = "Self-referential data structure (Node holds std::vector<Node>). Coverage for recursive types + vector-of-self member binding. NOT a BINDER-0004 regression (builds pre-fix too)."
 skipped_features = []
+
+[emit]
+enabled = true

@@ -13,3 +13,6 @@ strategy     = "single_stage"          # single_stage | two_stage
 reflect_args     = ["^^podfix"]
 subset_rationale = "Whole namespace; trivial POD fixture to prove the pipeline."
 skipped_features = []
+
+[emit]
+enabled = true

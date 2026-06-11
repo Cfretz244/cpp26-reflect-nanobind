@@ -26,6 +26,9 @@ gen_bin="$out_dir/gen_emit"
 gen_cpp="$out_dir/binding.gen.cpp"
 obj="$out_dir/$mod.o"
 so="$out_dir/$mod$EXT_SUFFIX"
+# The run's binding/ dir holds binding_includes.h, which the generated TU's
+# preamble re-includes -- both stages need it on the include path.
+bind_dir="$(cd "$(dirname "$gen_src")" && pwd)"
 
 [ -f "$NBLIB_PROD" ] || {
   echo "missing $NBLIB_PROD -- run corpus/lib/build_nanobind_prod.sh first" >&2
@@ -35,7 +38,7 @@ so="$out_dir/$mod$EXT_SUFFIX"
 # --- stage 1: build the generator with the reflection toolchain ---
 "$TC/bin/clang++" $REFLECT_FLAGS $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
-  -I "$PYINC" -I "$NBINC" "$@" ${NB_GEN_CFLAGS:-} \
+  -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
   "$gen_src" -o "$gen_bin" \
   || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
 
@@ -49,7 +52,7 @@ DYLD_LIBRARY_PATH="$TC/lib" "$gen_bin" "$gen_cpp" \
   -isysroot "$SDKROOT_PATH" \
   -fPIC -fvisibility=hidden \
   -DNB_ABORT_ON_LEAK \
-  -I "$PYINC" -I "$NBINC" "$@" ${NB_PROD_CFLAGS:-} \
+  -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_PROD_CFLAGS:-} \
   -c "$gen_cpp" -o "$obj" \
   || { echo "BUILD_FAIL_STAGE=emit_compile" >&2; exit 33; }
 
