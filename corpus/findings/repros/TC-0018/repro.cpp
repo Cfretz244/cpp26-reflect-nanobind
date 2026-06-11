@@ -1,25 +1,16 @@
-// TC-0018: define_static_string / reflect_constant_string miscompiles for
-// inputs >= 32768 characters.
+// TC-0018: NTTP packs of >= 32768 elements miscompile: the pack's stored
+// argument count (SubstNonTypeTemplateParmPackExpr::NumArguments : 15) wraps,
+// and the expansion produces a bogus "excess elements in array initializer"
+// from __define_static::FixedArray. 32767 works; 32768 fails. Reproduces in
+// plain C++ without reflection (see the finding write-up) -- reflection's
+// define_static_string just makes such packs trivial to form.
 //
 //   $TC/bin/clang++ -std=c++26 -freflection-latest -stdlib=libc++ \
 //     -isysroot "$(xcrun --show-sdk-path)" -nostdinc++ \
-//     -isystem $TC/include/c++/v1 -fconstexpr-steps=200000000 \
+//     -isystem $TC/include/c++/v1 -fconstexpr-steps=268435456 \
 //     -fsyntax-only repro.cpp
 //
-// Expected: compiles (or a pointed implementation-limit diagnostic).
-// Actual:   "error: excess elements in array initializer" out of
-//           __define_static::FixedArray -- at 32767 chars it compiles, at
-//           32768 it does not.
-//
-// Root cause: reflect_constant_string spells the whole string as ONE pack of
-// char NTTPs; substituting it creates a SubstNonTypeTemplateParmExpr per
-// element, whose PackIndex is a 15-bit bitfield (clang/AST/ExprCXX.h, stored
-// as index+1) that overflows at element 32767 -- the FixedArray
-// specialization's deduced bound then disagrees with its initializer list.
-// The same 15-bit PackIndex exists on SubstTemplateTypeParmType
-// (clang/AST/Type.h) for TYPE packs. Field shape: any generated-source
-// emitter lifting >32K of text via define_static_string (the nanobind emit
-// backend's first full TU was 50K).
+// Expected: compiles. Pre-fix: "excess elements in array initializer".
 #include <meta>
 #include <string>
 

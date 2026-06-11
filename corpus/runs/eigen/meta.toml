@@ -26,9 +26,6 @@ skipped_features = [
 
 [emit]
 enabled = true
-# TC-0020 (candidate): Eigen declares DenseBase::setConstant's param `value`
-# and defines it `val`; parameter identifier_of is redeclaration-dependent on
-# this toolchain, so the two lanes legitimately render different kwarg names
-# for this ONE method. Root-caused in
-# corpus/findings/TC-0020-param-identifier-redecl-dependent.md.
-surface_diff_ignore = ['\.attrs\.setConstant\.doc$']
+# (TC-0020's surface_diff_ignore for setConstant's kwarg removed: the
+# toolchain fix makes the inconsistently-named parameter deterministically
+# unnamed in BOTH lanes -- see the finding.)
