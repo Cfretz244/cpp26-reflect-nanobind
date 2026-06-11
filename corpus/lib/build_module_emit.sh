@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# Gate 4 (emit lane): two stages, two compilers.
-#   stage 1 (P2996 toolchain): compile the emit GENERATOR (gen_emit.cpp, which
-#     calls nb::emit_bindings<...> at constexpr time) and run it to render
-#     <out_dir>/binding.gen.cpp -- the complete binding TU as plain C++.
-#   stage 2 (PRODUCTION compiler, Apple Clang + system libc++): compile and
-#     link the generated source into the module. No reflection toolchain, no
-#     toolchain libc++, no $TC rpath anywhere in the artifact.
+# Gate 4 (emit lane): two stages.
+#   stage 1 (reflection compiler): compile the emit GENERATOR (gen_emit.cpp,
+#     which calls nb::write_bindings<...> at constexpr time) and run it to
+#     render <out_dir>/binding.gen.cpp -- the complete binding TU as plain C++.
+#   stage 2 (PRODUCTION compiler): compile and link the generated source into
+#     the module with no reflection flags anywhere in the artifact.
+#       clang-p2996 backend: Apple Clang + system libc++ (a genuinely
+#         different compiler and runtime; no $TC rpath in the artifact).
+#       gcc16 backend: the SAME stock g++, just without -freflection --
+#         the deployability story collapses to "one released compiler".
 #
 # usage: build_module_emit.sh <gen_emit.cpp> <module_name> <out_dir> [-I extra ...]
 #   produces <out_dir>/binding.gen.cpp and <out_dir>/<module_name><EXT_SUFFIX>
 # env:
-#   NB_GEN_CFLAGS       stage-1 extras (the run's extra_cflags, incl. -fconstexpr-steps)
+#   NB_GEN_CFLAGS       stage-1 extras (the run's extra_cflags, incl. constexpr budget)
 #   NB_PROD_STD         stage-2 -std (default $PROD_STD_DEFAULT)
 #   NB_PROD_CFLAGS      stage-2 extras (extra_cflags minus reflection-only flags)
 #   NB_EXTRA_SOURCES    library .cc files recompiled HERE by the prod compiler
@@ -35,6 +38,72 @@ bind_dir="$(cd "$(dirname "$gen_src")" && pwd)"
   exit 35
 }
 
+if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
+  # --- stage 1: build the generator with g++ -freflection ---
+  # Text rendering is inherently step-hungry; the generator gets a raised
+  # constant-evaluation budget by default (GCC spells it -fconstexpr-ops-limit);
+  # a run's NB_GEN_CFLAGS comes later and wins.
+  gen_extra_objs=()
+  if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
+    i=0
+    for esrc in $NB_EXTRA_SOURCES; do
+      eobj="$out_dir/gen_extra_${i}.o"
+      "$CORPUS_CXX" \
+        -std=c++26 -O2 -DNDEBUG -fPIC -fvisibility=hidden \
+        -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" \
+        -c "$esrc" -o "$eobj" \
+        || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
+      gen_extra_objs+=("$eobj")
+      i=$((i + 1))
+    done
+  fi
+  "$CORPUS_CXX" $REFLECT_FLAGS \
+    -fconstexpr-ops-limit=1000000000 \
+    -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
+    "$gen_src" ${gen_extra_objs[@]+"${gen_extra_objs[@]}"} -o "$gen_bin" \
+    || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
+
+  # --- stage 1b: run it to render the binding TU ---
+  "$gen_bin" "$gen_cpp" \
+    || { echo "BUILD_FAIL_STAGE=emit_gen_run" >&2; exit 32; }
+
+  # --- stage 2: compile the GENERATED source with plain g++ (no reflection) ---
+  "$PROD_CXX" \
+    -std="${NB_PROD_STD:-$PROD_STD_DEFAULT}" -O2 -DNDEBUG \
+    -fPIC -fvisibility=hidden \
+    -DNB_ABORT_ON_LEAK \
+    -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_PROD_CFLAGS:-} \
+    -c "$gen_cpp" -o "$obj" \
+    || { echo "BUILD_FAIL_STAGE=emit_compile" >&2; exit 33; }
+
+  # --- stage 2b: recompile any library sources with the production compiler ---
+  extra_objs=()
+  if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
+    i=0
+    for esrc in $NB_EXTRA_SOURCES; do
+      eobj="$out_dir/extra_${i}.o"
+      "$PROD_CXX" \
+        -std="${NB_PROD_STD:-$PROD_STD_DEFAULT}" -O2 -DNDEBUG \
+        -fPIC -fvisibility=hidden \
+        -I "$PYINC" -I "$NBINC" "$@" ${NB_PROD_CFLAGS:-} \
+        -c "$esrc" -o "$eobj" \
+        || { echo "BUILD_FAIL_STAGE=emit_extra_compile" >&2; exit 34; }
+      extra_objs+=("$eobj")
+      i=$((i + 1))
+    done
+  fi
+
+  # --- link with the production compiler ---
+  "$PROD_CXX" \
+    -shared -fvisibility=hidden -O2 \
+    "$obj" ${extra_objs[@]+"${extra_objs[@]}"} "$NBLIB_PROD" ${NB_EXTRA_LIBS_PROD:-} \
+    -o "$so" \
+    || { echo "BUILD_FAIL_STAGE=emit_link" >&2; exit 35; }
+
+  echo "$so"
+  exit 0
+fi
+
 # --- stage 1: build the generator with the reflection toolchain ---
 # Text rendering is inherently step-hungry (every member's spelling and
 # binding line is built in consteval), so the generator gets a raised
@@ -48,7 +117,7 @@ if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
   i=0
   for esrc in $NB_EXTRA_SOURCES; do
     eobj="$out_dir/gen_extra_${i}.o"
-    "$TC/bin/clang++" \
+    "$CORPUS_CXX" \
       -std=c++26 -stdlib=libc++ -O2 -DNDEBUG -arch arm64 $ISYSROOT_FLAGS \
       -nostdinc++ -isystem "$TC/include/c++/v1" \
       -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" \
@@ -58,7 +127,7 @@ if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
     i=$((i + 1))
   done
 fi
-"$TC/bin/clang++" $REFLECT_FLAGS $ISYSROOT_FLAGS \
+"$CORPUS_CXX" $REFLECT_FLAGS $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
   -fconstexpr-steps=1000000000 \
   -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \

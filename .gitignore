@@ -10,6 +10,11 @@ examples/serialize_poc
 build/
 .venv/
 
+# GCC 16 backend build state (created inside the gcc16-reflect container)
+build-gcc16/
+gcc16-proveout/venv/
+gcc16-proveout/build-nanobind/
+
 # Repo-local LLVM toolchain (built from the llvm-project submodule)
 toolchain/
 toolchain-build/
@@ -18,8 +23,11 @@ toolchain-build.log
 # corpus campaign scratch (reconstructible from submodule pins + binding sources)
 corpus/runs/*/binding/build/
 corpus/runs/*/binding/build-emit/
+corpus/runs/*/binding/build-gcc16/
+corpus/runs/*/binding/build-emit-gcc16/
 corpus/runs/*/binding/*.o
 corpus/runs/*/tests/build/
+corpus/runs/*/tests/build-gcc16/
 corpus/runs/*/logs/
 corpus/runs/*/.pytest_cache/
 **/__pycache__/

@@ -62,7 +62,7 @@ consteval void collect_members_named(sm::info M, std::string_view name,
     nanobind::detail::collect_public_base_subtree(M, owners);
     for (auto o : owners)
         for (auto m : sm::members_of(o, sm::access_context::unchecked()))
-            if (!nanobind::detail::is_using_proxy(m) && sm::has_identifier(m) &&
+            if (sm::has_identifier(m) &&
                 sm::identifier_of(m) == name &&
                 (arity == std::size_t(-1) ||
                  (sm::is_function(m) && !sm::is_template(m) &&
@@ -80,7 +80,7 @@ consteval void collect_subscript_operators(sm::info M,
     nanobind::detail::collect_public_base_subtree(M, owners);
     for (auto o : owners)
         for (auto m : sm::members_of(o, sm::access_context::unchecked()))
-            if (!nanobind::detail::is_using_proxy(m) && sm::is_function(m) &&
+            if (sm::is_function(m) &&
                 !sm::is_template(m) && sm::is_operator_function(m) &&
                 sm::operator_of(m) == sm::operators::op_square_brackets)
                 out.push_back(m);
@@ -205,7 +205,7 @@ consteval sm::info eigen_excluded_marker() {
     for (sm::info D : {^^Eigen::DenseBase<Vec3>, ^^Eigen::DenseBase<Mat3>,
                        ^^Eigen::DenseBase<CVec1>, ^^Eigen::DenseBase<CVec3>})
         for (auto m : sm::members_of(D, sm::access_context::unchecked()))
-            if (!nanobind::detail::is_using_proxy(m) && sm::has_identifier(m) &&
+            if (sm::has_identifier(m) &&
                 sm::identifier_of(m) == "trace")
                 bad.push_back(m);
     for (auto m : bad)

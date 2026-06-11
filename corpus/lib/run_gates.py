@@ -17,6 +17,17 @@ combined outcome is the worst lane (surface mismatch => D.surface). Runs
 without [emit] behave exactly as before (single constexpr lane; the v1
 top-level fields are still populated from it).
 
+TWO BACKENDS (see lib/env.sh): the original clang-p2996 lane on macOS, and the
+gcc16 lane (PRIMARY since the 2026-06 re-home) on Linux inside the
+gcc16-reflect container. The backend is keyed on $CORPUS_TOOLCHAIN
+(auto-gcc16 on Linux). The gcc16 backend keeps its artifacts apart so the
+macOS record survives: build dirs get a -gcc16 suffix and the result file is
+result-gcc16.json. Under gcc16 ONE compiler serves both lanes (g++
+-freflection for the reflection TUs, plain g++ as the production compiler),
+so prebuilt library archives are shared between lanes and clang's
+-fconstexpr-steps spelling in a run's extra_cflags is translated to GCC's
+-fconstexpr-ops-limit mechanically.
+
 Usage:  python run_gates.py <run_dir> [--mode constexpr|emit|both]
         (--mode subsets the lanes for debugging; default both-if-[emit])
 Exit code: 0 iff every executed lane is E/E-weak and the surface diff passed.
@@ -33,7 +44,12 @@ LIB = pathlib.Path(__file__).resolve().parent
 CORPUS = LIB.parent
 REPO = CORPUS.parent
 TC = REPO / "toolchain"
-VENV_PY = REPO / ".venv" / "bin" / "python"
+BACKEND = os.environ.get("CORPUS_TOOLCHAIN") or (
+    "gcc16" if sys.platform.startswith("linux") else "clang-p2996")
+IS_GCC = BACKEND == "gcc16"
+VENV_PY = (REPO / "gcc16-proveout" / "venv" / "bin" / "python") if IS_GCC \
+    else (REPO / ".venv" / "bin" / "python")
+SUFFIX = "-gcc16" if IS_GCC else ""          # build-dir / result-file suffix
 
 OUTCOME_RANK = {"E": 0, "E-weak": 1, "D": 2, "C": 3, "B": 4, "A": 5}
 
@@ -46,12 +62,33 @@ def sh(args, **kw):
 def run_env(toolchain_dyld=True):
     e = dict(os.environ)
     e.pop("DYLD_LIBRARY_PATH", None)
-    if toolchain_dyld:
+    if toolchain_dyld and not IS_GCC:
         # The constexpr lane's modules link the toolchain libc++. The emit
         # lane must NOT see this: dyld overrides by LEAF name, so it would
         # hijack the system libc++.1.dylib inside a prod-built module.
+        # (gcc16: one libstdc++ runtime for everything -- nothing to inject.)
         e["DYLD_LIBRARY_PATH"] = str(TC / "lib")
     return e
+
+
+def translate_cflags(flags):
+    """Map clang-spelled per-run flags to the gcc16 backend's spelling.
+
+    meta.toml extra_cflags were authored for the clang lane; the only
+    backend-specific one in the corpus is the raised constant-evaluation
+    budget (-fconstexpr-steps=N -> -fconstexpr-ops-limit=N). 'Steps' and
+    'ops' are different units of the same order; a run that still trips the
+    limit records its own raised value in meta.toml [gcc16] extra_cflags.
+    """
+    if not IS_GCC:
+        return flags
+    out = []
+    for f in flags:
+        if f.startswith("-fconstexpr-steps="):
+            out.append("-fconstexpr-ops-limit=" + f.split("=", 1)[1])
+        else:
+            out.append(f)
+    return out
 
 
 def first_lines(text, n=5):
@@ -87,6 +124,12 @@ def detect_toolchain_bug(diag_text):
         return {"status": "suspected", "kind": "constexpr-step-limit",
                 "signature": "constexpr evaluation hit maximum step limit",
                 "finding": "TC-0002-sloc-ice-heavy-reflection"}
+    if "constexpr evaluation operation count exceeds limit" in t:
+        # GCC's spelling of the constant-evaluation budget. Not a bug: raise
+        # the run's [gcc16] extra_cflags -fconstexpr-ops-limit.
+        return {"status": "suspected", "kind": "constexpr-ops-limit",
+                "signature": "constexpr evaluation operation count exceeds limit",
+                "finding": ""}
     # A *static* assertion is a deliberate source-level diagnostic (e.g. the
     # binder's BINDER-0014 completeness gate naming a missing caster header),
     # not a compiler self-assert -- drop it before the generic "assertion
@@ -117,6 +160,7 @@ def strip_reflection_flags(flags):
     warning tweaks."""
     return [f for f in flags
             if not f.startswith("-fconstexpr-steps")
+            and not f.startswith("-fconstexpr-ops-limit")
             and not f.startswith("-freflection")]
 
 
@@ -125,22 +169,28 @@ def run_lane(lane, run, meta, incflags, extra_cflags, extra_sources,
     """Gates 4/5/6 for one lane. Returns (lane_dict, build_dir)."""
     L = lane_record()
     is_emit = lane == "emit"
-    build_dir = run / "binding" / ("build-emit" if is_emit else "build")
+    build_dir = run / "binding" / (("build-emit" if is_emit else "build") + SUFFIX)
     emit_meta = meta.get("emit", {})
 
     build_env = dict(os.environ)
     if extra_sources:
         build_env["NB_EXTRA_SOURCES"] = " ".join(extra_sources)
     if is_emit:
-        # Mechanical prod link line: the prod archive variants install to
-        # <prefix>-prod (build_cmake_lib.sh --prod / build_abseil.sh --prod).
         if extra_libs:
-            build_env["NB_EXTRA_LIBS_PROD"] = extra_libs.replace(
-                "-install/lib", "-install-prod/lib").replace(
-                "abseil-install/lib", "abseil-install-prod/lib")
+            if IS_GCC:
+                # One compiler on the gcc16 backend: the emit lane links the
+                # SAME archive the constexpr lane does.
+                build_env["NB_EXTRA_LIBS_PROD"] = extra_libs
+            else:
+                # Mechanical prod link line: the prod archive variants install
+                # to <prefix>-prod (build_cmake_lib.sh / build_abseil.sh --prod).
+                build_env["NB_EXTRA_LIBS_PROD"] = extra_libs.replace(
+                    "-install/lib", "-install-prod/lib").replace(
+                    "abseil-install/lib", "abseil-install-prod/lib")
         build_env["NB_GEN_CFLAGS"] = " ".join(extra_cflags)
         build_env["NB_PROD_CFLAGS"] = " ".join(
-            strip_reflection_flags(emit_meta.get("extra_cflags", extra_cflags)))
+            strip_reflection_flags(translate_cflags(
+                emit_meta.get("extra_cflags", extra_cflags))))
         if emit_meta.get("std"):
             build_env["NB_PROD_STD"] = emit_meta["std"]
     elif extra_libs:
@@ -204,8 +254,8 @@ def run_lane(lane, run, meta, incflags, extra_cflags, extra_sources,
         L["gate_results"]["6_correct"] = "skip"
         L["furthest_gate"] = 6
         return L, build_dir
-    cache = run / "tests" / "build" / (".pytest_cache_emit" if is_emit
-                                       else ".pytest_cache")
+    cache = run / "tests" / ("build" + SUFFIX) / (".pytest_cache_emit" if is_emit
+                                                  else ".pytest_cache")
     t = sh([str(VENV_PY), "-m", "pytest", str(test_py), "-q",
             "-o", f"cache_dir={cache}"],
            env={**run_env(toolchain_dyld=not is_emit),
@@ -231,7 +281,11 @@ def main(run_dir, mode=None):
     # Per-run extra compile flags (e.g. a raised -fconstexpr-steps for heavy
     # reflection like nlohmann/json's basic_json). Recorded in meta.toml for
     # reproducibility; applied to the reflection compiles (Gate 4 stage 1).
-    extra_cflags = meta.get("extra_cflags", [])
+    # The gcc16 backend translates clang spellings (translate_cflags) and a
+    # [gcc16] table's extra_cflags, when present, replaces them outright.
+    extra_cflags = translate_cflags(meta.get("extra_cflags", []))
+    if IS_GCC and "extra_cflags" in meta.get("gcc16", {}):
+        extra_cflags = meta["gcc16"]["extra_cflags"]
     # Per-run extra library source files for non-header-only libs: compiled and
     # linked into the module (constexpr lane: by the toolchain via
     # build_module.sh; emit lane: by the PRODUCTION compiler via
@@ -241,13 +295,22 @@ def main(run_dir, mode=None):
     #   - generic: `extra_libs = "-L {repo}/build/<slug>-install/lib -l<slug>_merged"`
     #   - legacy: `link_abseil = true` links the merged Abseil archive.
     # The emit lane mechanically rewrites the prefix to the -prod variant.
-    abseil_prefix = os.environ.get("NB_ABSEIL_PREFIX", str(REPO / "build" / "abseil-install"))
+    abseil_prefix = os.environ.get(
+        "NB_ABSEIL_PREFIX",
+        str(REPO / ("build-gcc16" if IS_GCC else "build") / "abseil-install"))
     extra_libs = meta.get("extra_libs", "").replace("{repo}", str(REPO))
+    if IS_GCC:
+        # Prebuilt archives live under build-gcc16/ on this backend
+        # (build_cmake_lib.sh routes there automatically).
+        extra_libs = extra_libs.replace(str(REPO) + "/build/",
+                                        str(REPO) + "/build-gcc16/")
     if meta.get("link_abseil", False):
-        # CoreFoundation: absl's cctz time-zone lookup (transitively in the merged archive)
-        # references it on macOS.
         extra_libs = (extra_libs + " " if extra_libs else "") + \
-            f"-L {abseil_prefix}/lib -labsl_merged -framework CoreFoundation"
+            f"-L {abseil_prefix}/lib -labsl_merged"
+        if not IS_GCC:
+            # CoreFoundation: absl's cctz time-zone lookup (transitively in
+            # the merged archive) references it on macOS.
+            extra_libs += " -framework CoreFoundation"
     mod = meta["module_name"]
     strategy = meta.get("strategy", "single_stage")
 
@@ -259,14 +322,21 @@ def main(run_dir, mode=None):
     else:
         lanes_to_run = [mode]
 
+    if IS_GCC:
+        toolchain_id = "gcc-" + (sh(["g++", "-dumpfullversion"]).stdout.strip()
+                                 or "unknown")
+    else:
+        toolchain_id = sh(["git", "-C", str(REPO), "rev-parse", "--short",
+                           "HEAD:llvm-project"]).stdout.strip() or "unknown"
     r = {
         "schema_version": 2,
+        "backend": BACKEND,
         "slug": meta["slug"],
         "url": meta.get("url", ""),
         "pinned_commit": meta.get("pin", ""),
         "tier": meta.get("tier"),
         "header_only": meta.get("header_only", True),
-        "toolchain_commit": sh(["git", "-C", str(REPO), "rev-parse", "--short", "HEAD:llvm-project"]).stdout.strip() or "unknown",
+        "toolchain_commit": toolchain_id,
         "binder_commit": sh(["git", "-C", str(REPO), "rev-parse", "--short", "HEAD:nanobind"]).stdout.strip() or "unknown",
         "prod_compiler": "",
         "outcome": None,
@@ -285,7 +355,8 @@ def main(run_dir, mode=None):
         "notes": "",
     }
     if "emit" in lanes_to_run:
-        v = sh([os.environ.get("PROD_CXX", "/usr/bin/clang++"), "--version"])
+        default_prod = "g++" if IS_GCC else "/usr/bin/clang++"
+        v = sh([os.environ.get("PROD_CXX", default_prod), "--version"])
         r["prod_compiler"] = v.stdout.splitlines()[0] if v.stdout else "unknown"
 
     def classify_tc_bug(text):
@@ -321,9 +392,10 @@ def main(run_dir, mode=None):
         if extra_libs:
             build_env["NB_EXTRA_LIBS"] = extra_libs
         ob = sh(["bash", str(LIB / "build_native.sh"), str(oracle),
-                 str(run / "tests" / "build" / "oracle"), *incflags], env=build_env)
+                 str(run / "tests" / ("build" + SUFFIX) / "oracle"), *incflags],
+                env=build_env)
         if ob.returncode == 0:
-            res = sh([str(run / "tests" / "build" / "oracle")], env=run_env())
+            res = sh([str(run / "tests" / ("build" + SUFFIX) / "oracle")], env=run_env())
             if res.returncode == 0 and res.stdout.strip():
                 (run / "tests" / "expected.json").write_text(res.stdout)
                 r["oracle"]["layers_used"].append("L1_differential")
@@ -402,7 +474,7 @@ def main(run_dir, mode=None):
 
 
 def finish(run, r):
-    (run / "result.json").write_text(json.dumps(r, indent=2) + "\n")
+    (run / f"result{SUFFIX}.json").write_text(json.dumps(r, indent=2) + "\n")
     lane_bits = " ".join(
         f"{l}={d['outcome']}" for l, d in r.get("lanes", {}).items())
     sd = r.get("surface_diff", {}).get("status", "skip")

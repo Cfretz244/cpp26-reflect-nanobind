@@ -19,7 +19,6 @@ consteval std::meta::info cq_excluded_marker() {
     for (sm::info Q : {^^moodycamel::ConcurrentQueue<int>,
                        ^^moodycamel::ConcurrentQueue<std::string>}) {
         for (auto mem : sm::members_of(Q, sm::access_context::unchecked())) {
-            if (nanobind::detail::is_using_proxy(mem)) continue;
             if (sm::is_static_member(mem) && sm::is_variable(mem))
                 args.push_back(sm::reflect_constant(mem));
         }

@@ -41,7 +41,7 @@ consteval sm::info cli_excluded_marker() {
 
     for (sm::info owner : {^^CLI::App, ^^CLI::Option}) {
         for (sm::info mem : sm::members_of(owner, sm::access_context::unchecked())) {
-            if (!nb::detail::is_using_proxy(mem) && sm::is_function(mem) &&
+            if (sm::is_function(mem) &&
                 !sm::is_template(mem) && has_ptr_to_ptr_param(mem))
                 add(mem);
         }

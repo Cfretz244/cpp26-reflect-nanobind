@@ -8,7 +8,12 @@ set -uo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/env.sh"
 
 probe_src="$1"; shift
-"$TC/bin/clang++" $REFLECT_FLAGS $ISYSROOT_FLAGS \
+if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
+  exec "$CORPUS_CXX" $REFLECT_FLAGS \
+    -I "$PYINC" -I "$NBINC" "$@" \
+    -fsyntax-only "$probe_src"
+fi
+"$CORPUS_CXX" $REFLECT_FLAGS $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
   -I "$PYINC" -I "$NBINC" "$@" \
   -fsyntax-only "$probe_src"

@@ -19,15 +19,28 @@
 // is only specialized for char/wchar_t/char8_t/char16_t/char32_t, so the byte
 // string is ill-formed to instantiate (a latent json bug). Our reflection binder
 // *does* instantiate it when it binds that machinery, so we supply the missing
-// char_traits here -- defined byte-for-byte like libc++'s own char_traits<char8_t>
-// (char8_t is the same width/representation). This is a TEST-SIDE declaration so
-// the binder can be validated against the real, unmodified nlohmann::json; json
-// itself is left pristine. Declared before <nlohmann/json.hpp> so the
-// specialization is visible at every instantiation point.
+// char_traits here -- a complete standalone specialization (modeled on
+// char_traits<char8_t>; char8_t is the same width/representation), written
+// without any library-internal base so it compiles against BOTH libc++ and
+// libstdc++. This is a TEST-SIDE declaration so the binder can be validated
+// against the real, unmodified nlohmann::json; json itself is left pristine.
+// Declared before <nlohmann/json.hpp> so the specialization is visible at
+// every instantiation point.
+#include <cstdio>     // EOF
+#include <cstring>    // memcpy/memmove
+#include <iosfwd>     // streamoff / fpos
 namespace std {
 template <>
-struct char_traits<unsigned char>
-    : __char_traits_base<unsigned char, unsigned int, static_cast<unsigned int>(EOF)> {
+struct char_traits<unsigned char> {
+    using char_type  = unsigned char;
+    using int_type   = unsigned int;
+    using off_type   = streamoff;
+    using pos_type   = fpos<mbstate_t>;
+    using state_type = mbstate_t;
+
+    static constexpr void assign(char_type& a, const char_type& b) noexcept { a = b; }
+    static constexpr bool eq(char_type a, char_type b) noexcept { return a == b; }
+    static constexpr bool lt(char_type a, char_type b) noexcept { return a < b; }
     static constexpr int compare(const char_type* a, const char_type* b, size_t n) noexcept {
         for (size_t i = 0; i < n; ++i) {
             if (lt(a[i], b[i])) return -1;
@@ -46,6 +59,29 @@ struct char_traits<unsigned char>
             if (eq(s[i], a)) return s + i;
         return nullptr;
     }
+    static char_type* move(char_type* d, const char_type* s, size_t n) {
+        if (n) memmove(d, s, n);
+        return d;
+    }
+    static char_type* copy(char_type* d, const char_type* s, size_t n) {
+        if (n) memcpy(d, s, n);
+        return d;
+    }
+    static char_type* assign(char_type* d, size_t n, char_type c) {
+        for (size_t i = 0; i < n; ++i) d[i] = c;
+        return d;
+    }
+    static constexpr int_type not_eof(int_type c) noexcept {
+        return eq_int_type(c, eof()) ? ~eof() : c;
+    }
+    static constexpr char_type to_char_type(int_type c) noexcept {
+        return static_cast<char_type>(c);
+    }
+    static constexpr int_type to_int_type(char_type c) noexcept {
+        return static_cast<int_type>(c);
+    }
+    static constexpr bool eq_int_type(int_type a, int_type b) noexcept { return a == b; }
+    static constexpr int_type eof() noexcept { return static_cast<int_type>(EOF); }
 };
 }  // namespace std
 
@@ -64,11 +100,17 @@ struct char_traits<unsigned char>
 // (e.g. the Gate-1 probe) leaves json standalone and unannotated. Guarded on
 // P3394 support: the emit lane's GENERATED TU re-includes this header under
 // the production compiler, where the annotations (already consumed at
-// generation time) must compile away.
+// generation time) must compile away. clang spells the feature
+// __has_feature(annotation_attributes); GCC 16 has no __has_feature name for
+// it -- key off the reflection feature-test macro instead (the same pattern
+// as the unit fixture's NB_FIXTURE_ANN).
 #if defined(__has_feature)
 #  if __has_feature(annotation_attributes)
 #    define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
 #  endif
+#endif
+#if !defined(NLOHMANN_JSON_NB_SKIP) && defined(__cpp_impl_reflection)
+#  define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
 #endif
 #ifndef NLOHMANN_JSON_NB_SKIP
 #  define NLOHMANN_JSON_NB_SKIP

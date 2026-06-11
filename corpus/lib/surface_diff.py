@@ -120,13 +120,18 @@ def _diff(a, b, path, out, ignore):
 def compare(run_dir, module_name, ignore_patterns):
     run = pathlib.Path(run_dir).resolve()
     repo = pathlib.Path(__file__).resolve().parent.parent.parent
-    venv_py = repo / ".venv" / "bin" / "python"
+    backend = os.environ.get("CORPUS_TOOLCHAIN") or (
+        "gcc16" if sys.platform.startswith("linux") else "clang-p2996")
+    is_gcc = backend == "gcc16"
+    suffix = "-gcc16" if is_gcc else ""
+    venv_py = (repo / "gcc16-proveout" / "venv" / "bin" / "python") if is_gcc \
+        else (repo / ".venv" / "bin" / "python")
     me = pathlib.Path(__file__).resolve()
 
     def dump_lane(build_dir, dyld):
         env = dict(os.environ)
         env.pop("DYLD_LIBRARY_PATH", None)
-        if dyld:
+        if dyld and not is_gcc:
             env["DYLD_LIBRARY_PATH"] = str(repo / "toolchain" / "lib")
         p = subprocess.run([str(venv_py), str(me), "dump", str(build_dir),
                             module_name], capture_output=True, text=True,
@@ -137,12 +142,13 @@ def compare(run_dir, module_name, ignore_patterns):
             sys.exit(3)
         return json.loads(p.stdout)
 
-    # constexpr lane needs the toolchain libc++; the emit lane must NOT see it
-    # (leaf-name dyld override would hijack the system libc++).
-    cx = dump_lane(run / "binding" / "build", dyld=True)
-    em = dump_lane(run / "binding" / "build-emit", dyld=False)
+    # clang backend: the constexpr lane needs the toolchain libc++; the emit
+    # lane must NOT see it (leaf-name dyld override would hijack the system
+    # libc++). gcc16 backend: one runtime, no env shaping.
+    cx = dump_lane(run / "binding" / ("build" + suffix), dyld=True)
+    em = dump_lane(run / "binding" / ("build-emit" + suffix), dyld=False)
 
-    art = run / "tests" / "build"
+    art = run / "tests" / ("build" + suffix)
     art.mkdir(parents=True, exist_ok=True)
     (art / "surface_constexpr.json").write_text(
         json.dumps(cx, indent=1, sort_keys=True) + "\n")

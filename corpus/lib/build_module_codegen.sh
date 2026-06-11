@@ -15,10 +15,16 @@ gen_bin="$out_dir/gen"
 gen_hdr="$out_dir/trampolines.gen.h"
 
 # --- stage 1: build the generator (uses reflection to inspect the types) ---
-"$TC/bin/clang++" $REFLECT_FLAGS $ISYSROOT_FLAGS \
-  -nostdinc++ -isystem "$TC/include/c++/v1" \
-  -I "$PYINC" -I "$NBINC" "$@" \
-  "$gen_src" -o "$gen_bin" || { echo "BUILD_FAIL_STAGE=gen_compile" >&2; exit 21; }
+if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
+  "$CORPUS_CXX" $REFLECT_FLAGS \
+    -I "$PYINC" -I "$NBINC" "$@" \
+    "$gen_src" -o "$gen_bin" || { echo "BUILD_FAIL_STAGE=gen_compile" >&2; exit 21; }
+else
+  "$CORPUS_CXX" $REFLECT_FLAGS $ISYSROOT_FLAGS \
+    -nostdinc++ -isystem "$TC/include/c++/v1" \
+    -I "$PYINC" -I "$NBINC" "$@" \
+    "$gen_src" -o "$gen_bin" || { echo "BUILD_FAIL_STAGE=gen_compile" >&2; exit 21; }
+fi
 
 # --- stage 1b: run the generator to emit the trampoline header ---
 "$gen_bin" "$gen_hdr" || { echo "BUILD_FAIL_STAGE=gen_run" >&2; exit 22; }
