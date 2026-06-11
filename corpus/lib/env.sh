@@ -32,3 +32,21 @@ corpus_run_python() {  # usage: corpus_run_python <build_dir> -c "import mod"
   local build_dir="$1"; shift
   DYLD_LIBRARY_PATH="$TC/lib" PYTHONPATH="$build_dir" "$VENV_PY" "$@"
 }
+
+# --- Production toolchain (the emit lane's stage 2): Apple Clang + system libc++ ---
+# The emit backend's generated source is plain C++17/20; compiling and linking
+# it with the PRODUCTION compiler -- zero reflection-toolchain involvement in
+# the artifact -- is the lane's whole point.
+export PROD_CXX="${PROD_CXX:-/usr/bin/clang++}"
+export PROD_CC="${PROD_CC:-/usr/bin/clang}"
+export NBLIB_PROD="$REPO_ROOT/build/prod/libnanobind-static.a"   # build_nanobind_prod.sh
+export NB_ABSEIL_PREFIX_PROD="${NB_ABSEIL_PREFIX_PROD:-$REPO_ROOT/build/abseil-install-prod}"
+export PROD_STD_DEFAULT="c++20"
+
+# Import a prod-built module. NO DYLD_LIBRARY_PATH: dyld overrides by LEAF
+# name, so exporting $TC/lib would load the toolchain's libc++.1.dylib into a
+# module built against the system libc++ (two-runtime corruption).
+corpus_run_python_prod() {  # usage: corpus_run_python_prod <build_dir> -c "import mod"
+  local build_dir="$1"; shift
+  PYTHONPATH="$build_dir" "$VENV_PY" "$@"
+}

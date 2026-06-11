@@ -5,7 +5,7 @@
   "required": ["schema_version", "slug", "outcome", "furthest_gate", "gate_results"],
   "additionalProperties": true,
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "enum": [1, 2] },
     "slug": { "type": "string" },
     "url": { "type": "string" },
     "pinned_commit": { "type": "string" },
@@ -14,6 +14,7 @@
     "run_id": { "type": "string" },
     "toolchain_commit": { "type": "string" },
     "binder_commit": { "type": "string" },
+    "prod_compiler": { "type": "string" },
     "outcome": { "enum": ["A", "B", "C", "D", "E", "E-weak"] },
     "furthest_gate": { "type": "integer", "minimum": 0, "maximum": 6 },
     "gate_results": {
@@ -24,6 +25,22 @@
         "4_compile": { "enum": ["pass", "fail", "skip"] },
         "5_import":  { "enum": ["pass", "fail", "skip"] },
         "6_correct": { "enum": ["pass", "fail", "skip"] }
+      }
+    },
+    "lanes": {
+      "description": "schema v2: per-backend gate ladders. `constexpr` is nb::reflect_ compiled by the P2996 toolchain; `emit` is the generated-source module compiled by the PRODUCTION compiler (Apple Clang + system libc++). The top-level outcome is the WORST lane (a Gate 6b surface mismatch forces D). The v1 top-level gate_results/furthest_gate/failure mirror the constexpr lane.",
+      "type": "object",
+      "properties": {
+        "constexpr": { "$ref": "#/definitions/lane" },
+        "emit":      { "$ref": "#/definitions/lane" }
+      }
+    },
+    "surface_diff": {
+      "description": "Gate 6b: module-vs-module API-surface differential (corpus/lib/surface_diff.py), run when both lanes import.",
+      "type": "object",
+      "properties": {
+        "status": { "enum": ["pass", "fail", "skip"] },
+        "mismatches": { "type": "array", "items": { "type": "string" } }
       }
     },
     "subset": {
@@ -64,5 +81,36 @@
     "metrics": { "type": "object" },
     "artifacts": { "type": "object" },
     "notes": { "type": "string" }
+  },
+  "definitions": {
+    "lane": {
+      "type": "object",
+      "required": ["outcome", "furthest_gate", "gate_results"],
+      "properties": {
+        "outcome": { "enum": ["A", "B", "C", "D", "E", "E-weak"] },
+        "furthest_gate": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "gate_results": {
+          "type": "object",
+          "properties": {
+            "4_compile": { "enum": ["pass", "fail", "skip"] },
+            "5_import":  { "enum": ["pass", "fail", "skip"] },
+            "6_correct": { "enum": ["pass", "fail", "skip"] }
+          }
+        },
+        "failure": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "description": "B.emit_gen_compile / B.emit_gen_run (stage 1, reflection toolchain), B.emit_compile / B.emit_extra_compile / B.emit_link (stage 2, production compiler), C.*, D.value -- plus the v1 codes on the constexpr lane.",
+              "type": ["string", "null"]
+            },
+            "first_diagnostics": { "type": "array", "items": { "type": "string" } },
+            "signal": { "type": ["string", "null"] }
+          }
+        },
+        "metrics": { "type": "object" },
+        "oracle": { "type": "object" }
+      }
+    }
   }
 }

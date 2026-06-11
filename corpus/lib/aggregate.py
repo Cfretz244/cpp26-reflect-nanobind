@@ -61,13 +61,42 @@ def main():
     lines.append("")
     lines.append("## Per-run")
     lines.append("")
-    lines.append("| slug | tier | outcome | gate | strategy | pin | notes |")
-    lines.append("|---|---|---|---|---|---|---|")
+    lines.append("| slug | tier | outcome | constexpr | emit | surface | gate | strategy | pin | notes |")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|")
     for r in sorted(results, key=lambda r: (r.get("tier") or 0, r["slug"])):
         fc = (r.get("failure") or {}).get("code") or ""
+        lanes = r.get("lanes") or {}
+        cx = (lanes.get("constexpr") or {}).get("outcome", r["outcome"])
+        em = (lanes.get("emit") or {}).get("outcome", "-")
+        sd = (r.get("surface_diff") or {}).get("status", "-")
         lines.append(f"| {r['slug']} | {r.get('tier')} | {r['outcome']} | "
+                     f"{cx} | {em} | {sd} | "
                      f"{r['furthest_gate']} | {r['gate_results'].get('3_strategy','')} | "
-                     f"{r.get('pinned_commit','')} | {fc} {r.get('notes','').strip()} |")
+                     f"{r.get('pinned_commit','')} | {fc} {r.get('notes','').strip()[:90]} |")
+    lines.append("")
+
+    # ---- emit-lane section (schema v2): rollout status + failure clusters ----
+    em_runs = [r for r in results if (r.get("lanes") or {}).get("emit")]
+    lines.append("## Emit lane (production-toolchain source codegen)")
+    lines.append("")
+    if not em_runs:
+        lines.append("_No run has an emit lane yet (meta.toml [emit])._")
+    else:
+        em_counts = collections.Counter(
+            r["lanes"]["emit"]["outcome"] for r in em_runs)
+        sd_fail = [r["slug"] for r in em_runs
+                   if (r.get("surface_diff") or {}).get("status") == "fail"]
+        lines.append(f"Runs with an emit lane: **{len(em_runs)}** / {len(results)}; "
+                     f"outcomes: " + ", ".join(f"{k}={v}" for k, v in sorted(em_counts.items())))
+        if sd_fail:
+            lines.append(f"Surface-diff failures: {', '.join(sd_fail)}")
+        clusters = collections.defaultdict(list)
+        for r in em_runs:
+            code = (r["lanes"]["emit"].get("failure") or {}).get("code")
+            if code:
+                clusters[code].append(r["slug"])
+        for code, slugs in sorted(clusters.items(), key=lambda kv: -len(kv[1])):
+            lines.append(f"- `{code}`: {len(slugs)} run(s) -- {', '.join(slugs)}")
     lines.append("")
     (AGG / "report.md").write_text("\n".join(lines) + "\n")
 
