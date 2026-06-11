@@ -32,7 +32,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 70.35
+        "binding_compile_seconds": 67.7
       },
       "oracle": {
         "layers_used": [
@@ -56,7 +56,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 334.47,
+        "binding_compile_seconds": 323.35,
         "generated_tu_lines": 536,
         "generated_tu_bytes": 278277
       },
@@ -102,9 +102,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.47,
-    "constexpr_binding_compile_seconds": 70.35,
-    "emit_binding_compile_seconds": 334.47,
+    "probe_seconds": 1.45,
+    "constexpr_binding_compile_seconds": 67.7,
+    "emit_binding_compile_seconds": 323.35,
     "emit_generated_tu_lines": 536,
     "emit_generated_tu_bytes": 278277
   },

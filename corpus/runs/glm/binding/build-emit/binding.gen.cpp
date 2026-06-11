@@ -27,7 +27,7 @@ static void nbgen_bind___glm__vec_L3_Cfloat_C__glm__qualifier__packed_highp_R(nb
     auto cls = nb::class_<::glm::vec<3, float, ::glm::qualifier::packed_highp>>(m, py_name);
     cls.def(::nanobind::detail::reflect_init<>());
     cls.def(::nanobind::detail::reflect_init<float>(), nb::arg("scalar"));
-    cls.def(::nanobind::detail::reflect_init<float, float, float>(), nb::arg("a"), nb::arg("b"), nb::arg("c"));
+    cls.def(::nanobind::detail::reflect_init<float, float, float>());
     cls.def(::nanobind::detail::reflect_init<const ::glm::vec<3, float, ::glm::qualifier::packed_highp> &>());
     cls.def_static("length", []() -> int { return ::glm::vec<3, float, ::glm::qualifier::packed_highp>::length(); });
     cls.def("__getitem__", [](::glm::vec<3, float, ::glm::qualifier::packed_highp> &self, int a0) -> float & { return self.operator[](::std::forward<int>(a0)); }, nb::is_operator());
@@ -43,7 +43,7 @@ static void nbgen_bind___glm__vec_L4_Cfloat_C__glm__qualifier__packed_highp_R(nb
     auto cls = nb::class_<::glm::vec<4, float, ::glm::qualifier::packed_highp>>(m, py_name);
     cls.def(::nanobind::detail::reflect_init<>());
     cls.def(::nanobind::detail::reflect_init<float>(), nb::arg("scalar"));
-    cls.def(::nanobind::detail::reflect_init<float, float, float, float>(), nb::arg("_x"), nb::arg("_y"), nb::arg("_z"), nb::arg("_w"));
+    cls.def(::nanobind::detail::reflect_init<float, float, float, float>());
     cls.def(::nanobind::detail::reflect_init<const ::glm::vec<4, float, ::glm::qualifier::packed_highp> &>());
     cls.def_static("length", []() -> int { return ::glm::vec<4, float, ::glm::qualifier::packed_highp>::length(); });
     cls.def("__getitem__", [](::glm::vec<4, float, ::glm::qualifier::packed_highp> &self, int a0) -> float & { return self.operator[](::std::forward<int>(a0)); }, nb::is_operator());
