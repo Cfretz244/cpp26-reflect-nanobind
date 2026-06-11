@@ -36,8 +36,12 @@ bind_dir="$(cd "$(dirname "$gen_src")" && pwd)"
 }
 
 # --- stage 1: build the generator with the reflection toolchain ---
+# Text rendering is inherently step-hungry (every member's spelling and
+# binding line is built in consteval), so the generator gets a raised
+# constexpr budget by default; a run's NB_GEN_CFLAGS comes later and wins.
 "$TC/bin/clang++" $REFLECT_FLAGS $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
+  -fconstexpr-steps=1000000000 \
   -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
   "$gen_src" -o "$gen_bin" \
   || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
