@@ -15,6 +15,14 @@ extra_libs   = "-L {repo}/build/box2d-install/lib -lbox2d_merged"
 # binding (Gate 4) compile, exactly as the pugixml/json/abseil heavy runs do.
 extra_cflags = ["-fconstexpr-steps=33554432"]
 
+[emit]
+enabled = true
+# Stage 2 (production compile of the generated TU) links the PRODUCTION box2d
+# archive: run_gates.py rewrites the extra_libs -install/lib prefix to
+# -install-prod/lib automatically (build/box2d-install-prod/libbox2d_merged.a,
+# Apple Clang + system libc++). Default stage-2 std/cflags (constexpr
+# extra_cflags minus the reflection-only -fconstexpr-steps) suffice.
+
 reflect_args = [
   "^^b2Vec2", "^^b2Vec3", "^^b2Mat22", "^^b2Rot", "^^b2Transform", "^^b2MassData",
   "^^b2World", "^^b2Body", "^^b2Fixture",
@@ -24,7 +32,7 @@ reflect_args = [
 ]
 subset_rationale = "box2d's real physics object graph bound head-on. b2Vec2 is the 2D vector value type (x/y fields + the full operator set: ==/!=/+/-/unary-/+=/-=/*=, plus Length/Normalize/Skew). b2World is the simulation root constructed from a gravity vector, with Step(dt, velIters, posIters), CreateBody(const b2BodyDef*) (raw b2Body* return BORROWS -- bodies are world-owned), GetBodyCount, Get/SetGravity, sleep flags. b2Body is the rigid-body handle (GetPosition/GetAngle/GetLinearVelocity/GetMass/GetType/IsAwake + CreateFixture). b2BodyDef/b2FixtureDef/b2Filter are plain option structs (data members bound def_rw); b2BodyType is the static/kinematic/dynamic enum. b2PolygonShape (SetAsBox) and b2CircleShape derive from the abstract b2Shape (bound with no Python ctor) and are passed to CreateFixture by pointer. The differential drops a dynamic box onto a static ground floor under fixed gravity, runs N deterministic Steps (fixed dt/iteration counts), and compares -- bit-for-bit (same compiled archive both sides) via %.9g -- body positions, velocities, angle, the world body count, and the sleep state at rest, against a native C++ oracle running the identical scenario."
 skipped_features = [
-  "BLOCKED AT GATE 4 (outcome B) by a toolchain ICE: nb::reflect_ of ANY global-namespace CLASS aborts the compiler at clang/lib/AST/ExprConstantMeta.cpp:1772 (llvm_unreachable 'unhandled template kind' in DescriptionOf, reached from return_type_of on the binder's global-namespace free-operator scan in bind_free_operators). Every box2d public type is a global-scope class, so no subset survives -- even nb::reflect_<^^b2Vec2>(m) alone crashes. See findings_draft/return-type-of-global-namespace-template-description-ice.md + findings_draft/repro/crash_global_class.cpp (4-line standalone repro). A global-scope ENUM and a class in a NAMED namespace both compile clean -- the trigger is class-in-global-namespace.",
+  "HISTORICAL (now fixed, not a current skip): reflecting ANY global-namespace CLASS once aborted the compiler at clang/lib/AST/ExprConstantMeta.cpp llvm_unreachable 'unhandled template kind' in DescriptionOf, reached from return_type_of on the binder's global-namespace free-operator scan -- every box2d public type is a global-scope class, so no subset survived. That toolchain ICE was minimized and FIXED as TC-0014 (DescriptionOf builtin-template/template-template-parm arms + a generic fallback; see CLAUDE.md and findings_draft/return-type-of-global-namespace-template-description-ice.md + findings_draft/repro/crash_global_class.cpp). With the fixed toolchain both lanes are green; box2d binds its global-namespace classes head-on.",
   "b2World::CreateJoint/DestroyJoint, GetJointList/GetContactList, QueryAABB/RayCast, SetContactListener/SetDestructionListener/SetContactFilter/SetDebugDraw, DebugDraw, Dump -- all mention forward-declared classes (b2Joint/b2Contact/b2*Listener/b2*Callback/b2Draw) the binder makes opaque automatically; the methods are skipped",
   "b2World::GetContactManager/GetProfile -- return internal facade types (b2ContactManager holds a b2BroadPhase/b2DynamicTree; b2Profile is a timing struct); both excluded via nb::exclude_, methods skipped",
   "b2Body::GetJointList/GetContactList/GetUserData/GetMassData(SetMassData)/Dump and the joint-edge accessors -- mention forward-declared or excluded types; skipped automatically",

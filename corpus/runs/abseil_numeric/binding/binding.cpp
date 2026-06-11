@@ -6,10 +6,10 @@
 // Links the prebuilt absl static lib (int128 division/streaming live in int128.cc).
 #include <nanobind/nb_reflect.h>
 
-#include "absl/numeric/int128.h"
+#include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
 
 NB_MODULE(abseil_numeric_ext, m) {
-    nb::reflect_<^^absl::int128, ^^absl::uint128>(m);
+    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }
