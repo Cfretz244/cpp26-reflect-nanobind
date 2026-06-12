@@ -93,6 +93,30 @@ def test_concrete_sink_differential():
     assert s.should_log(L.info) == E["sink_should_info_after"]
 
 
+def test_null_sink_differential():
+    # null_sink<null_mutex>, discovered by the derived_from_ match (both the
+    # _mt and _st aliases name this one spec). A logger over it drives the
+    # full pipeline with no observable output.
+    ns = m.null_sinkNull_mutex()
+    assert ns.level().value == E["null_default_level"]
+    assert isinstance(ns, m.sink)
+    lg = m.logger("nulllog", ns)
+    lg.log(L.info, "swallowed")
+    lg.flush()
+    assert len(lg.sinks()) == E["null_n_sinks"]
+
+
+def test_ansicolor_should_color_differential():
+    # ansicolor sinks, discovered by the match; ctor takes the seeded
+    # color_mode enum explicitly (the default VALUE is the P3096 gap).
+    # always/never keeps should_color() tty-independent; the flattened
+    # ansicolor_sink<M> surface (set_color_mode/should_color) drives it.
+    a = m.ansicolor_stdout_sinkConsole_mutex(m.color_mode.always)
+    assert a.should_color() == E["ansi_always"]
+    a.set_color_mode(m.color_mode.never)
+    assert a.should_color() == E["ansi_never"]
+
+
 # --- Layer 3: invariants (the Tier-3 themes, structurally) ---
 
 def test_sink_inheritance_chain():
@@ -125,3 +149,24 @@ def test_logger_surface_bound():
                  "flush", "flush_on", "flush_level", "sinks", "clone",
                  "enable_backtrace", "disable_backtrace", "dump_backtrace"):
         assert hasattr(m.logger, meth), meth
+
+
+def test_matched_sink_family():
+    # Every sink the derived_from_ match discovers binds with sink as its
+    # real Python ancestor; the stderr differential pins the second
+    # stdout_sinks template behaviorally.
+    for name in ("stdout_sinkConsole_mutex", "stdout_sinkConsole_nullmutex",
+                 "stderr_sinkConsole_mutex", "stderr_sinkConsole_nullmutex",
+                 "null_sinkNull_mutex",
+                 "ansicolor_stdout_sinkConsole_mutex",
+                 "ansicolor_stdout_sinkConsole_nullmutex",
+                 "ansicolor_stderr_sinkConsole_mutex",
+                 "ansicolor_stderr_sinkConsole_nullmutex"):
+        cls = getattr(m, name, None)
+        assert cls is not None, name
+        assert issubclass(cls, m.sink), name
+    # not_<named_<"ostream_sink*">> keeps the documented exclusion.
+    assert not hasattr(m, "ostream_sinkConsole_mutex")
+    assert not hasattr(m, "ostream_sinkConsole_nullmutex")
+    es = m.stderr_sinkConsole_mutex()
+    assert es.should_log(L.info) == E["stderr_should_info"]

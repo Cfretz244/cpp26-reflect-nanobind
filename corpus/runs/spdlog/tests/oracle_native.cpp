@@ -7,6 +7,7 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/sinks/null_sink.h>
 
 #include <cstdint>
 #include <iostream>
@@ -79,6 +80,24 @@ int main() {
     add_b("sink_should_info", s.should_log(level_enum::info));
     s.set_level(level_enum::err);
     add_b("sink_should_info_after", s.should_log(level_enum::info));
+
+    // --- the derived_from_-matched sink family ---
+    // null_sink: a logger over it runs the full pipeline with no observable output.
+    auto ns = std::make_shared<spdlog::sinks::null_sink_mt>();
+    add_i("null_default_level", static_cast<std::int64_t>(ns->level()));
+    spdlog::logger nlg("nulllog", ns);
+    nlg.log(level_enum::info, std::string_view("swallowed"));
+    nlg.flush();
+    add_i("null_n_sinks", static_cast<std::int64_t>(nlg.sinks().size()));
+    // ansicolor: color_mode::always/never makes should_color() deterministic
+    // (no tty dependence); set_color_mode flips it.
+    spdlog::sinks::ansicolor_stdout_sink_mt ac(spdlog::color_mode::always);
+    add_b("ansi_always", ac.should_color());
+    ac.set_color_mode(spdlog::color_mode::never);
+    add_b("ansi_never", ac.should_color());
+    // stderr sink: same base surface through the second stdout_sinks template.
+    spdlog::sinks::stderr_sink_mt es;
+    add_b("stderr_should_info", es.should_log(level_enum::info));
 
     std::cout << "{";
     for (size_t i = 0; i < kv.size(); ++i) {
