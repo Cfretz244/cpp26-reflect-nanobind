@@ -77,8 +77,20 @@ the former drops a mapped member the binding author marks by name.
 
 ## Status
 
-Not patched in GCC (per discipline). Worked around in the binder — see
-BINDER-DRAFT-1 (`never_bound_plain_member_fn` drops never-bound members before
-the lift) and the eigen run's BINDER-DRAFT-1 (`nb::exclude_member_` by-name drop
-for mapped members the author excludes). To be filed on gcc.gnu.org bugzilla in
-Phase 4.
+Worked around in the binder — see BINDER-DRAFT-1
+(`never_bound_plain_member_fn` drops never-bound members before the lift) and
+the eigen run's BINDER-DRAFT-1 (`nb::exclude_member_` by-name drop for mapped
+members the author excludes).
+
+**PATCH READY** (Phase 4, 2026-06-12): minimized, root-caused, and fixed on
+the devenv trunk tree, jointly with GCC-1 (same root cause): the P0859
+pre-pass `instantiate_constexpr_fns` / `instantiate_cx_fn_r`
+(gcc/cp/constexpr.cc) walks into `REFLECT_EXPR` operands and
+instantiates/synthesizes every reflected constexpr/defaulted member —
+but forming a reflection is not a [basic.def.odr] naming; only splicing
+through it is, and those paths mark-use on their own. Fix: don't walk into
+`REFLECT_EXPR` subtrees. Verified: both xfail probes (gcc1, gcc6) compile
+AND run; testsuite slices 3939 passes / 0 unexpected fails; regression test
+g++.dg/reflect/members-of-lift1.C added. Patch + bugzilla material:
+`corpus/findings/repros/GCC-0006/` (UPSTREAM.md). Not yet filed — filing is
+the user's call.

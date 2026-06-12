@@ -1,0 +1,115 @@
+From a2b10c8601f74f29d4a113e53c427ee49a0ad390 Mon Sep 17 00:00:00 2001
+From: Chris Fretz <cfretz@icloud.com>
+Date: Fri, 12 Jun 2026 02:59:41 -0400
+Subject: [PATCH] c++/reflection: don't instantiate definitions of reflected
+ functions
+
+The P0859 pre-instantiation walk in cxx_eval_outermost_constant_expr
+(instantiate_cx_fn_r) instantiates every constexpr function and
+synthesizes every maybe-deleted defaulted function MENTIONED by the
+expression about to be evaluated.  It also walks into REFLECT_EXPR
+operands, so an evaluation that merely materializes reflections of
+class members -- e.g. std::define_static_array over a members_of list,
+the canonical "lift the member list into a template argument" idiom --
+instantiates the definition of every reflected constexpr member and
+synthesizes every implicitly-declared special member.  If such a
+definition is ill-formed for the reflected specialization (an
+implicit copy constructor of a class holding vector<unique_ptr<T>>, or
+a constexpr member whose body is lazily ill-formed for this
+specialization, e.g. tl::expected<void, E>::operator->), the lift is a
+hard error, although nothing ever calls the member.
+
+Forming a reflection does not name the function in the
+[basic.def.odr] sense, so P0859 does not apply; evaluation paths that
+really call through a reflection (splice, extract) instantiate the
+definition at that point (mark_used, and cxx_eval_call_expression's
+"can't defer instantiating any longer" fallback).
+
+Skip REFLECT_EXPR subtrees in instantiate_cx_fn_r.
+
+gcc/cp/ChangeLog:
+
+	* constexpr.cc (instantiate_cx_fn_r): Do not walk into
+	REFLECT_EXPR operands.
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/reflect/members-of-lift1.C: New test.
+---
+ gcc/cp/constexpr.cc                           | 13 +++++++
+ .../g++.dg/reflect/members-of-lift1.C         | 39 +++++++++++++++++++
+ 2 files changed, 52 insertions(+)
+ create mode 100644 gcc/testsuite/g++.dg/reflect/members-of-lift1.C
+
+diff --git a/gcc/cp/constexpr.cc b/gcc/cp/constexpr.cc
+index 8b9392b461b..43ef9e7c158 100644
+--- a/gcc/cp/constexpr.cc
++++ b/gcc/cp/constexpr.cc
+@@ -10750,6 +10750,19 @@ instantiate_cx_fn_r (tree *tp, int *walk_subtrees, void */*data*/)
+       if (EXPR_HAS_LOCATION (*tp))
+ 	input_location = EXPR_LOCATION (*tp);
+     }
++  else if (TREE_CODE (*tp) == REFLECT_EXPR)
++    {
++      /* A reflection represents an entity without naming it in the
++	 [basic.def.odr] sense: forming or copying a reflection of a
++	 constexpr function or of a defaulted special member function
++	 (e.g. materializing a members_of list as a template argument)
++	 must not instantiate its definition -- the definition might not
++	 be instantiable at all for the reflected specialization.  If the
++	 evaluation actually evaluates through the reflection (splice,
++	 extract, ...), the definition is instantiated at that point.  */
++      *walk_subtrees = 0;
++      return NULL_TREE;
++    }
+ 
+   if (!EXPR_P (*tp))
+     *walk_subtrees = 0;
+diff --git a/gcc/testsuite/g++.dg/reflect/members-of-lift1.C b/gcc/testsuite/g++.dg/reflect/members-of-lift1.C
+new file mode 100644
+index 00000000000..db0fd16e500
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/reflect/members-of-lift1.C
+@@ -0,0 +1,39 @@
++// Materializing reflections of class members as template arguments (the
++// define_static_array lift of a members_of list) must not instantiate the
++// members' definitions: forming a reflection does not name the function in
++// the [basic.def.odr] sense.  Both an implicitly-declared special member
++// whose definition would be ill-formed (deleted-by-instantiation copy
++// operations of vector<unique_ptr>) and a constexpr member whose body is
++// lazily ill-formed in the reflected specialization used to be instantiated
++// (and hard-error) by the lift.
++// { dg-do compile { target c++26 } }
++// { dg-additional-options "-freflection" }
++
++#include <meta>
++#include <memory>
++#include <vector>
++
++struct Item { int v = 7; };
++// No user-declared members: implicit default/copy/move ctors + assignments.
++struct Bag { std::vector<std::unique_ptr<Item>> items; };
++
++template <class T> struct Base { T m_val; };   // general storage: has m_val
++template <> struct Base<void> {};              // void storage: no m_val
++
++template <class T>
++struct S : Base<T> {
++  int ok = 0;
++  // Lazily ill-formed for T = void: there is no m_val there.
++  constexpr const T* cefn () const { return std::addressof (this->m_val); }
++};
++
++int
++main ()
++{
++  constexpr auto ms1 = std::define_static_array (
++    std::meta::members_of (^^Bag, std::meta::access_context::unchecked ()));
++  static_assert (ms1.size () > 0);
++  constexpr auto ms2 = std::define_static_array (
++    std::meta::members_of (^^S<void>, std::meta::access_context::unchecked ()));
++  static_assert (ms2.size () > 0);
++}
+-- 
+2.50.1 (Apple Git-155)
+
