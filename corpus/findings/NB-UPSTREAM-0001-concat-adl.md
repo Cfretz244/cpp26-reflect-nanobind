@@ -13,8 +13,20 @@ trigger is binding types from namespaces that declare their own `concat`
   (filed 2026-06-12; once merged, mirrorbind's default nanobind dependency can
   move from the Cfretz244 fork back to upstream, and PATCHES.md updates).
 - Branch: `fix-concat-adl` on `Cfretz244/nanobind`
-- Commit: `6fe25595c320c044c953af98e336a7f9dcc1deb0` (one commit on upstream
-  master `367ba7ab`)
+- Commit: `8cc58b0` (amended; one commit on upstream master `367ba7ab`).
+  **CI status: all checks green** across the full upstream matrix.
+- **Post-filing fix worth remembering:** the first push failed ONLY the two
+  Python 3.9 CI jobs (macOS + Ubuntu; Windows passed via MSVC's lax two-phase
+  lookup). `union_name` in nb_descr.h's `PY_VERSION_HEX < 0x030A0000` branch
+  -- compiled only against 3.9 headers, where `typing.Union[...]` replaces
+  PEP 604 `X | Y` -- calls `concat` from ABOVE its declarations; the original
+  unqualified call was resolved by ADL at instantiation (the very mechanism
+  the fix suppresses), so the parenthesized callee broke ordinary lookup.
+  Fixed by relocating the optional_name/union_name block below the variadic
+  concat. Validated by building + running the suite against a real 3.9
+  (uv venv): 370 passed; 3.12 unchanged at 388. Lesson: an ADL-suppression
+  patch must audit every preprocessor-conditional branch -- a call that
+  "already compiles" may be compiling on ADL.
 - Validation: full upstream suite on macOS arm64 / Apple Clang 17 /
   Python 3.12 — 388 passed, 0 failed (168 optional-dep skips); the new
   regression test (`test_58_concat_adl`, tests/test_functions.cpp) verified
