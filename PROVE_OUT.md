@@ -127,6 +127,37 @@ features + four toolchain fixes, taking the corpus to **17 runs, all E**:
   Mangler fix + standalone repro + regression tests landed; the binder's dispatch-level
   substitution workaround removed; upstreamed as #286 / PR #287).
 
+**The matcher API + default instantiations (June 2026, post-re-home, on `gcc16-only`).**
+The first expressiveness campaign after the GCC 16 re-home, attacking the two
+selection-ergonomics pains the corpus surfaced: hand-built exclusion packs (eigen's
+~237-line marker) and one-by-one specialization listing (glm bound 2 of its vec grid).
+- **Matcher DSL (`nb_reflect_match.h`):** the `nb::matcher` concept — empty
+  default-constructible types with a consteval `M{}(info) -> bool` (types, never lambdas:
+  GCC's consteval-lambda decay rule) — plus combinator leaves (`named_<"glob">` over
+  normalized identifiers, `in_namespace_`, `derived_from_`, `has_annotation_`, kind
+  leaves, `all_of_`/`any_of_`/`not_`), every leaf P3560-guarded (false, never throw).
+- **Three pack markers:** `match_<^^scope, M>` (classify-FIRST namespace walk — the
+  matcher only sees what the binder could bind; accepted nested namespaces seed whole),
+  `exclude_if_<M>` (predicates ride the new `exclusion_set` — listed span + pointers to
+  consteval invokers, rebuilt per evaluation since such pointers can never persist —
+  consulted at exactly the points the exclude_ list is: entity / template resolution /
+  parent chain / member gates), and `instantiate_<Target, with_<...>/product_<set_...>>`
+  (bulk class-template minting; `val_<V>` NTTPs; matcher-typed targets sweep the pack's
+  namespace roots; explicit-with_ failures hard-error via the undefined-consteval-fn
+  idiom, product_ substitution failures skip — constraints declare a grid's valid
+  corners). All three expand EARLY to per-element "effective seeds" consumed identically
+  by the constexpr, emit, and codegen backends — an expanded seed is bit-for-bit an
+  explicit listing (naming, discovery, base wiring, emit text).
+- **Acceptance demos, re-gated green:** glm mints its `vec<{2,3,4}x{float,double}>`
+  grid from ONE product_ rule (E/E/pass; 6 specs for the price of 2 lines); eigen's
+  33 glob-able template exclusions collapse into 11 thematic `named_` globs scoped to
+  `in_namespace_<^^Eigen>` (E/E/pass) — and pre-exclude whatever a future Eigen names
+  by the same conventions. Machinery overhead on unchanged runs: noise (json/expected
+  compile times flat).
+- **Validation:** unit suite 137/137 (3 lanes), probes 10–13 in `gcc16-proveout/probes/`,
+  full 36-run re-gate. Phase 2 reserved in the grammar: explicit-arg member-template
+  instantiation (expected's monadic API) — `instantiate_`'s Target is kind-agnostic.
+
 ## Phasing (and where fan-out begins)
 
 | Phase | What | Advance criteria | Status |

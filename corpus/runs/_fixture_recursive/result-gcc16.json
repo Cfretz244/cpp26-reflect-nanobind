@@ -7,7 +7,7 @@
   "tier": 0,
   "header_only": true,
   "toolchain_commit": "gcc-16.1.0",
-  "binder_commit": "db872b7",
+  "binder_commit": "b29edd7",
   "prod_compiler": "g++ (GCC) 16.1.0",
   "outcome": "E",
   "furthest_gate": 6,
@@ -33,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 1.34
+        "binding_compile_seconds": 1.41
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "2 passed in 0.01s"
+        "pytest_summary": "2 passed in 0.02s"
       }
     },
     "emit": {
@@ -57,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 2.02,
+        "binding_compile_seconds": 2.1,
         "generated_tu_lines": 44,
         "generated_tu_bytes": 1774
       },
@@ -86,7 +86,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "2 passed in 0.01s"
+    "pytest_summary": "2 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -98,8 +98,8 @@
   },
   "metrics": {
     "probe_seconds": 0.26,
-    "constexpr_binding_compile_seconds": 1.34,
-    "emit_binding_compile_seconds": 2.02,
+    "constexpr_binding_compile_seconds": 1.41,
+    "emit_binding_compile_seconds": 2.1,
     "emit_generated_tu_lines": 44,
     "emit_generated_tu_bytes": 1774
   },
