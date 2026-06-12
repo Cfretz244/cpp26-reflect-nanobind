@@ -315,6 +315,13 @@ def main(run_dir, mode=None):
     strategy = meta.get("strategy", "single_stage")
 
     has_emit = "emit" in meta and meta["emit"].get("enabled", True)
+    # A [gcc16] emit_enabled=false records a backend-specific RESOURCE wall
+    # (e.g. the json emit generator exhausting g++'s constant-evaluation
+    # memory) without weakening the clang record. Requires a justification
+    # comment in meta.toml + a findings entry; correctness gaps must NOT be
+    # hidden this way.
+    if IS_GCC and not meta.get("gcc16", {}).get("emit_enabled", True):
+        has_emit = False
     if mode is None:
         lanes_to_run = ["constexpr", "emit"] if has_emit else ["constexpr"]
     elif mode == "both":

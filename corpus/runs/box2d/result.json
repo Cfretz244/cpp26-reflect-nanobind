@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "box2d",
   "url": "https://github.com/erincatto/box2d",
   "pinned_commit": "v2.4.2",
   "tier": 4,
   "header_only": false,
-  "toolchain_commit": "ff46ef7",
-  "binder_commit": "3b6cb28",
+  "toolchain_commit": "a015a30",
+  "binder_commit": "11ae176",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 37.14
+        "binding_compile_seconds": 44.33
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "6 passed in 0.01s"
+        "pytest_summary": "6 passed in 0.02s"
       }
     },
     "emit": {
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 63.94,
+        "binding_compile_seconds": 72.14,
         "generated_tu_lines": 467,
         "generated_tu_bytes": 43152
       },
@@ -65,7 +66,7 @@
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "6 passed in 0.01s"
+        "pytest_summary": "6 passed in 0.02s"
       }
     }
   },
@@ -83,7 +84,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "6 passed in 0.01s"
+    "pytest_summary": "6 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -94,9 +95,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.19,
-    "constexpr_binding_compile_seconds": 37.14,
-    "emit_binding_compile_seconds": 63.94,
+    "probe_seconds": 0.26,
+    "constexpr_binding_compile_seconds": 44.33,
+    "emit_binding_compile_seconds": 72.14,
     "emit_generated_tu_lines": 467,
     "emit_generated_tu_bytes": 43152
   },

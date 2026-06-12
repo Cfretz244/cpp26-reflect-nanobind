@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "expected",
   "url": "https://github.com/TartanLlama/expected",
   "pinned_commit": "v1.3.1",
   "tier": 3,
   "header_only": true,
-  "toolchain_commit": "ff46ef7",
-  "binder_commit": "3b6cb28",
+  "toolchain_commit": "a015a30",
+  "binder_commit": "11ae176",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 7.96
+        "binding_compile_seconds": 9.61
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "16 passed in 0.01s"
+        "pytest_summary": "16 passed in 0.02s"
       }
     },
     "emit": {
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 20.9,
+        "binding_compile_seconds": 26.52,
         "generated_tu_lines": 164,
         "generated_tu_bytes": 20957
       },
@@ -65,7 +66,7 @@
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "16 passed in 0.01s"
+        "pytest_summary": "16 passed in 0.02s"
       }
     }
   },
@@ -99,7 +100,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "16 passed in 0.01s"
+    "pytest_summary": "16 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -110,9 +111,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.42,
-    "constexpr_binding_compile_seconds": 7.96,
-    "emit_binding_compile_seconds": 20.9,
+    "probe_seconds": 0.48,
+    "constexpr_binding_compile_seconds": 9.61,
+    "emit_binding_compile_seconds": 26.52,
     "emit_generated_tu_lines": 164,
     "emit_generated_tu_bytes": 20957
   },

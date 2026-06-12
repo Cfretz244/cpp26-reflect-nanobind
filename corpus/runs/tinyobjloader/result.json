@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "tinyobjloader",
   "url": "https://github.com/tinyobjloader/tinyobjloader",
   "pinned_commit": "v1.0.7",
   "tier": 2,
   "header_only": true,
   "toolchain_commit": "a015a30",
-  "binder_commit": "50a3c0c",
+  "binder_commit": "58543ff",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 4.72
+        "binding_compile_seconds": 6.37
       },
       "oracle": {
         "layers_used": [
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 6.08,
+        "binding_compile_seconds": 8.05,
         "generated_tu_lines": 174,
         "generated_tu_bytes": 10057
       },
@@ -106,9 +107,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.46,
-    "constexpr_binding_compile_seconds": 4.72,
-    "emit_binding_compile_seconds": 6.08,
+    "probe_seconds": 0.64,
+    "constexpr_binding_compile_seconds": 6.37,
+    "emit_binding_compile_seconds": 8.05,
     "emit_generated_tu_lines": 174,
     "emit_generated_tu_bytes": 10057
   },

@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "pugixml",
   "url": "https://github.com/zeux/pugixml",
   "pinned_commit": "v1.15",
   "tier": 3,
   "header_only": false,
   "toolchain_commit": "a015a30",
-  "binder_commit": "50a3c0c",
+  "binder_commit": "58543ff",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 12.05
+        "binding_compile_seconds": 15.89
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "15 passed in 0.01s"
+        "pytest_summary": "15 passed in 0.02s"
       }
     },
     "emit": {
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 23.35,
+        "binding_compile_seconds": 30.42,
         "generated_tu_lines": 282,
         "generated_tu_bytes": 36060
       },
@@ -104,7 +105,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "15 passed in 0.01s"
+    "pytest_summary": "15 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -115,9 +116,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.32,
-    "constexpr_binding_compile_seconds": 12.05,
-    "emit_binding_compile_seconds": 23.35,
+    "probe_seconds": 0.46,
+    "constexpr_binding_compile_seconds": 15.89,
+    "emit_binding_compile_seconds": 30.42,
     "emit_generated_tu_lines": 282,
     "emit_generated_tu_bytes": 36060
   },

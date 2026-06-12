@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "abseil_crc",
   "url": "https://github.com/abseil/abseil-cpp",
   "pinned_commit": "20250814.2",
   "tier": 6,
   "header_only": false,
-  "toolchain_commit": "ff46ef7",
-  "binder_commit": "3b6cb28",
+  "toolchain_commit": "a015a30",
+  "binder_commit": "11ae176",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 3.38
+        "binding_compile_seconds": 4.27
       },
       "oracle": {
         "layers_used": [
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 5.01,
+        "binding_compile_seconds": 6.11,
         "generated_tu_lines": 48,
         "generated_tu_bytes": 4157
       },
@@ -101,9 +102,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.02,
-    "constexpr_binding_compile_seconds": 3.38,
-    "emit_binding_compile_seconds": 5.01,
+    "probe_seconds": 1.35,
+    "constexpr_binding_compile_seconds": 4.27,
+    "emit_binding_compile_seconds": 6.11,
     "emit_generated_tu_lines": 48,
     "emit_generated_tu_bytes": 4157
   },

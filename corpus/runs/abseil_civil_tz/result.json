@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "abseil_civil_tz",
   "url": "https://github.com/abseil/abseil-cpp",
   "pinned_commit": "20250814.2",
   "tier": 6,
   "header_only": false,
-  "toolchain_commit": "ff46ef7",
-  "binder_commit": "3b6cb28",
+  "toolchain_commit": "a015a30",
+  "binder_commit": "11ae176",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 7.36
+        "binding_compile_seconds": 9.45
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "9 passed in 0.03s"
+        "pytest_summary": "9 passed in 0.02s"
       }
     },
     "emit": {
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 17.67,
+        "binding_compile_seconds": 21.62,
         "generated_tu_lines": 214,
         "generated_tu_bytes": 28743
       },
@@ -97,7 +98,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "9 passed in 0.03s"
+    "pytest_summary": "9 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -108,9 +109,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.78,
-    "constexpr_binding_compile_seconds": 7.36,
-    "emit_binding_compile_seconds": 17.67,
+    "probe_seconds": 1.21,
+    "constexpr_binding_compile_seconds": 9.45,
+    "emit_binding_compile_seconds": 21.62,
     "emit_generated_tu_lines": 214,
     "emit_generated_tu_bytes": 28743
   },

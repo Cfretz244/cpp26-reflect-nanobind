@@ -1,12 +1,13 @@
 {
   "schema_version": 2,
+  "backend": "clang-p2996",
   "slug": "_fixture_recursive",
   "url": "",
   "pinned_commit": "",
   "tier": 0,
   "header_only": true,
-  "toolchain_commit": "ff46ef7",
-  "binder_commit": "3b6cb28",
+  "toolchain_commit": "a015a30",
+  "binder_commit": "11ae176",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -32,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 1.29
+        "binding_compile_seconds": 1.71
       },
       "oracle": {
         "layers_used": [
@@ -56,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 2.43,
+        "binding_compile_seconds": 3.1,
         "generated_tu_lines": 44,
         "generated_tu_bytes": 1770
       },
@@ -96,9 +97,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.43,
-    "constexpr_binding_compile_seconds": 1.29,
-    "emit_binding_compile_seconds": 2.43,
+    "probe_seconds": 0.58,
+    "constexpr_binding_compile_seconds": 1.71,
+    "emit_binding_compile_seconds": 3.1,
     "emit_generated_tu_lines": 44,
     "emit_generated_tu_bytes": 1770
   },
