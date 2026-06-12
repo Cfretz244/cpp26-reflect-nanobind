@@ -2,6 +2,16 @@
 // expanded `template for` body? This is the binder's central dispatch idiom
 // (nb_reflect.h reflect_dispatch): if it fails, every dispatch site needs a
 // dependent-context wrapper.
+//
+// VERDICT (2026-06-12, see corpus/findings/repros/GCC-0004/UPSTREAM.md):
+// GCC is CONFORMING and this probe fails BY SPEC — [meta.reflection.traits]
+// makes is_class_type/is_enum_type THROW meta::exception for non-type
+// reflections (clang-p2996's false-returning predicates are the divergence),
+// and the "not usable in a splice type" errors are cascade from the failed
+// classify, NOT discarded-branch checking: with an is_type-gated classify
+// the at-site discarded splices compile and run on 16.1 and trunk alike
+// (repros/GCC-0004/gcc4_hybrid.cpp). 09b is the correct portable spelling.
+// Kept failing as a divergence canary.
 #include <meta>
 #include <cstdio>
 
