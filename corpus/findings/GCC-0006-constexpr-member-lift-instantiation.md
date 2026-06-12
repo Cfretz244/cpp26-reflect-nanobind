@@ -49,8 +49,36 @@ definition) and GCC-2 (eager instantiation on lift), generalized: any
 `constexpr` member function with a lazily-ill-formed body bites, not only
 implicit/special members.
 
+## Second site — the eigen run (member-level exclude_ collision)
+
+The `eigen` run (BINDER-0014 flagship) is a SECOND, harder site of this same
+divergence. Eigen's vector-only accessors (`w()`/`x()`/`y()`/`z()`/`operator[]`)
+and vector-`resize()` are `constexpr` and `static_assert` a shape in their
+bodies — exactly the lazily-ill-formed-constexpr-member shape — and they are
+NOT `enable_if`-ed away (unlike expected's `value()`/`operator*`), so they are
+present in `members_of` for the wrong-shaped bound spec. Two consequences:
+
+1. The BINDER-0014 per-member `nb::exclude_<...>` escape hatch works by lifting
+   each member's REFLECTION into the marker, which is itself a materialization —
+   so on GCC, forming the exclusion instantiates the very bodies it means to
+   exclude. The reflection-NTTP exclusion route is GCC-incompatible for these
+   members; `never_bound_plain_member_fn` does NOT cover them (they are mapped,
+   public, ordinary methods/operators).
+2. The binder's base-flatten lift instantiates them anyway (the facade bases are
+   bound as real Python bases).
+
+Resolved by a new GCC-safe binder capability, `nb::exclude_member_<Owner,
+"name">` — exclude a member by NAME, dropping it before the lift without ever
+forming its reflection (owner is a class, safe to materialize; name is a
+fixed_string). See `corpus/runs/eigen/findings_draft/BINDER-DRAFT-1-exclude-member-by-name.md`
+(dedup_key gcc6-exclude-member-by-name). This is the general companion to
+`never_bound_plain_member_fn`: where the latter drops members no pass consumes,
+the former drops a mapped member the binding author marks by name.
+
 ## Status
 
 Not patched in GCC (per discipline). Worked around in the binder — see
 BINDER-DRAFT-1 (`never_bound_plain_member_fn` drops never-bound members before
-the lift). To be filed on gcc.gnu.org bugzilla in Phase 4.
+the lift) and the eigen run's BINDER-DRAFT-1 (`nb::exclude_member_` by-name drop
+for mapped members the author excludes). To be filed on gcc.gnu.org bugzilla in
+Phase 4.

@@ -26,7 +26,11 @@ namespace sm = std::meta;
 // unbindable footgun from Python).
 consteval void collect_bad_matrix_ctors(sm::info M, std::size_t size,
                                         std::vector<sm::info>& out) {
-    sm::info scalar = sm::template_arguments_of(M)[0];
+    // M may be reached through a `using` alias (Vec3/Mat3/...); GCC 16's
+    // template_arguments_of THROWS on a typedef reflection (the clang-p2996
+    // fork auto-dealiased). Dealias first -- members_of/parameters_of below
+    // already tolerate the alias, this is the one strict metafunction.
+    sm::info scalar = sm::template_arguments_of(sm::dealias(M))[0];
     for (auto m : sm::members_of(M, sm::access_context::unchecked())) {
         if (!sm::is_constructor(m) || sm::is_template(m) || sm::is_deleted(m))
             continue;
@@ -67,22 +71,6 @@ consteval void collect_members_named(sm::info M, std::string_view name,
                 (arity == std::size_t(-1) ||
                  (sm::is_function(m) && !sm::is_template(m) &&
                   sm::parameters_of(m).size() == arity)))
-                out.push_back(m);
-}
-
-// Every operator[] across M's public-base subtree -- the bracket operator is
-// vector-only in Eigen (its body static_asserts IsVectorAtCompileTime), so it
-// is excluded on the MATRIX specs while staying bound (as __getitem__) on the
-// vectors.
-consteval void collect_subscript_operators(sm::info M,
-                                           std::vector<sm::info>& out) {
-    std::vector<sm::info> owners{M};
-    nanobind::detail::collect_public_base_subtree(M, owners);
-    for (auto o : owners)
-        for (auto m : sm::members_of(o, sm::access_context::unchecked()))
-            if (sm::is_function(m) &&
-                !sm::is_template(m) && sm::is_operator_function(m) &&
-                sm::operator_of(m) == sm::operators::op_square_brackets)
                 out.push_back(m);
 }
 
@@ -151,13 +139,16 @@ consteval sm::info eigen_excluded_marker() {
         // intCast: casts to integer scalars, irrelevant surface.
         collect_members_named(M, "intCast", bad);
         // More lazily-ill-formed bodies, found at Gate 4 (each static_asserts
-        // a shape the bound spec may not have): value() is 1x1-only, w() needs
-        // size >= 4, setUnit/setLinSpaced/unitOrthogonal are vector-only, the
-        // resize family is for dynamic/vector shapes (meaningless on
-        // fixed-size specs anyway).
+        // a shape the bound spec may not have): value() is 1x1-only,
+        // setUnit/setLinSpaced/unitOrthogonal are vector-only, the resize
+        // family is for dynamic/vector shapes (meaningless on fixed-size specs
+        // anyway). w() (needs size >= 4) and resize() (matrix-ill-formed) have
+        // CONSTEXPR bodies GCC 16 instantiates when their reflection is
+        // materialized (GCC-6); they are excluded by NAME below
+        // (nb::exclude_member_) so their reflection is never formed.
         for (std::string_view n :
-             {"value", "w", "setUnit", "setLinSpaced", "setEqualSpaced",
-              "unitOrthogonal", "resize", "resizeLike", "conservativeResize",
+             {"value", "setUnit", "setLinSpaced", "setEqualSpaced",
+              "unitOrthogonal", "resizeLike", "conservativeResize",
               "conservativeResizeLike"})
             collect_members_named(M, n, bad);
         // The vector-resize setConstant(Index, const Scalar&): its body calls
@@ -184,19 +175,11 @@ consteval sm::info eigen_excluded_marker() {
             collect_members_named(M, n, bad);
     }
     // operator[] is vector-only (its body static_asserts), and the x/y/z
-    // accessors call it in THEIR bodies: exclude them on the matrix spec,
-    // keep them (__getitem__, .x()/.y()/.z()) on the 3-vectors.
-    for (sm::info M : {^^Mat3}) {
-        collect_subscript_operators(M, bad);
-        for (std::string_view n : {"x", "y", "z"})
-            collect_members_named(M, n, bad);
-    }
-    // On the 1x1 (complex) matrix, y()/z() index past the end (their bodies
-    // static_assert size >= 2/3).
-    for (sm::info M : {^^CVec1}) {
-        for (std::string_view n : {"y", "z"})
-            collect_members_named(M, n, bad);
-    }
+    // accessors call it in THEIR bodies: exclude them on the matrix spec, keep
+    // them (__getitem__, .x()/.y()/.z()) on the 3-vectors. operator[]'s
+    // constexpr body is instantiated by GCC the moment its reflection is
+    // materialized (GCC-6), so it -- like x/y/z -- is excluded by name below
+    // (nb::exclude_member_<^^Mat3, "__getitem__">), never by reflection.
     // LIB-0002: Eigen 5.0.1 declares DenseBase::trace() but never DEFINES it
     // (the real trace lives on MatrixBase, Redux.h) -- a dead declaration
     // that normal use never odr-uses but a bound method does: undefined
@@ -210,6 +193,38 @@ consteval sm::info eigen_excluded_marker() {
                 bad.push_back(m);
     for (auto m : bad)
         add(m);
+
+    // -- by-NAME member exclusions (nb::exclude_member_<Derived, "name">) --
+    // For members whose CONSTEXPR body GCC 16 instantiates the moment their
+    // reflection is materialized as an NTTP (GCC-6: reflect_constant /
+    // define_static_array lift), and whose body is lazily ill-formed for the
+    // bound spec. Listing their reflection in exclude_ (as `bad` above does)
+    // would itself be the hard error, so they are named instead -- the owner
+    // is the DERIVED spec (a class; safe to materialize), and the binder drops
+    // any matching member before the lift. Honored on clang too (identical
+    // surface). w(): vector-only, size >= 4 (errors on every bound spec).
+    add(^^nanobind::exclude_member_<^^Vec3, "w">);
+    add(^^nanobind::exclude_member_<^^Mat3, "w">);
+    add(^^nanobind::exclude_member_<^^CVec1, "w">);
+    add(^^nanobind::exclude_member_<^^CVec3, "w">);
+    // On the 3x3, the vector-only coeff accessors x/y/z are matrix-ill-formed.
+    add(^^nanobind::exclude_member_<^^Mat3, "x">);
+    add(^^nanobind::exclude_member_<^^Mat3, "y">);
+    add(^^nanobind::exclude_member_<^^Mat3, "z">);
+    // operator[] -> __getitem__ (vector-only on a matrix).
+    add(^^nanobind::exclude_member_<^^Mat3, "__getitem__">);
+    // resize() is excluded on EVERY bound spec (the surface omits it -- the
+    // fixture has no resize story). On the 3x3 its constexpr body is
+    // matrix-ill-formed (the GCC-6 trigger); on the vectors it is well-formed
+    // but still unwanted -- name-exclude it uniformly so one rule shape covers
+    // all four specs.
+    add(^^nanobind::exclude_member_<^^Vec3, "resize">);
+    add(^^nanobind::exclude_member_<^^Mat3, "resize">);
+    add(^^nanobind::exclude_member_<^^CVec1, "resize">);
+    add(^^nanobind::exclude_member_<^^CVec3, "resize">);
+    // On the 1x1 (complex) vector, y()/z() index past the end.
+    add(^^nanobind::exclude_member_<^^CVec1, "y">);
+    add(^^nanobind::exclude_member_<^^CVec1, "z">);
 
     return sm::substitute(^^nanobind::exclude_, args);
 }
