@@ -1,10 +1,15 @@
-// GCC-2 (EXPECTED TO FAIL on GCC 16.1; minimized bug repro): a constexpr
-// LOCAL variable is rejected as the range of an expansion statement inside a
-// function template ("'indices' is not a constant expression"); the same
-// initializer expression inline, or hoisted to a variable template, works.
+// GCC-2 (EXPECTED TO FAIL on GCC — and that is CONFORMING; reclassified
+// 2026-06-12, see corpus/findings/repros/GCC-0002/UPSTREAM.md): a non-static
+// constexpr LOCAL variable as the range of a `template for (constexpr ...)`
+// is ill-formed under [stmt.expand]/5.2 — the synthesized range variable is
+// `constexpr decltype(auto) range = ( expansion-initializer );`, a constexpr
+// REFERENCE needing an address constant, which a non-static local lacks.
+// GCC's note even carries the fix-it ("add 'static'"; verified working).
+// Inline (prvalue) ranges and variable templates work — static storage.
+// clang-p2996 ACCEPTS this program; that is the divergence (accepts-invalid).
 //
-// The binder's workaround: emit_indices_v variable template
-// (nb_reflect_emit.h).
+// The binder's emit_indices_v variable template (nb_reflect_emit.h) is the
+// correct portable spelling, not a workaround for a GCC defect.
 #include <meta>
 #include <cstdio>
 #include <vector>
