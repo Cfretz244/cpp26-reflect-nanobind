@@ -53,29 +53,47 @@ cc1plus was OOM-killed after ~827 s with the bare "Killed signal terminated
 program cc1plus". This is NOT the libstdc++-leakage false alarm: the run's
 constexpr lane is fully green (30 s, 7/7 tests incl. its `test_no_policy_explosion`
 structural check, so the bind set is verified clean), and clang-p2996 renders
-the same TU in 240 s. So the scope is: TWO runs disabled outright (json,
-abseil_hash) and the ~15–20x memory ratio confirmed on a third, passing run
-(unordered_dense) — strong material for the upstream performance report. The
-correlation is with heavy consteval STRING RENDERING (the emit generator),
-not reflection walking per se: all three runs' constexpr lanes, with the same
-raised budgets, compile fine under g++. abseil_hash being killed where
-unordered_dense survives suggests the wall scales with generated-TU size and
-the container/member-template surface is past it.
+the same TU in 240 s. `abseil_btree` is the FOURTH case and the second genuine
+container run — the ordered sibling of abseil_hash. Its generator renders the
+btree-container surfaces (the btree_map_container/btree_set_container/
+btree_container ancestry + the heterogeneous query surface contains/count/find/
+erase/at/equal_range/lower_bound/upper_bound and operator[], all as qualified
+member-template calls — a 536-line TU, larger still than abseil_hash's 509).
+cc1plus was OOM-killed after ~196 s with the bare "Killed signal terminated
+program cc1plus" in the 31 GiB container; the run's constexpr lane is fully
+green (23.3 s, 4/4 tests, bind set clean) and clang-p2996 renders the same TU
+in 365 s — again NOT the libstdc++-leakage false alarm. So the scope is: THREE
+runs disabled outright (json, abseil_hash, abseil_btree) and the ~15–20x memory
+ratio confirmed on a fourth, passing run (unordered_dense) — strong material
+for the upstream performance report. The correlation is with heavy consteval
+STRING RENDERING (the emit generator), not reflection walking per se: all four
+runs' constexpr lanes, with the same raised budgets, compile fine under g++.
+abseil_hash and abseil_btree being killed where unordered_dense survives, with
+the two Abseil container runs both past the wall, reinforces that it scales
+with generated-TU size and the container/member-template surface is past it.
 
-NOTE: json's >31 GiB evidence was ALSO gathered before the `is_in_std` fix;
-re-test before treating its disable as final (supervisor task open). If
-another run hits this wall, record it against this dedup_key and disable
-that run's gcc16 emit lane the same way; the emit backend's
-chunked-evaluation design (emit_item_chunk_v) may need a GCC-specific
-chunking strategy — a binder change, tracked separately.
+json RE-TESTED solo (2026-06-11, post-`is_in_std`, idle 31 GiB container):
+still OOM-killed — its disable is FINAL for GCC 16.1, and the original
+1.69 GB-vs->31 GiB calibration stands on a clean bind set. If another run
+hits this wall, record it against this dedup_key and disable that run's
+gcc16 emit lane the same way; the emit backend's chunked-evaluation design
+(emit_item_chunk_v) may need a GCC-specific chunking strategy — a binder
+change, tracked separately. Re-test all three disabled runs when the
+container moves to GCC 16.2 (PR 125179's constexpr perf fix lands there;
+see gcc16-proveout/UPSTREAM_RESEARCH.md).
 
 ## Mitigation status
 
 - `runs/json/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane green:
-  `constexpr=E`, 37 s; pending re-test post-`is_in_std`).
+  `constexpr=E`, 37 s; re-tested solo post-`is_in_std` — still OOM, final
+  for 16.1).
 - `runs/abseil_hash/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane
   green: `constexpr=E`, 30 s, 7/7 tests; emit generator OOM-killed at ~827 s,
   509-line TU; bind set verified clean — not the leakage false alarm).
+- `runs/abseil_btree/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane
+  green: `constexpr=E`, 23.3 s, 4/4 tests; emit generator OOM-killed at ~196 s,
+  536-line TU; bind set verified clean — the ordered sibling of abseil_hash, not
+  the leakage false alarm).
 - `runs/unordered_dense`: re-ENABLED after the `is_in_std` fix; passes with
   a thin margin (~91% of the 31 GiB container — run its emit lane solo).
 - Possible future binder-side mitigation: render per-class chunks in even

@@ -17,3 +17,20 @@ skipped_features = ["ordered ITERATION from Python (begin/lower_bound return ite
 
 [emit]
 enabled = true
+
+[gcc16]
+# The emit GENERATOR for the ordered btree-container surfaces (the
+# btree_map_container/btree_set_container/btree_container ancestry + the
+# heterogeneous query surface -- contains/count/find/erase/at/equal_range/
+# lower_bound/upper_bound and operator[] -- rendered as qualified
+# member-template calls) exhausts g++ 16.1's constant-evaluation memory:
+# cc1plus was OOM-killed after ~196 s with the bare "Killed signal terminated
+# program cc1plus" -- no error message, the GCC-0007 wall signature. clang-p2996
+# renders the same 536-line TU fine (365 s). This is a resource wall, not a
+# correctness gap: the constexpr lane is fully green under g++ (26.8 s, 4/4
+# tests -- the bind set is clean, NOT the libstdc++-leakage false alarm that
+# unordered_dense hit). This is the ordered sibling of abseil_hash, the second
+# genuine GCC-0007 container run; its 536-line TU is larger still than
+# abseil_hash's 509-line one. See
+# corpus/findings/GCC-0007-emit-generator-constexpr-memory.md.
+emit_enabled = false
