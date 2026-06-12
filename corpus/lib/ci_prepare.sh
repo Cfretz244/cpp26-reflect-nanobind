@@ -21,6 +21,10 @@ if [ -n "$LIB" ]; then
   (cd .. && git submodule update --init --depth 1 "corpus/libs/$LIB")
 fi
 
+# Every run links nanobind's support archive ($NBLIB; one g++-built archive
+# serves both lanes on the gcc16 backend). Idempotent.
+bash lib/build_nanobind_prod.sh
+
 # Compiled runs: build the merged static archive the run's extra_libs links.
 case "$SLUG" in
   abseil_*)  bash lib/build_abseil.sh ;;
