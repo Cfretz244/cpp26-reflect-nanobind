@@ -1,5 +1,42 @@
 # GCC development environment (Phase 4: minimize + file + fix upstream)
 
+## State as of 2026-06-12 (handoff)
+
+Everything below is DONE and on disk; a fresh agent can start at "The loop".
+
+- **Image**: `gcc-devenv` is built locally (gcc:16 base + build prereqs +
+  DejaGnu + gdb + ccache). Rebuild anytime: `docker build -t gcc-devenv
+  gcc16-proveout/devenv`.
+- **Checkout**: `devenv/gcc/` is a blob-lazy clone of gcc.gnu.org/git/gcc.git
+  with `master` checked out and `releases/gcc-16` tracked locally.
+- **Built + installed**: `build-master/` is configured
+  (c,c++; --disable-bootstrap; --enable-checking=yes; ccache) and fully
+  built; `make install` has run, so the USABLE compiler is
+  `install-master/bin/g++` (= 17.0.0 @ commit 7ce3a7b1beb). Set
+  `LD_LIBRARY_PATH=$PWD/install-master/lib64` when running its output.
+  NOTE: the bare in-tree `build-master/gcc/xg++ -B...` does NOT find
+  libstdc++'s `<meta>` — use the installed driver for repros (or the
+  testsuite runner, which wires its own paths).
+- **No gcc-16 tree yet**: `scripts/configure.sh gcc-16 && scripts/build.sh
+  gcc-16` when a release-branch build is needed (backport verification).
+- **Probe matrix vs trunk is recorded** in ../UPSTREAM_RESEARCH.md
+  ("Trunk verification matrix"): GCC-5 FIXED on trunk (next action =
+  bisect the fixing commit here, then check releases/gcc-16 for it);
+  GCC-1/2/6 reproduce (file); GCC-8 reproduces and trunk's checking
+  build upgrades it to a same_comdat_group symtab verify (file with both
+  signatures); GCC-3 + GCC-4-family = file as behavior questions;
+  08_ann_spec's trunk break is GCC 17 API finalization, not a bug.
+- **Suggested first task for the next agent**: `git bisect` the GCC-5 fix
+  on master (good = 16.1 release tag `releases/gcc-16.1.0`, bad...
+  inverted: ICE present at 16.1, gone at trunk — bisect with
+  `gcc16-proveout/probes/xfail_gcc5_deferred_noexcept_partial_spec.cpp`
+  as the test, rebuilding cc1plus only per step:
+  `make -C build-master/gcc cc1plus` is the cycle), then check whether
+  that commit is on `releases/gcc-16`; if not, comment on the relevant
+  PR asking for backport. Then file GCC-8 (strongest case), then
+  GCC-1+6 together, then the GCC-2/3/4 questions — citations and CC
+  list in ../UPSTREAM_RESEARCH.md.
+
 A dockerized GCC-from-source dev setup for working the reflection findings
 (corpus/findings/GCC-000*.md, probes in ../probes/) into upstream bug
 reports and candidate patches. The container holds only the toolchain and
