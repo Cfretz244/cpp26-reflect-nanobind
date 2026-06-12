@@ -1,4 +1,4 @@
-# NB-UPSTREAM-0001 — nanobind `detail::concat` ADL hijack (upstream contribution, PREPARED)
+# NB-UPSTREAM-0001 — nanobind `detail::concat` ADL hijack (upstream contribution, FILED)
 
 The one nanobind-core patch mirrorbind's default fork carries (see
 mirrorbind/PATCHES.md), prepared as a general-purpose upstream contribution
@@ -7,8 +7,11 @@ anywhere in the branch or PR** — it is a standalone bug fix whose real-world
 trigger is binding types from namespaces that declare their own `concat`
 (canonically `nlohmann::detail`).
 
-## State: READY TO FILE (not filed)
+## State: FILED
 
+- **PR: [wjakob/nanobind#1372](https://github.com/wjakob/nanobind/pull/1372)**
+  (filed 2026-06-12; once merged, mirrorbind's default nanobind dependency can
+  move from the Cfretz244 fork back to upstream, and PATCHES.md updates).
 - Branch: `fix-concat-adl` on `Cfretz244/nanobind`
 - Commit: `6fe25595c320c044c953af98e336a7f9dcc1deb0` (one commit on upstream
   master `367ba7ab`)
@@ -17,8 +20,6 @@ trigger is binding types from namespaces that declare their own `concat`
   regression test (`test_58_concat_adl`, tests/test_functions.cpp) verified
   to FAIL to compile against pristine upstream headers
   (`nb_func.h:178: invalid operands ... 'descr<2UL - 1>' and 'std::string'`).
-- To file: `gh pr create --repo wjakob/nanobind --head Cfretz244:fix-concat-adl`
-  with the title/body below.
 
 ## PR title
 
