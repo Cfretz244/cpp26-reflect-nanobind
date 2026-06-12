@@ -44,12 +44,23 @@ json is the canonical case. `unordered_dense` initially appeared affected,
 but that OOM evidence was gathered while libstdc++'s `__gnu_cxx` iterator
 specs were leaking into the bind set (fixed in `is_in_std`, wave 1); with
 the fix its emit lane PASSES — at ~28.5 GiB peak vs clang's ~2 GiB-class for
-the same 199-line generated TU (116 s). So the scope is: ONE run disabled
-outright (json), and the ~15–20x memory ratio confirmed on a second,
-passing run — strong material for the upstream performance report. The
+the same 199-line generated TU (116 s). `abseil_hash` is the THIRD case and a
+genuine one: its generator renders the three hash-container surfaces
+(flat_hash_map/flat_hash_set/node_hash_map, the raw_hash_map/raw_hash_set
+ancestry, and the heterogeneous query surface as qualified member-template
+calls — a 509-line TU, larger than unordered_dense's passing 199 lines).
+cc1plus was OOM-killed after ~827 s with the bare "Killed signal terminated
+program cc1plus". This is NOT the libstdc++-leakage false alarm: the run's
+constexpr lane is fully green (30 s, 7/7 tests incl. its `test_no_policy_explosion`
+structural check, so the bind set is verified clean), and clang-p2996 renders
+the same TU in 240 s. So the scope is: TWO runs disabled outright (json,
+abseil_hash) and the ~15–20x memory ratio confirmed on a third, passing run
+(unordered_dense) — strong material for the upstream performance report. The
 correlation is with heavy consteval STRING RENDERING (the emit generator),
-not reflection walking per se: both runs' constexpr lanes, with the same
-raised budgets, compile fine under g++.
+not reflection walking per se: all three runs' constexpr lanes, with the same
+raised budgets, compile fine under g++. abseil_hash being killed where
+unordered_dense survives suggests the wall scales with generated-TU size and
+the container/member-template surface is past it.
 
 NOTE: json's >31 GiB evidence was ALSO gathered before the `is_in_std` fix;
 re-test before treating its disable as final (supervisor task open). If
@@ -62,6 +73,9 @@ chunking strategy — a binder change, tracked separately.
 
 - `runs/json/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane green:
   `constexpr=E`, 37 s; pending re-test post-`is_in_std`).
+- `runs/abseil_hash/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane
+  green: `constexpr=E`, 30 s, 7/7 tests; emit generator OOM-killed at ~827 s,
+  509-line TU; bind set verified clean — not the leakage false alarm).
 - `runs/unordered_dense`: re-ENABLED after the `is_in_std` fix; passes with
   a thin margin (~91% of the 31 GiB container — run its emit lane solo).
 - Possible future binder-side mitigation: render per-class chunks in even

@@ -1,0 +1,106 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "abseil_statusor",
+  "url": "https://github.com/abseil/abseil-cpp",
+  "pinned_commit": "20250814.2",
+  "tier": 6,
+  "header_only": false,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "4b9254d",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 10.5
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "7 passed in 0.03s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 12.82,
+        "generated_tu_lines": 161,
+        "generated_tu_bytes": 16780
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "7 passed in 0.03s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [],
+    "rationale": "",
+    "skipped_features": []
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "7 passed in 0.03s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 1.68,
+    "constexpr_binding_compile_seconds": 10.5,
+    "emit_binding_compile_seconds": 12.82,
+    "emit_generated_tu_lines": 161,
+    "emit_generated_tu_bytes": 16780
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 15 top-level object(s) compared; "
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "abseil_hash",
+  "url": "https://github.com/abseil/abseil-cpp",
+  "pinned_commit": "20250814.2",
+  "tier": 6,
+  "header_only": false,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "4b9254d",
+  "prod_compiler": "",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 27.73
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "7 passed in 0.02s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "skip",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^absl::flat_hash_map<int, std::string>",
+      "^^absl::flat_hash_set<int>",
+      "^^absl::node_hash_map<int, std::string>",
+      "^^hmtest"
+    ],
+    "rationale": "The BINDER-0008 payoff: absl::flat_hash_map/flat_hash_set/node_hash_map bound HEAD-ON. Reachability discovery (binder Change 1) keeps the container_internal policy explosion out (no FlatHashMapPolicy/Hash/Eq/Alloc types; only signature-reachable internals like node_handle and the raw_hash_map/raw_hash_set ancestry, which becomes the Python base chain). Default-instantiable member templates (binder Change 2 + the TC-0004 dispatch-level substitution workaround) bind the heterogeneous query surface directly: contains/count/find/erase/at/equal_range and operator[] -> __getitem__ (C++ semantics: default-inserts on miss). size/empty/clear/capacity/bucket_count/load_factor/rehash/reserve bind as plain methods. The hmtest fixture supplies only VALUE-SETTING population (put/add): insert()'s pair<iterator,bool> return has no Python representation (iterators are C++-only), and __getitem__ cannot express assignment.",
+    "skipped_features": [
+      "insert/extract from Python (returns pair<iterator,bool>/node_handle; iterator types have no Python value semantics -- population via hmtest::put/add or d[k] default-insert)",
+      "emplace/try_emplace/insert_or_assign/lazy_emplace (parameter-pack member templates, skipped by design)",
+      "begin/end iteration (iterator-returning; a future __iter__/make_iterator feature)",
+      "btree containers (sibling run abseil_btree)",
+      "FixedArray (still blocked -- internal AsValueType instantiation; see BINDER-0008)"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "7 passed in 0.02s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 1.8,
+    "constexpr_binding_compile_seconds": 27.73
+  },
+  "artifacts": {},
+  "notes": ""
+}

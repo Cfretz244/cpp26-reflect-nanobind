@@ -23,3 +23,16 @@ enabled = true
 # (build/abseil-install-prod/lib/libabsl_merged.a) is linked mechanically by
 # run_gates.py via link_abseil; the generated TU links clean against it. The
 # emit generator's stage-1 raised step budget arrives via NB_GEN_CFLAGS.
+
+[gcc16]
+# The emit GENERATOR for the three hash-container surfaces (raw_hash_map/
+# raw_hash_set ancestry + the heterogeneous query surface rendered as qualified
+# member-template calls) exhausts g++ 16.1's constant-evaluation memory:
+# cc1plus was OOM-killed after ~827 s with the bare "Killed signal terminated
+# program cc1plus" -- no error message, the GCC-0007 wall signature. clang-p2996
+# renders the same 509-line TU fine (240 s). This is a resource wall, not a
+# correctness gap: the constexpr lane is fully green under g++ (30.6 s, 7/7
+# tests incl. the no-policy-explosion structural check -- the bind set is clean,
+# so this is NOT the libstdc++-leakage false alarm that unordered_dense hit).
+# See corpus/findings/GCC-0007-emit-generator-constexpr-memory.md.
+emit_enabled = false

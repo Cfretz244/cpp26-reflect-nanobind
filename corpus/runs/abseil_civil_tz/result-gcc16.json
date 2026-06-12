@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "abseil_civil_tz",
+  "url": "https://github.com/abseil/abseil-cpp",
+  "pinned_commit": "20250814.2",
+  "tier": 6,
+  "header_only": false,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "4b9254d",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 5.59
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "9 passed in 0.03s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 18.28,
+        "generated_tu_lines": 214,
+        "generated_tu_bytes": 28579
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "9 passed in 0.02s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^absl::TimeZone",
+      "^^absl::TimeZone::CivilInfo",
+      "^^absl::Time",
+      "^^absl::Duration",
+      "^^absl::CivilSecond",
+      "^^absl::CivilDay",
+      "^^absl::CivilYear",
+      "^^tztest"
+    ],
+    "rationale": "absl::TimeZone (concrete copyable value type: name(), At(Time) -> CivilInfo, ==) and the civil-time types bound head-on. CivilDay/CivilSecond/CivilYear are aliases of time_internal::cctz::detail::civil_time<tag> SPECIALIZATIONS -- real internal-namespace specs bound under their spec-derived Python names (accepted per the reachability-only decision; a friendly-naming pass is future work). Their field accessors (year/month/day/hour/minute/second) and member += (__iadd__, incl. the famous normalization behavior) bind directly. TimeZone::CivilInfo is a NESTED class listed explicitly (nested non-template classes are not auto-discovered); its cs/subsecond/offset/is_dst/zone_abbr members bind (zone_abbr exercises a const char* def_ro). The tztest fixture wraps the free conversion API (UTCTimeZone/FixedTimeZone/LoadTimeZone -> optional, FromCivil/ToCivilSecond/ToCivilDay, FromUnixSeconds/ToUnixSeconds, FormatTime, GetWeekday -> int). Differentials use UTC/fixed-offset zones only (tzdata-independent).",
+    "skipped_features": [
+      "civil-time comparison/difference operators (free function TEMPLATES over <tag>, skipped by design; differential uses field accessors)",
+      "TimeZone::At(CivilSecond) -> TimeInfo and NextTransition/PrevTransition (nested TimeInfo/CivilTransition + out-params; not exercised)",
+      "named-zone loads in differentials (LoadTimeZone is exposed but tests stick to UTC/fixed offsets for tzdata independence)",
+      "ctor default-argument values (C++26 gap: civil ctors bind with all six fields required)"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "9 passed in 0.03s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 0.94,
+    "constexpr_binding_compile_seconds": 5.59,
+    "emit_binding_compile_seconds": 18.28,
+    "emit_generated_tu_lines": 214,
+    "emit_generated_tu_bytes": 28579
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 17 top-level object(s) compared; "
+}
