@@ -110,9 +110,12 @@ def test_typed_attribute_conversions_differential(lib):
     b1 = el.child("book")
     assert b1.attribute("id").as_int(0) == E["b1_id_int"]
     assert b1.attribute("pages").as_uint(0) == E["b1_pages_int"]
-    # price as_double: compare via the same to_string the oracle used
+    # price as_double: compare numerically against the oracle's parsed double. (A string
+    # compare would be a std::to_string-formatting artifact -- libc++ renders "9.990000",
+    # libstdc++ in C++26 mode renders the shortest form "9.99"; both parse to the same
+    # JSON float, so the numeric compare is the portable, binding-faithful check.)
     price = b1.attribute("price").as_double(0.0)
-    assert ("%.6f" % price) == E["b1_price_str"]
+    assert price == pytest.approx(E["b1_price"])
     # missing attribute returns the supplied default
     assert b1.attribute("nope").as_int(-7) == E["b1_missing_default"]
 

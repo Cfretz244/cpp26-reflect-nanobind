@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "cli11",
+  "url": "https://github.com/CLIUtils/CLI11",
+  "pinned_commit": "v2.6.2",
+  "tier": 3,
+  "header_only": true,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 31.41
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "6 passed in 0.03s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 88.55,
+        "generated_tu_lines": 457,
+        "generated_tu_bytes": 81462
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "6 passed in 0.02s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^CLI::App",
+      "^^CLI::Option",
+      "^^CLI::Error",
+      "^^CLI::ParseError",
+      "^^CLI::RequiredError",
+      "^^CLI::ExtrasError",
+      "^^CLI::ArgumentMismatch",
+      "^^CLI::ConversionError",
+      "cli_excluded_marker()"
+    ],
+    "rationale": "CLI::App is bound head-on through its string-collecting option API -- the path that needs no typed C++ variable, so it crosses to Python with no fixture: add_option(name)/add_flag(name) return an Option whose parsed values stay as strings (results() == list[str]); parse(list[str]) drives a parse from a reversed forward command line (CLI11's parse(vector<string>&) expects the reversed vector, avoiding argc/argv). CLI::Option exposes count/empty/results/get_single_name/get_snames/get_lnames and the configuration chain (required/expected/take_all). The CLI::ParseError hierarchy (RequiredError/ExtrasError/ArgumentMismatch/ConversionError) is reflected so the failure-path differential can compare real CLI exceptions. oracle_native.cpp drives four scenarios (basic option+repeated-flag parse, a 3-value option, a required-missing RequiredError, an unexpected-extra ExtrasError) and the Python test mirrors them exactly. NOTE: the run does NOT reach a clean pass -- the binder defaults raw-pointer-returning methods (add_option/add_flag -> Option*, every fluent setter -> App*/Option*) to rv_policy::automatic (= take_ownership for pointers), but App owns each Option through std::unique_ptr, so Python's wrapper double-frees it. The first parse aborts (SIGABRT) or segfaults inside CLI::App::_process_requirements (when a discarded add_flag return is GC'd early). This is a real binder ownership-default bug, minimized in findings_draft/reflect-raw-ptr-return-take-ownership-default.md; the tests are written against correct behavior and pass once pointer returns default to a non-owning policy. No fixture is used: wrapping add_* in a C++ factory would only hide the bug.",
+    "skipped_features": [
+      "ensure_utf8(char**) and the argv-style parse(int, char**) / parse(int, wchar_t**) overloads: a pointer-to-pointer parameter has no nanobind caster and the binder does not gracefully skip it (it synthesizes a non-matching forwarding lambda -> hard compile error); excluded by member reflection via cli_excluded_marker(). The bindable parse(vector<string>&) is what the run drives. (see findings_draft/binder-ptr-to-ptr-param-no-graceful-skip.md)",
+      "typed option binding (add_option(name, T& variable) / add_flag(name, T& variable)): templated on the bound C++ variable's type -- a consteval/template front that cannot reference a Python value, so not bindable; the string-collecting Option.results() path is the bindable equivalent and is what the differential checks",
+      "Validator / Formatter / Config subobjects, callbacks (std::function setters), subcommand trees beyond add_subcommand presence: deep auxiliary surface, out of the parse-correctness focus"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "6 passed in 0.03s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 5.5,
+    "constexpr_binding_compile_seconds": 31.41,
+    "emit_binding_compile_seconds": 88.55,
+    "emit_generated_tu_lines": 457,
+    "emit_generated_tu_bytes": 81462
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 9 top-level object(s) compared; "
+}

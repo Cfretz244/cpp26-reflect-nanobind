@@ -1,0 +1,125 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "simdjson",
+  "url": "https://github.com/simdjson/simdjson",
+  "pinned_commit": "v4.6.4",
+  "tier": 3,
+  "header_only": false,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 9.44
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "17 passed in 0.03s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 17.78,
+        "generated_tu_lines": 205,
+        "generated_tu_bytes": 19204
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "17 passed in 0.06s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^simdjson::dom::element",
+      "^^simdjson::dom::array",
+      "^^simdjson::dom::object",
+      "^^simdjson::dom::element_type",
+      "^^simdjson::error_code",
+      "^^simdjsontest",
+      "^^nb::exclude_<^^simdjson::simdjson_result, ^^simdjson::dom::parser, ^^simdjson::dom::document, ^^simdjson::dom::document_stream, ^^simdjson::dom::key_value_pair, ^^simdjson::padded_string, ^^simdjson::padded_string_view, ^^simdjson::internal::tape_ref, ^^std::basic_ostream>"
+    ],
+    "rationale": "simdjson's DOM value types are bound head-on: dom::element (the JSON node handle -- type() -> element_type, the nine is_*() discriminants is_array/is_object/is_string/is_int64/is_uint64/is_double/is_number/is_bool/is_null/is_bigint, and operator==/operator< over elements), dom::array and dom::object (size()), the element_type enum (ARRAY/OBJECT/INT64/UINT64/DOUBLE/STRING/BOOL/NULL_VALUE/BIGINT, the type-discriminant theme, differentially checked), and the error_code enum (the full parse/navigation taxonomy SUCCESS..NUM_ERROR_CODES). simdjson's entire navigation+coercion surface returns simdjson_result<T> (a value-or-error monad with no Python caster) off a MOVE-ONLY parser whose returned handles alias parser-owned buffers -- neither expressible to Python -- so the simdjsontest fixture supplies ONLY that: Doc owns the parser+padded source and yields the root as a bound dom::element; at_key/at_pointer/at_index/array_at/object_at navigate (unwrapping simdjson_result<element> to the SAME bound element, throwing QueryError carrying the raw error_code on NO_SUCH_FIELD/INDEX_OUT_OF_BOUNDS/INCORRECT_TYPE); as_array/as_object/as_int64/as_uint64/as_double/as_bool/as_string coerce; array_values/object_keys materialize children/keys in document order. Differential: the native oracle parses one fixed JSON document and emits scalar reads (int/uint/double/bool/string), array+object sizes, key lookups, JSON-pointer navigation, type discriminants for every value kind, document-order array elements and object keys, is_null/number coercions, and error codes for malformed JSON + missing keys + wrong-type coercions; the Python test parses the identical string through the binding and asserts equality on all of it plus enum-value and isinstance invariants.",
+    "skipped_features": [
+      "the ondemand API (simdjson::ondemand::*) -- forward-iteration-constrained, single-pass, and template-heavy (value/field/object/array are tied to a live iterator); the random-access DOM API is the bindable + differentiable surface",
+      "simdjson_result<T> (every navigation/coercion return) -- a value-or-error monad template with no Python caster; surfaced through the simdjsontest fixture's unwrap helpers (result -> value, throwing QueryError carrying the raw error_code)",
+      "dom::parser entry points (parse/load/parse_many/load_many) -- parser is move-only and its results alias parser-owned buffers; the Doc fixture owns the parser+source and exposes the root element (parse_many/load_many additionally return document_stream, a streaming front with no Python meaning)",
+      "dom::document -- move-only, std::unique_ptr<uint64_t[]>/<uint8_t[]> members; an internal buffer holder with no standalone Python use (the parser owns one)",
+      "element::get<T>()/is<T>() member templates (non-defaulted type param) -- skipped per the member-template-needs-explicit-args limitation; the non-template get_int64()/get_bool()/... are surfaced via the fixture's as_* coercions",
+      "iteration via begin()/end() on element/array/object -> dom::array::iterator/object::iterator (forward iterators returning element/key_value_pair; no Python iterator protocol bound) -- array_values/object_keys materialize the children/keys head-on instead",
+      "padded_string / padded_string_view (the SIMDJSON_PADDING-aware parse-input types) -- the fixture takes a std::string and pads internally; not separately useful to Python",
+      "operator std::string_view / operator int64_t / ... implicit conversions on element (SIMDJSON_EXCEPTIONS path) -- ambiguous as Python dunders; explicit as_* coercions are surfaced instead",
+      "at_path/at_path_with_wildcard (JSONPath) and the deprecated at(string_view) overload -- JSONPath returns std::vector<element>/results; at_pointer (RFC 6901) covers pointer navigation head-on",
+      "default-argument VALUES (parse's realloc_if_needed, allocate's max_depth, parse_many's batch_size) are a C++26 reflection gap (P3096 exposes has_default_argument, not the value); not exercised -- the fixture's helpers take no defaulted args"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "17 passed in 0.03s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 2.18,
+    "constexpr_binding_compile_seconds": 9.44,
+    "emit_binding_compile_seconds": 17.78,
+    "emit_generated_tu_lines": 205,
+    "emit_generated_tu_bytes": 19204
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 21 top-level object(s) compared; "
+}

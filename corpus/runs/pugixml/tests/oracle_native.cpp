@@ -97,8 +97,14 @@ int main() {
     add_i("b1_id_int", b1.attribute("id").as_int());
     add_i("b1_pages_int", b1.attribute("pages").as_uint());
     {
+        // Emit the parsed double as a value, not via std::to_string: the latter's
+        // double formatting diverges across standard libraries (libc++ renders the
+        // classic 6-decimal "%f" form "9.990000"; libstdc++ in C++26 mode renders the
+        // shortest round-trippable form "9.99"), which would make the differential
+        // string compare a library artifact rather than a binding observation. The
+        // test compares numerically (pytest.approx) against this value.
         double price = b1.attribute("price").as_double();
-        add_s("b1_price_str", std::to_string(price));
+        kv.emplace_back("b1_price", std::to_string(price));
     }
     add_i("b1_missing_default", b1.attribute("nope").as_int(-7));
 

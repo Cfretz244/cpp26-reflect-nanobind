@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "spdlog",
+  "url": "https://github.com/gabime/spdlog",
+  "pinned_commit": "v1.17.0",
+  "tier": 3,
+  "header_only": true,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 8.72
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "10 passed in 0.04s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 14.3,
+        "generated_tu_lines": 167,
+        "generated_tu_bytes": 15476
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "10 passed in 0.02s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^spdlog::logger",
+      "^^spdlog::level",
+      "^^spdlog::pattern_time_type",
+      "^^spdlog::sinks::sink",
+      "^^spdlog::sinks::stdout_sink_base<spdlog::details::console_mutex>",
+      "^^spdlog::sinks::stdout_sink_mt",
+      "^^logtest"
+    ],
+    "rationale": "spdlog::logger is the library's central class, bound head-on: ctors (name / name+sink_ptr), the non-template log(level, string_view) overloads, set_level/level/should_log/name/set_pattern/flush/flush_on/flush_level, sinks() -> vector<shared_ptr<sink>> (the shared_ptr theme), and clone() -> shared_ptr<logger>. spdlog::level is the namespace carrying the level_enum plus to_string_view/to_short_c_str/from_str (the log-level-enum theme, differentially checked). sinks::sink is the abstract base and sinks::stdout_sink_mt a real concrete sink; the intermediate stdout_sink_base<console_mutex> is LISTED EXPLICITLY so the whole 3-level chain binds as real Python bases (the inheritance theme) -- its only signature self-mentions are deleted copy/move operators, which pull nothing into the bind set (BINDER-0012), so without the explicit opt-in it would flatten. The logtest fixture owns an ostringstream-backed ostream_sink and hands it out as shared_ptr<sinks::sink>, so Python-driven logging is captured as text and compared byte-for-byte against the native oracle driving the identical sequence. Built with SPDLOG_USE_STD_FORMAT (a first-class spdlog config) so string_view_t/format_string_t are the std types the nanobind casters cover; the default bundled-fmt mode's fmt::basic_string_view has no caster.",
+    "skipped_features": [
+      "templated log front-ends (logger::info/warn/... take std::format_string<Args...> -- consteval first param, intrinsically not bindable; the non-template log(level, string_view) overloads are the bindable surface)",
+      "Python-implemented custom sinks (sink's pure virtuals need a two-stage trampoline; virtual-override path already proven by _fixture_virtual, kept out of this run)",
+      "set_formatter(unique_ptr<formatter>) -- by-value move-only param, skipped per BINDER-0010",
+      "sinks_init_list ctor (initializer_list has no Python representation)",
+      "ostream_sink bound directly (ctor takes std::ostream& -- no caster; wrapped by the logtest CaptureSink fixture instead)"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "10 passed in 0.04s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 2.26,
+    "constexpr_binding_compile_seconds": 8.72,
+    "emit_binding_compile_seconds": 14.3,
+    "emit_generated_tu_lines": 167,
+    "emit_generated_tu_bytes": 15476
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 10 top-level object(s) compared; "
+}
