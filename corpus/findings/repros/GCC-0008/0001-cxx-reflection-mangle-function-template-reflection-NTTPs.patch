@@ -1,0 +1,174 @@
+From be4033289d76140990b8fcbb59705bda2d7ed6ce Mon Sep 17 00:00:00 2001
+From: Chris Fretz <cfretz@icloud.com>
+Date: Fri, 12 Jun 2026 02:59:18 -0400
+Subject: [PATCH] c++/reflection: mangle function-template reflection NTTPs
+ unambiguously
+
+A reflection of a function template used as a template argument mangles
+as "ft" + scope + unqualified name only.  Function templates overload,
+so the reflections of two same-named sibling templates -- e.g. a
+const/non-const member function template pair, or namespace-scope
+siblings differing in template head, signature or constraints -- mangle
+identically, and a dispatcher template instantiated once per sibling
+with the reflection as an NTTP emits two definitions under one symbol:
+an "already defined" assembler error, or with comdat linkage a silent
+fold where one body serves both call sites.
+
+Extend the "ft" encoding with the template head (in the style of lambda
+template heads, <template-param-decl>* plus the head's constraints), a
+'_' separator, the type of the templated function, and any trailing
+requires-clause.
+
+gcc/cp/ChangeLog:
+
+	* mangle.cc (write_reflection): Document the extended "ft"
+	encoding in the <reflection> grammar comment.  For function
+	template reflections, also write the innermost template
+	parameter declarations, the head's constraints, the type of the
+	templated function and any trailing requires-clause.
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/reflect/mangle1.C: Adjust the two function-template
+	expectations for the extended encoding.
+	* g++.dg/reflect/mangle8.C: New test.
+---
+ gcc/cp/mangle.cc                       | 36 +++++++++++++++++--
+ gcc/testsuite/g++.dg/reflect/mangle1.C |  4 +--
+ gcc/testsuite/g++.dg/reflect/mangle8.C | 48 ++++++++++++++++++++++++++
+ 3 files changed, 84 insertions(+), 4 deletions(-)
+ create mode 100644 gcc/testsuite/g++.dg/reflect/mangle8.C
+
+diff --git a/gcc/cp/mangle.cc b/gcc/cp/mangle.cc
+index a287cded8ae..66ee3424513 100644
+--- a/gcc/cp/mangle.cc
++++ b/gcc/cp/mangle.cc
+@@ -4188,7 +4188,10 @@ write_expression (tree expr)
+ 		  ::= dm <prefix> <unqualified-name>	# ns data member
+ 		  ::= un <prefix> [ <nonnegative number> ] _ # unnamed bitfld
+ 		  ::= ct [ <prefix> ] <unqualified-name> # class template
+-		  ::= ft [ <prefix> ] <unqualified-name> # function template
++		  ::= ft [ <prefix> ] <unqualified-name>
++		      <template-param-decl>* [ Q <constraint-expression> ]
++		      _ <type> [ Q <constraint-expression> ]
++						 # function template
+ 		  ::= vt [ <prefix> ] <unqualified-name> # variable template
+ 		  ::= at [ <prefix> ] <unqualified-name> # alias template
+ 		  ::= co [ <prefix> ] <unqualified-name> # concept
+@@ -4270,7 +4273,6 @@ write_reflection (tree refl)
+       write_compact_number (idx);
+     }
+   else if (strcmp (prefix, "ct") == 0
+-	   || strcmp (prefix, "ft") == 0
+ 	   || strcmp (prefix, "vt") == 0
+ 	   || strcmp (prefix, "at") == 0
+ 	   || strcmp (prefix, "co") == 0
+@@ -4280,6 +4282,36 @@ write_reflection (tree refl)
+       write_prefix (decl_mangling_context (arg));
+       write_unqualified_name (arg);
+     }
++  else if (strcmp (prefix, "ft") == 0)
++    {
++      /* Function templates overload, so the context and name alone do not
++	 identify a unique template: reflections of a const/non-const
++	 member function template pair, or of namespace-scope siblings
++	 differing in template head, signature or constraints, would
++	 mangle identically, and distinct instantiations of a template
++	 taking such a reflection as a template argument would get one
++	 symbol (silently folded or rejected at assembly time).  Also
++	 write the template head (in the style of lambda template heads),
++	 the type of the templated function, and any trailing
++	 requires-clause.  */
++      write_prefix (decl_mangling_context (arg));
++      write_unqualified_name (arg);
++      tree parms = DECL_TEMPLATE_PARMS (arg);
++      for (tree parm : tree_vec_range (INNERMOST_TEMPLATE_PARMS (parms)))
++	if (parm != error_mark_node)
++	  write_template_param_decl (parm);
++      write_tparms_constraints (TEMPLATE_PARMS_CONSTRAINTS (parms));
++      tree fn = DECL_TEMPLATE_RESULT (arg);
++      write_char ('_');
++      write_type (TREE_TYPE (fn));
++      if (tree c = get_trailing_function_requirements (fn))
++	{
++	  ++G.parm_depth;
++	  write_char ('Q');
++	  write_constraint_expression (c);
++	  --G.parm_depth;
++	}
++    }
+   else if (strcmp (prefix, "ba") == 0)
+     {
+       gcc_assert (TREE_CODE (arg) == TREE_BINFO);
+diff --git a/gcc/testsuite/g++.dg/reflect/mangle1.C b/gcc/testsuite/g++.dg/reflect/mangle1.C
+index e0e60994312..c2e0748260b 100644
+--- a/gcc/testsuite/g++.dg/reflect/mangle1.C
++++ b/gcc/testsuite/g++.dg/reflect/mangle1.C
+@@ -234,8 +234,8 @@ baz (int x)
+ // { dg-final { scan-assembler "_Z3barILi233ELDmun3NS21S1_EEvv" } }
+ // { dg-final { scan-assembler "_Z3barILi240ELDmct4TClsEEvv" } }
+ // { dg-final { scan-assembler "_Z3barILi241ELDmct3NS24TClsEEvv" } }
+-// { dg-final { scan-assembler "_Z3barILi250ELDmft3TFnEEvv" } }
+-// { dg-final { scan-assembler "_Z3barILi251ELDmft3NS23TFnEEvv" } }
++// { dg-final { scan-assembler "_Z3barILi250ELDmft3TFnTnDa_FvvEEEvv" } }
++// { dg-final { scan-assembler "_Z3barILi251ELDmft3NS23TFnTnDa_FvvEEEvv" } }
+ // { dg-final { scan-assembler "_Z3barILi260ELDmvt4TVarEEvv" } }
+ // { dg-final { scan-assembler "_Z3barILi261ELDmvt3NS24TVarEEvv" } }
+ // { dg-final { scan-assembler "_Z3barILi270ELDmat6TAliasEEvv" } }
+diff --git a/gcc/testsuite/g++.dg/reflect/mangle8.C b/gcc/testsuite/g++.dg/reflect/mangle8.C
+new file mode 100644
+index 00000000000..4ca53d49a04
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/reflect/mangle8.C
+@@ -0,0 +1,48 @@
++// Reflections of same-named sibling function templates used as template
++// arguments must mangle distinctly.  A const/non-const member function
++// template pair dispatched through a function template taking the
++// TEMPLATE_DECL reflection as an NTTP used to produce one symbol for both
++// instantiations: an "already defined" assembler error, or, with comdat
++// linkage, one body silently serving both call sites.
++// { dg-do run { target c++26 } }
++// { dg-additional-options "-freflection" }
++
++#include <meta>
++#include <vector>
++
++struct Table {
++  int v = 41;
++  template <class K = int>
++  int& at (const K&) { return v; }
++  template <class K = int>
++  const int& at (const K&) const { return v; }
++};
++
++template <typename T, std::meta::info Tmpl>
++void
++dispatch (T& obj, int& out)
++{
++  constexpr auto spec
++    = std::meta::substitute (Tmpl, std::vector<std::meta::info>{});
++  constexpr auto mp = &[:spec:];
++  out += (obj.*mp) (0);
++}
++
++int
++main ()
++{
++  Table t;
++  int sum = 0;
++  template for (constexpr auto m : std::define_static_array (
++		  std::meta::members_of (^^Table,
++					 std::meta::access_context::unchecked ())))
++    {
++      if constexpr (std::meta::is_function_template (m)
++		    && std::meta::has_identifier (m)
++		    && std::meta::identifier_of (m)
++		       == std::string_view ("at"))
++	dispatch<Table, m> (t, sum);
++    }
++  if (sum != 82)
++    __builtin_abort ();
++}
+-- 
+2.50.1 (Apple Git-155)
+

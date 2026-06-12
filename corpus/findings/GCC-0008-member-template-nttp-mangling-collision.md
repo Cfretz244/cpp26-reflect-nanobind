@@ -4,7 +4,13 @@
 - compiler: g++ (GCC) 16.1.0 aarch64-linux-gnu (`gcc:16` docker image)
 - probe: `gcc16-proveout/probes/xfail_gcc8_member_template_nttp_mangling.cpp`
 - status: workaround landed in the binder (`member_tmpl_mangle_hint`);
-  upstream report planned (Phase 4; gcc.gnu.org bugzilla, component c++)
+  **PATCH READY** — minimized, root-caused (`write_reflection` in
+  gcc/cp/mangle.cc encodes Template-kind reflections by scope+name only;
+  function templates overload), fixed on the devenv trunk tree and verified
+  (probe runs exit 0; reflection+constexpr testsuite slices 3939 passes / 0
+  unexpected fails; regression test g++.dg/reflect/mangle8.C added). Patch +
+  bugzilla material: `corpus/findings/repros/GCC-0008/` (UPSTREAM.md). Not
+  yet filed — filing is the user's call.
 - found by: corpus run `unordered_dense`
 
 ## Symptom
