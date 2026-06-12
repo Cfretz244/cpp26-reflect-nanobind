@@ -15,12 +15,13 @@
 // under findings/): absl::FixedArray's internal zero-length-array storage member (BINDER-0006) and
 // absl::int128's free operator<<(std::ostream&, ...) which the binder tries to bind as a dunder,
 // instantiating an incomplete std::ostream caster (BINDER-0007).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(abseil_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

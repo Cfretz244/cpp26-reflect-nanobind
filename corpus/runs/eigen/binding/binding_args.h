@@ -6,8 +6,10 @@
 // bodies (fixed-size convenience ctors, shape-asserting facade members).
 // See binding.cpp's header comment for the full rationale.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
+
+namespace mb = mirrorbind;
 
 using Vec3 = Eigen::Matrix<double, 3, 1>;
 using Mat3 = Eigen::Matrix<double, 3, 3>;
@@ -63,7 +65,7 @@ consteval void collect_members_named(sm::info M, std::string_view name,
                                      std::vector<sm::info>& out,
                                      std::size_t arity = std::size_t(-1)) {
     std::vector<sm::info> owners{M};
-    nanobind::detail::collect_public_base_subtree(M, owners);
+    mirrorbind::detail::collect_public_base_subtree(M, owners);
     for (auto o : owners)
         for (auto m : sm::members_of(o, sm::access_context::unchecked()))
             if (sm::has_identifier(m) &&
@@ -75,7 +77,7 @@ consteval void collect_members_named(sm::info M, std::string_view name,
 }
 
 // The thematic FAMILIES of divergence engines, as one scoped matcher
-// (nb::exclude_if_, nested in the exclude_ marker below): expression/view
+// (mb::exclude_if_, nested in the exclude_ marker below): expression/view
 // facades and solver/decomposition objects follow Eigen's naming
 // conventions, so eleven globs replace thirty-three template listings --
 // and a future Eigen's new CwiseFoo or FooSolver is excluded before anyone
@@ -83,20 +85,20 @@ consteval void collect_members_named(sm::info M, std::string_view name,
 // never touch the eigentest fixture; none of the globs collide with the
 // bound facade chain (Matrix, PlainObjectBase, MatrixBase, DenseBase,
 // DenseCoeffsBase, EigenBase).
-using eigen_machinery = nanobind::all_of_<
-    nanobind::in_namespace_<^^Eigen>,
-    nanobind::any_of_<
-        nanobind::named_<"Cwise*">,          // CwiseUnary/Binary/Nullary/TernaryOp, CwiseUnaryView
-        nanobind::named_<"*View">,           // Triangular/SelfAdjoint/Real/Sparse/IndexedView
-        nanobind::named_<"*Wrapper">,        // Array/Matrix/Diagonal/SkewSymmetric/PermutationWrapper
-        nanobind::named_<"Permutation*">,    // PermutationBase/Matrix(/Wrapper)
-        nanobind::named_<"*Solver">,         // Eigen/Generalized/SelfAdjoint/ComplexEigenSolver
-        nanobind::named_<"*SVD">,            // JacobiSVD, BDCSVD
-        nanobind::named_<"*QR">,             // Householder/ColPiv/FullPivHouseholderQR
-        nanobind::named_<"*PivLU">,          // PartialPivLU, FullPivLU
-        nanobind::named_<"*Schur">,          // RealSchur, ComplexSchur
-        nanobind::named_<"*Decomposition">,  // Hessenberg, CompleteOrthogonal
-        nanobind::named_<"Householder*">>>;  // HouseholderSequence (+ the QRs)
+using eigen_machinery = mirrorbind::all_of_<
+    mirrorbind::in_namespace_<^^Eigen>,
+    mirrorbind::any_of_<
+        mirrorbind::named_<"Cwise*">,          // CwiseUnary/Binary/Nullary/TernaryOp, CwiseUnaryView
+        mirrorbind::named_<"*View">,           // Triangular/SelfAdjoint/Real/Sparse/IndexedView
+        mirrorbind::named_<"*Wrapper">,        // Array/Matrix/Diagonal/SkewSymmetric/PermutationWrapper
+        mirrorbind::named_<"Permutation*">,    // PermutationBase/Matrix(/Wrapper)
+        mirrorbind::named_<"*Solver">,         // Eigen/Generalized/SelfAdjoint/ComplexEigenSolver
+        mirrorbind::named_<"*SVD">,            // JacobiSVD, BDCSVD
+        mirrorbind::named_<"*QR">,             // Householder/ColPiv/FullPivHouseholderQR
+        mirrorbind::named_<"*PivLU">,          // PartialPivLU, FullPivLU
+        mirrorbind::named_<"*Schur">,          // RealSchur, ComplexSchur
+        mirrorbind::named_<"*Decomposition">,  // Hessenberg, CompleteOrthogonal
+        mirrorbind::named_<"Householder*">>>;  // HouseholderSequence (+ the QRs)
 
 consteval sm::info eigen_excluded_marker() {
     std::vector<sm::info> args;
@@ -105,7 +107,7 @@ consteval sm::info eigen_excluded_marker() {
     // -- namespaces --
     add(^^Eigen::internal);
     // -- the glob-able machinery families (see eigen_machinery above) --
-    add(^^nanobind::exclude_if_<eigen_machinery>);
+    add(^^mirrorbind::exclude_if_<eigen_machinery>);
     // -- expression / plumbing templates outside the naming families --
     for (sm::info t : {^^Eigen::Transpose, ^^Eigen::Diagonal, ^^Eigen::Block,
                        ^^Eigen::VectorBlock, ^^Eigen::Reverse,
@@ -154,7 +156,7 @@ consteval sm::info eigen_excluded_marker() {
         // anyway). w() (needs size >= 4) and resize() (matrix-ill-formed) have
         // CONSTEXPR bodies GCC 16 instantiates when their reflection is
         // materialized (GCC-6); they are excluded by NAME below
-        // (nb::exclude_member_) so their reflection is never formed.
+        // (mb::exclude_member_) so their reflection is never formed.
         for (std::string_view n :
              {"value", "setUnit", "setLinSpaced", "setEqualSpaced",
               "unitOrthogonal", "resizeLike", "conservativeResize",
@@ -188,7 +190,7 @@ consteval sm::info eigen_excluded_marker() {
     // them (__getitem__, .x()/.y()/.z()) on the 3-vectors. operator[]'s
     // constexpr body is instantiated by GCC the moment its reflection is
     // materialized (GCC-6), so it -- like x/y/z -- is excluded by name below
-    // (nb::exclude_member_<^^Mat3, "__getitem__">), never by reflection.
+    // (mb::exclude_member_<^^Mat3, "__getitem__">), never by reflection.
     // LIB-0002: Eigen 5.0.1 declares DenseBase::trace() but never DEFINES it
     // (the real trace lives on MatrixBase, Redux.h) -- a dead declaration
     // that normal use never odr-uses but a bound method does: undefined
@@ -203,7 +205,7 @@ consteval sm::info eigen_excluded_marker() {
     for (auto m : bad)
         add(m);
 
-    // -- by-NAME member exclusions (nb::exclude_member_<Derived, "name">) --
+    // -- by-NAME member exclusions (mb::exclude_member_<Derived, "name">) --
     // For members whose CONSTEXPR body GCC 16 instantiates the moment their
     // reflection is materialized as an NTTP (GCC-6: reflect_constant /
     // define_static_array lift), and whose body is lazily ill-formed for the
@@ -212,30 +214,30 @@ consteval sm::info eigen_excluded_marker() {
     // is the DERIVED spec (a class; safe to materialize), and the binder drops
     // any matching member before the lift. Honored on clang too (identical
     // surface). w(): vector-only, size >= 4 (errors on every bound spec).
-    add(^^nanobind::exclude_member_<^^Vec3, "w">);
-    add(^^nanobind::exclude_member_<^^Mat3, "w">);
-    add(^^nanobind::exclude_member_<^^CVec1, "w">);
-    add(^^nanobind::exclude_member_<^^CVec3, "w">);
+    add(^^mirrorbind::exclude_member_<^^Vec3, "w">);
+    add(^^mirrorbind::exclude_member_<^^Mat3, "w">);
+    add(^^mirrorbind::exclude_member_<^^CVec1, "w">);
+    add(^^mirrorbind::exclude_member_<^^CVec3, "w">);
     // On the 3x3, the vector-only coeff accessors x/y/z are matrix-ill-formed.
-    add(^^nanobind::exclude_member_<^^Mat3, "x">);
-    add(^^nanobind::exclude_member_<^^Mat3, "y">);
-    add(^^nanobind::exclude_member_<^^Mat3, "z">);
+    add(^^mirrorbind::exclude_member_<^^Mat3, "x">);
+    add(^^mirrorbind::exclude_member_<^^Mat3, "y">);
+    add(^^mirrorbind::exclude_member_<^^Mat3, "z">);
     // operator[] -> __getitem__ (vector-only on a matrix).
-    add(^^nanobind::exclude_member_<^^Mat3, "__getitem__">);
+    add(^^mirrorbind::exclude_member_<^^Mat3, "__getitem__">);
     // resize() is excluded on EVERY bound spec (the surface omits it -- the
     // fixture has no resize story). On the 3x3 its constexpr body is
     // matrix-ill-formed (the GCC-6 trigger); on the vectors it is well-formed
     // but still unwanted -- name-exclude it uniformly so one rule shape covers
     // all four specs.
-    add(^^nanobind::exclude_member_<^^Vec3, "resize">);
-    add(^^nanobind::exclude_member_<^^Mat3, "resize">);
-    add(^^nanobind::exclude_member_<^^CVec1, "resize">);
-    add(^^nanobind::exclude_member_<^^CVec3, "resize">);
+    add(^^mirrorbind::exclude_member_<^^Vec3, "resize">);
+    add(^^mirrorbind::exclude_member_<^^Mat3, "resize">);
+    add(^^mirrorbind::exclude_member_<^^CVec1, "resize">);
+    add(^^mirrorbind::exclude_member_<^^CVec3, "resize">);
     // On the 1x1 (complex) vector, y()/z() index past the end.
-    add(^^nanobind::exclude_member_<^^CVec1, "y">);
-    add(^^nanobind::exclude_member_<^^CVec1, "z">);
+    add(^^mirrorbind::exclude_member_<^^CVec1, "y">);
+    add(^^mirrorbind::exclude_member_<^^CVec1, "z">);
 
-    return sm::substitute(^^nanobind::exclude_, args);
+    return sm::substitute(^^mirrorbind::exclude_, args);
 }
 
 

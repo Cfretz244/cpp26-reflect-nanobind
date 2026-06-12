@@ -11,7 +11,7 @@
 // differential. Bind set + the pointer-to-pointer exclude marker are defined
 // ONCE in binding_args.h (shared with the emit-lane generator); this TU adds
 // only the STL caster headers the generated bindings reference.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"
 
 #include <nanobind/stl/string.h>
@@ -23,6 +23,8 @@
 #include <nanobind/stl/wstring.h>
 #include <nanobind/stl/optional.h>
 
+namespace mb = mirrorbind;
+
 NB_MODULE(cli11_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

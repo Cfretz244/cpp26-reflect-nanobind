@@ -28,7 +28,7 @@ if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
     -O2 -DNDEBUG -fPIC -fvisibility=hidden \
     $REFLECT_FLAGS \
     -DNB_ABORT_ON_LEAK \
-    -I "$PYINC" -I "$NBINC" "$@" \
+    -I "$PYINC" -I "$NBINC" -I "$MBINC" "$@" \
     -c "$src" -o "$obj" || { echo "BUILD_FAIL_STAGE=compile" >&2; exit 11; }
 
   # --- extra library sources (plain C++, no reflection flags) ---
@@ -39,7 +39,7 @@ if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
       eobj="$out_dir/extra_${i}.o"
       "$CORPUS_CXX" \
         -std=c++26 -O2 -DNDEBUG -fPIC -fvisibility=hidden \
-        -I "$PYINC" -I "$NBINC" "$@" \
+        -I "$PYINC" -I "$NBINC" -I "$MBINC" "$@" \
         -c "$esrc" -o "$eobj" || { echo "BUILD_FAIL_STAGE=extra_compile" >&2; exit 12; }
       extra_objs+=("$eobj")
       i=$((i + 1))
@@ -62,7 +62,7 @@ fi
   -fPIC -fvisibility=hidden -fno-stack-protector -Os \
   $REFLECT_FLAGS \
   -DNB_ABORT_ON_LEAK \
-  -I "$PYINC" -I "$NBINC" "$@" \
+  -I "$PYINC" -I "$NBINC" -I "$MBINC" "$@" \
   -c "$src" -o "$obj" || { echo "BUILD_FAIL_STAGE=compile" >&2; exit 11; }
 
 # --- compile extra library sources (NB_EXTRA_SOURCES), if any ---
@@ -77,7 +77,7 @@ if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
       -std=c++26 -stdlib=libc++ -O2 -DNDEBUG -arch arm64 $ISYSROOT_FLAGS \
       -nostdinc++ -isystem "$TC/include/c++/v1" \
       -fPIC -fvisibility=hidden \
-      -I "$PYINC" -I "$NBINC" "$@" \
+      -I "$PYINC" -I "$NBINC" -I "$MBINC" "$@" \
       -c "$esrc" -o "$eobj" || { echo "BUILD_FAIL_STAGE=extra_compile" >&2; exit 12; }
     extra_objs+=("$eobj")
     i=$((i + 1))

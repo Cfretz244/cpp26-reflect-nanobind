@@ -5,7 +5,7 @@
 // (BINDER-0012) -- without the explicit opt-in it would flatten instead of
 // being the real Python base the run's inheritance theme pins.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^spdlog::logger, ^^spdlog::level, ^^spdlog::pattern_time_type,            \

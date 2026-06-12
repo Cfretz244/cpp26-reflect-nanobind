@@ -22,14 +22,15 @@
 // NOTE: the to_string<T> instantiations bind under template-spec CamelCase names with an
 // enable_if-NTTP suffix (`to_stringInt0`, `to_stringDouble0`, `to_stringLonglong0`) — the open
 // cosmetic BINDER-0003.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(fmt_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

@@ -1,6 +1,6 @@
 // The reflect_ pack, defined ONCE for every backend consumer (P2996-only).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 
 // The original explicit subset (the vec3/vec4 aliases) plus the matcher-API
@@ -11,10 +11,10 @@
 // own CamelCase name wins on both routes, so the overlap is benign.
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^glm::vec3, ^^glm::vec4,                                                  \
-    ^^nanobind::instantiate_<^^glm::vec,                                       \
-        nanobind::product_<                                                    \
-            nanobind::set_<nanobind::val_<glm::length_t(2)>,                   \
-                           nanobind::val_<glm::length_t(3)>,                   \
-                           nanobind::val_<glm::length_t(4)>>,                  \
-            nanobind::set_<^^float, ^^double>,                                 \
-            nanobind::set_<nanobind::val_<glm::qualifier::packed_highp>>>>
+    ^^mirrorbind::instantiate_<^^glm::vec,                                       \
+        mirrorbind::product_<                                                    \
+            mirrorbind::set_<mirrorbind::val_<glm::length_t(2)>,                   \
+                           mirrorbind::val_<glm::length_t(3)>,                   \
+                           mirrorbind::val_<glm::length_t(4)>>,                  \
+            mirrorbind::set_<^^float, ^^double>,                                 \
+            mirrorbind::set_<mirrorbind::val_<glm::qualifier::packed_highp>>>>

@@ -3,6 +3,6 @@
 // two-stage codegen applies: every class with overridable virtuals gets a
 // trampoline (the constexpr lane treats the marker as inert configuration).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
-#define CORPUS_REFLECT_ARGS ^^shapes, ^^nanobind::trampoline_all_
+#define CORPUS_REFLECT_ARGS ^^shapes, ^^mirrorbind::trampoline_all_

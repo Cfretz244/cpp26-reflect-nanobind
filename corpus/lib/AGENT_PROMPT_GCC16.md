@@ -66,7 +66,7 @@ Known clang-p2996 <-> GCC 16 divergences, from the spike + seed runs
    those first.
 2. **Discarded `if constexpr` branches inside an expanded `template for` body
    are fully checked**. A splice valid only for the taken branch must live in
-   an info-NTTP helper template (`reflect_class_of` pattern, nb_reflect.h).
+   an info-NTTP helper template (`reflect_class_of` pattern, reflect.h).
 3. **A lambda whose body splices an enclosing info NTTP cannot decay to a
    function pointer** (consteval-only under GCC). Hoist: `constexpr auto mp =
    &[:fn:];` then call through `mp`.
@@ -79,7 +79,7 @@ Known clang-p2996 <-> GCC 16 divergences, from the spike + seed runs
 6. **GCC-5**: a DEPENDENT noexcept-specifier left unresolved ICEs
    `nothrow_spec_p` when the spliced function type meets a partial-spec
    matrix or `is_noexcept(type)`. Fixed binder-wide via `nb_fn_type_of(fn)`
-   (forces resolution; nb_reflect.h) — route any NEW decl-derived function
+   (forces resolution; reflect.h) — route any NEW decl-derived function
    type through it. Repro: gcc16-proveout/probes/xfail_gcc5_*.cpp.
 7. **API drift is already shimmed** (`nb_annotations_of_type`,
    `nb_has_ellipsis_parameter`, `<meta>` vs `<experimental/meta>`,
@@ -99,7 +99,7 @@ Known clang-p2996 <-> GCC 16 divergences, from the spike + seed runs
    lazily-ill-formed constexpr bodies hard-error on lift.
    `liftable_class_members` already filters never-bound members on GCC; if
    a BOUND member's constexpr body is lazily ill-formed for the reflected
-   spec, that is run-local (exclude it via nb::exclude_, like Eigen).
+   spec, that is run-local (exclude it via mb::exclude_, like Eigen).
 12. **GCC-7 memory wall** (finding GCC-0007): a heavy emit GENERATOR
    (consteval string rendering at json/unordered_dense scale) can OOM-kill
    cc1plus at >31 GB where clang renders the same TU in ~1-2 GB. If your
@@ -123,8 +123,8 @@ Known clang-p2996 <-> GCC 16 divergences, from the spike + seed runs
 - **Binder/emitter fixes** (`nanobind/include/nanobind/nb_reflect*.h`):
   allowed for GENERAL bugs (a divergence shape above appearing at a new
   site, a spelling gap, a classifier divergence). Rules:
-  - WHAT-to-bind logic in the shared classifiers (nb_reflect.h); text
-    rendering in nb_reflect_emit.h / nb_reflect_spell.h. Never fork a
+  - WHAT-to-bind logic in the shared classifiers (reflect.h); text
+    rendering in emit.h / spell.h. Never fork a
     decision into the emitter.
   - Portability fixes must keep clang-p2996 working: prefer compiler-neutral
     idioms over `#ifdef`; guard with `#if !defined(__clang__)` only as a

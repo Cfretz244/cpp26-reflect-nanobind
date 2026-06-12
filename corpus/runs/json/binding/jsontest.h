@@ -92,8 +92,8 @@ struct char_traits<unsigned char> {
 // appear in basic_json::to_cbor/to_msgpack/... signatures and the binary_t base);
 // binding them drags in un-castable byte types. Skipping them via the binder's own
 // supported annotation keeps the public json surface bindable. See the
-// `[[=::nanobind::reflect::skip{}]]` markers added in json.hpp.
-#include <nanobind/nb_reflect_annotations.h>
+// `[[=::mirrorbind::annot::skip{}]]` markers added in json.hpp.
+#include <mirrorbind/annotations.h>
 
 // Enable the opt-in skip annotations inside json (see NLOHMANN_JSON_NB_SKIP in
 // json.hpp). Only the binding TUs do this; a plain `#include <nlohmann/json.hpp>`
@@ -106,11 +106,11 @@ struct char_traits<unsigned char> {
 // as the unit fixture's NB_FIXTURE_ANN).
 #if defined(__has_feature)
 #  if __has_feature(annotation_attributes)
-#    define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
+#    define NLOHMANN_JSON_NB_SKIP [[=::mirrorbind::annot::skip{}]]
 #  endif
 #endif
 #if !defined(NLOHMANN_JSON_NB_SKIP) && defined(__cpp_impl_reflection)
-#  define NLOHMANN_JSON_NB_SKIP [[=::nanobind::reflect::skip{}]]
+#  define NLOHMANN_JSON_NB_SKIP [[=::mirrorbind::annot::skip{}]]
 #endif
 #ifndef NLOHMANN_JSON_NB_SKIP
 #  define NLOHMANN_JSON_NB_SKIP

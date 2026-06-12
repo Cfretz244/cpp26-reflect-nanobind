@@ -9,7 +9,7 @@
 // skipped. single_stage -- Python does not override box2d virtuals -- so no
 // trampoline marker is appended.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     /* --- math value types --- */                                            \
@@ -21,5 +21,5 @@
     /* --- shapes --- */                                                      \
     ^^b2Shape, ^^b2PolygonShape, ^^b2CircleShape,                             \
     /* --- exclusions: internal facades with no Python meaning --- */         \
-    ^^nanobind::exclude_<^^b2ContactManager, ^^b2Profile, ^^b2Color,          \
+    ^^mirrorbind::exclude_<^^b2ContactManager, ^^b2Profile, ^^b2Color,          \
                          ^^b2BlockAllocator, ^^b2BroadPhase>

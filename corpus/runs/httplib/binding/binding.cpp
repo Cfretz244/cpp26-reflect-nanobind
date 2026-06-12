@@ -25,13 +25,13 @@
 // caster the no-callback overloads still need the progress arg passed explicitly (a real
 // lambda; None is not an empty std::function) -- the tests pass `lambda c,t: True` and the
 // native oracle passes the identical always-continue callback, so both sides drive the same
-// call. nb::exclude_ makes the binder skip every member whose signature mentions a type it
+// call. mb::exclude_ makes the binder skip every member whose signature mentions a type it
 // still cannot represent (BINDER-0014): the Headers (unordered_multimap) / Params (multimap)
 // associative containers (no multimap caster -- headers go through the string get_header_value
 // / set_header accessors), and the streaming / multipart / internal-impl surface.
 //
 // Bind set defined once in binding_args.h (shared with the emit-lane generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
@@ -42,7 +42,8 @@
 #include <nanobind/stl/function.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(httplib_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

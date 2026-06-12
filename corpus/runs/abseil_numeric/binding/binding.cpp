@@ -4,12 +4,13 @@
 // the binder maps to Python dunders directly, and whose free operator<<(std::ostream&, ...) is
 // surfaced as __str__ (BINDER-0007). No fixture wrappers — the real types are bound head-on.
 // Links the prebuilt absl static lib (int128 division/streaming live in int128.cc).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(abseil_numeric_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

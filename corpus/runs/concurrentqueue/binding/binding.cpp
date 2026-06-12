@@ -8,7 +8,7 @@
 // supplies a thin optional<T>-returning adapter over the real queue's try_dequeue
 // (see cqtest.h for the justification).
 //
-// EXCLUSIONS (nb::exclude_, built programmatically below): ConcurrentQueue declares seven
+// EXCLUSIONS (mb::exclude_, built programmatically below): ConcurrentQueue declares seven
 // `static const size_t/uint32_t` configuration constants (BLOCK_SIZE, MAX_SUBQUEUE_SIZE,
 // EXPLICIT_INITIAL_INDEX_SIZE, IMPLICIT_INITIAL_INDEX_SIZE, INITIAL_IMPLICIT_PRODUCER_HASH_SIZE,
 // EXPLICIT_BLOCK_EMPTY_COUNTER_THRESHOLD, EXPLICIT_CONSUMER_CONSUMPTION_QUOTA_BEFORE_ROTATE)
@@ -19,13 +19,14 @@
 // These constants are not part of the producer/consumer differential, so they are excluded
 // here on both specs; see findings_draft/binder-static-const-member-address-odr-use.md.
 // Bind set defined once in binding_args.h (shared with the emit-lane generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
 #include "binding_args.h"
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(concurrentqueue_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

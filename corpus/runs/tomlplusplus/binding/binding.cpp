@@ -14,7 +14,7 @@
 // What is NOT bound, and why (see findings_draft/binder-lvalue-ref-to-pointer-param.md):
 //   toml::node / table / array / value<T> / parse_result -- every node class declares
 //   `virtual bool is_homogeneous(node_type, node*& first_nonmatch) noexcept;` and the binder
-//   hard-errors on the `node*&` out-param rather than skipping it (per-overload nb::exclude_
+//   hard-errors on the `node*&` out-param rather than skipping it (per-overload mb::exclude_
 //   is ineffective for these). Tree navigation therefore runs in C++ (tomlfix) and surfaces
 //   plain Python values plus the bound date/time structs above.
 //
@@ -23,7 +23,7 @@
 // natively and from Python and compares real bound objects (date/time/date_time fields,
 // node_type enum values, parse_error line/column) plus coerced scalars and round-trip text.
 // Bind set defined once in binding_args.h (shared with the emit-lane generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/optional.h>
@@ -31,7 +31,8 @@
 #include "binding_args.h"
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(tomlpp_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

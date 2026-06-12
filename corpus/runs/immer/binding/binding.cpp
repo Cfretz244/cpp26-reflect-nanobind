@@ -11,14 +11,15 @@
 // reflect_init (nb_paren_init.h) -- immer::vector's (size_type, T) fill ctor would
 // otherwise have its braced init Type{n, v} hijacked toward the initializer_list<T>
 // ctor (a hard narrowing error for vector<int>).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/pair.h>
 
 #include "binding_args.h"
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(immer_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

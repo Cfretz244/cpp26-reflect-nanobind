@@ -5,9 +5,9 @@
 // (graph internals / the templated build front), std::basic_ostream (the
 // dump(ostream&) overloads; the no-arg dump()->string binds instead).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^tf::Taskflow, ^^tf::Task, ^^tf::Executor, ^^tftest,                      \
-    ^^nanobind::exclude_<^^tf::Future, ^^tf::WorkerInterface, ^^tf::Graph,     \
+    ^^mirrorbind::exclude_<^^tf::Future, ^^tf::WorkerInterface, ^^tf::Graph,     \
                          ^^tf::FlowBuilder, ^^std::basic_ostream>

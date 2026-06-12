@@ -5,10 +5,11 @@
 // library includes live in binding_includes.h.
 #pragma once
 
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 namespace sm = std::meta;
 
 namespace cli_corpus {
@@ -46,7 +47,7 @@ consteval sm::info cli_excluded_marker() {
                 add(mem);
         }
     }
-    return sm::substitute(^^nb::exclude_, args);
+    return sm::substitute(^^mb::exclude_, args);
 }
 
 }  // namespace cli_corpus

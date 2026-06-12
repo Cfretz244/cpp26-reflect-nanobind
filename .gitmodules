@@ -79,3 +79,6 @@
 [submodule "corpus/libs/immer"]
 	path = corpus/libs/immer
 	url = https://github.com/arximboldi/immer
+[submodule "mirrorbind"]
+	path = mirrorbind
+	url = git@github.com:Cfretz244/mirrorbind.git

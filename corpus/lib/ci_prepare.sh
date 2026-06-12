@@ -17,6 +17,9 @@ case "$SLUG" in
   *)          LIB="$SLUG" ;;
 esac
 
+# The binder itself (every run includes <mirrorbind/reflect.h>).
+(cd .. && git submodule update --init --depth 1 mirrorbind)
+
 if [ -n "$LIB" ]; then
   (cd .. && git submodule update --init --depth 1 "corpus/libs/$LIB")
 fi

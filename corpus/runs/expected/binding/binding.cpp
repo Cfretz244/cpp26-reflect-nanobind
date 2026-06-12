@@ -30,13 +30,14 @@
 // See corpus/findings/TC-000{6,7,8,9}-*.md and BINDER-001{2,3}-*.md.
 //
 // Bind set defined once in binding_args.h (shared with the emit-lane generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(expected_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

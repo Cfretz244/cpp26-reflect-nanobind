@@ -13,12 +13,12 @@
 // and WriteBatch::Handler (a pure-virtual visitor needing a Python override we do not
 // surface).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                       \
     ^^leveldb::Status, ^^leveldb::Slice, ^^leveldb::Options,                      \
     ^^leveldb::ReadOptions, ^^leveldb::WriteOptions, ^^leveldb::WriteBatch,       \
     ^^leveldb::CompressionType, ^^leveldbtest,                                    \
-    ^^nanobind::exclude_<^^leveldb::Comparator, ^^leveldb::Env, ^^leveldb::Cache, \
+    ^^mirrorbind::exclude_<^^leveldb::Comparator, ^^leveldb::Env, ^^leveldb::Cache, \
                          ^^leveldb::FilterPolicy, ^^leveldb::Logger,              \
                          ^^leveldb::Snapshot, ^^leveldb::WriteBatch::Handler>

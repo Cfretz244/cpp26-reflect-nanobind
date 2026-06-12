@@ -50,7 +50,7 @@ if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
       eobj="$out_dir/gen_extra_${i}.o"
       "$CORPUS_CXX" \
         -std=c++26 -O2 -DNDEBUG -fPIC -fvisibility=hidden \
-        -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" \
+        -I "$PYINC" -I "$NBINC" -I "$MBINC" -I "$bind_dir" "$@" \
         -c "$esrc" -o "$eobj" \
         || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
       gen_extra_objs+=("$eobj")
@@ -59,7 +59,7 @@ if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
   fi
   "$CORPUS_CXX" $REFLECT_FLAGS \
     -fconstexpr-ops-limit=1000000000 \
-    -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
+    -I "$PYINC" -I "$NBINC" -I "$MBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
     "$gen_src" ${gen_extra_objs[@]+"${gen_extra_objs[@]}"} -o "$gen_bin" \
     || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
 
@@ -72,7 +72,7 @@ if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
     -std="${NB_PROD_STD:-$PROD_STD_DEFAULT}" -O2 -DNDEBUG \
     -fPIC -fvisibility=hidden \
     -DNB_ABORT_ON_LEAK \
-    -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_PROD_CFLAGS:-} \
+    -I "$PYINC" -I "$NBINC" -I "$MBINC" -I "$bind_dir" "$@" ${NB_PROD_CFLAGS:-} \
     -c "$gen_cpp" -o "$obj" \
     || { echo "BUILD_FAIL_STAGE=emit_compile" >&2; exit 33; }
 
@@ -85,7 +85,7 @@ if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
       "$PROD_CXX" \
         -std="${NB_PROD_STD:-$PROD_STD_DEFAULT}" -O2 -DNDEBUG \
         -fPIC -fvisibility=hidden \
-        -I "$PYINC" -I "$NBINC" "$@" ${NB_PROD_CFLAGS:-} \
+        -I "$PYINC" -I "$NBINC" -I "$MBINC" "$@" ${NB_PROD_CFLAGS:-} \
         -c "$esrc" -o "$eobj" \
         || { echo "BUILD_FAIL_STAGE=emit_extra_compile" >&2; exit 34; }
       extra_objs+=("$eobj")
@@ -120,7 +120,7 @@ if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
     "$CORPUS_CXX" \
       -std=c++26 -stdlib=libc++ -O2 -DNDEBUG -arch arm64 $ISYSROOT_FLAGS \
       -nostdinc++ -isystem "$TC/include/c++/v1" \
-      -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" \
+      -I "$PYINC" -I "$NBINC" -I "$MBINC" -I "$bind_dir" "$@" \
       -c "$esrc" -o "$eobj" \
       || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
     gen_extra_objs+=("$eobj")
@@ -130,7 +130,7 @@ fi
 "$CORPUS_CXX" $REFLECT_FLAGS $ISYSROOT_FLAGS \
   -nostdinc++ -isystem "$TC/include/c++/v1" \
   -fconstexpr-steps=1000000000 \
-  -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
+  -I "$PYINC" -I "$NBINC" -I "$MBINC" -I "$bind_dir" "$@" ${NB_GEN_CFLAGS:-} \
   "$gen_src" ${gen_extra_objs[@]+"${gen_extra_objs[@]}"} -o "$gen_bin" \
   || { echo "BUILD_FAIL_STAGE=emit_gen_compile" >&2; exit 31; }
 
@@ -144,7 +144,7 @@ DYLD_LIBRARY_PATH="$TC/lib" "$gen_bin" "$gen_cpp" \
   -isysroot "$SDKROOT_PATH" \
   -fPIC -fvisibility=hidden \
   -DNB_ABORT_ON_LEAK \
-  -I "$PYINC" -I "$NBINC" -I "$bind_dir" "$@" ${NB_PROD_CFLAGS:-} \
+  -I "$PYINC" -I "$NBINC" -I "$MBINC" -I "$bind_dir" "$@" ${NB_PROD_CFLAGS:-} \
   -c "$gen_cpp" -o "$obj" \
   || { echo "BUILD_FAIL_STAGE=emit_compile" >&2; exit 33; }
 
@@ -158,7 +158,7 @@ if [ -n "${NB_EXTRA_SOURCES:-}" ]; then
       -std="${NB_PROD_STD:-$PROD_STD_DEFAULT}" -O2 -DNDEBUG -arch arm64 \
       -isysroot "$SDKROOT_PATH" \
       -fPIC -fvisibility=hidden \
-      -I "$PYINC" -I "$NBINC" "$@" ${NB_PROD_CFLAGS:-} \
+      -I "$PYINC" -I "$NBINC" -I "$MBINC" "$@" ${NB_PROD_CFLAGS:-} \
       -c "$esrc" -o "$eobj" \
       || { echo "BUILD_FAIL_STAGE=emit_extra_compile" >&2; exit 34; }
     extra_objs+=("$eobj")

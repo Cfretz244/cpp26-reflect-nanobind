@@ -6,7 +6,7 @@
 // fixture bridges only what the real API can't hand to Python: the sys_days serial-day
 // round-trip (chrono time_point, no caster) and date::format() (a function template).
 // Bind set defined once in binding_args.h (shared with the emit-lane generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"
 #include <nanobind/stl/string.h>
 // BINDER-0029 made the caster walk see date's chrono-typed signatures
@@ -15,7 +15,8 @@
 #include <nanobind/stl/chrono.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(date_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

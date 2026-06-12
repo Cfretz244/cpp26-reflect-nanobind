@@ -2,7 +2,7 @@
 // The to_string<T> instantiations bind under template-spec CamelCase names
 // with an enable_if-NTTP suffix (BINDER-0003, open cosmetic).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^fmt::color, ^^fmt::terminal_color, ^^fmt::emphasis,                      \

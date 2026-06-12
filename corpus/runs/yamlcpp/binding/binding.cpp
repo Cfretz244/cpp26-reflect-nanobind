@@ -12,13 +12,14 @@
 // and Node::operator[](Key) (keyed/indexed access). See yamlfix.h for the full rationale.
 //
 // The bind set + exclude_ pack live in binding_args.h (shared with the emit generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(yamlcpp_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

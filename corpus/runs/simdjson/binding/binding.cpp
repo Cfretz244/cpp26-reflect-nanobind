@@ -14,7 +14,7 @@
 // coercion returning the SAME real element/array/object types bound here). The exclude_ pack
 // makes the unrepresentable types opaque on every discovery path (BINDER-0014) so the head-on
 // classes bind cleanly with their result-free members.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
@@ -22,8 +22,9 @@
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 namespace dom = simdjson::dom;
 
 NB_MODULE(simdjson_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

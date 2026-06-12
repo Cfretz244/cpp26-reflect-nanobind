@@ -10,14 +10,15 @@
 // through an xml_writer / std::ostream front Python cannot drive. The exclude_ pack (in
 // meta.toml's reflect_args) makes the writer/stream/iterator/range/text/tree-walker/XPath
 // types opaque so the methods mentioning them are skipped (BINDER-0014).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(pugixml_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

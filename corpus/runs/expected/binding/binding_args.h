@@ -5,7 +5,7 @@
 //   tl::unexpected<std::string>/<int> for their real non-template ctors,
 //   tl::bad_expected_access<std::string> as a class, and the extest fixture.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS \
     ^^tl::expected<int, std::string>, \

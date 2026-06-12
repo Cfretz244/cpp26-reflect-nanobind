@@ -7,7 +7,7 @@
 // array_values/object_keys return std::vector<element>/<string> (covered by
 // <nanobind/stl/vector.h>).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^simdjson::dom::element,                                                  \
@@ -16,7 +16,7 @@
     ^^simdjson::dom::element_type,                                             \
     ^^simdjson::error_code,                                                    \
     ^^simdjsontest,                                                            \
-    ^^nanobind::exclude_<                                                      \
+    ^^mirrorbind::exclude_<                                                      \
         ^^simdjson::simdjson_result,                                           \
         ^^simdjson::dom::parser,                                               \
         ^^simdjson::dom::document,                                             \

@@ -1,5 +1,5 @@
 // The reflect_ pack for the immer run, defined ONCE for every backend consumer
-// (constexpr `nb::reflect_<...>` and emit `nb::write_bindings<...>`). P2996-only.
+// (constexpr `mb::reflect_<...>` and emit `mb::write_bindings<...>`). P2996-only.
 //
 // immer's persistent containers are bound head-on as four real concrete
 // specializations listed explicitly (a spec's own template args are not
@@ -7,17 +7,19 @@
 // immer::map<int,int>, immer::set<int>. The whole immer::detail implementation
 // namespace (rbts:: rbtree/node/iterator, hamts:: champ/node/iterator) is
 // reachable through begin()/end()/impl() but diverges hard; it is excluded
-// transitively via an ^^nb::exclude_<...> marker assembled by the consteval
+// transitively via an ^^mb::exclude_<...> marker assembled by the consteval
 // helper below.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
+
+namespace mb = mirrorbind;
 
 namespace nbcorpus_immer {
 
 namespace sm = std::meta;
 
-// The exclusion set, assembled as an ^^nb::exclude_<...> marker:
+// The exclusion set, assembled as an ^^mb::exclude_<...> marker:
 //   the whole immer::detail namespace (transitive). immer's entire
 //   implementation lives there -- rbts:: rbtree/node/iterator, hamts::
 //   champ/node/iterator -- reachable from the public containers'
@@ -31,7 +33,7 @@ namespace sm = std::meta;
 consteval sm::info immer_excluded_marker() {
     std::vector<sm::info> args;
     args.push_back(sm::reflect_constant(^^immer::detail));
-    return sm::substitute(^^nanobind::exclude_, args);
+    return sm::substitute(^^mirrorbind::exclude_, args);
 }
 
 }  // namespace nbcorpus_immer

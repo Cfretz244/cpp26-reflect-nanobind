@@ -9,12 +9,13 @@
 // reference (no Python representation), so the fixture namespace wraps the four concrete
 // instantiations (double/float/int64/uint64) as string-in -> {value, consumed, ok, ec}-out.
 // Bind set defined once in binding_args.h (shared with the emit-lane generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"
 #include <nanobind/stl/string.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(fast_float_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

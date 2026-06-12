@@ -23,6 +23,7 @@ fi
 export CORPUS_TOOLCHAIN
 
 export NBINC="$REPO_ROOT/nanobind/include"             # nanobind headers
+export MBINC="$REPO_ROOT/mirrorbind/include"           # mirrorbind (the binder)
 
 if [ "$CORPUS_TOOLCHAIN" = "gcc16" ]; then
   # --- GCC 16 backend (Linux container) ---

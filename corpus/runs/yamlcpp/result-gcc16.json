@@ -33,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 4.15
+        "binding_compile_seconds": 4.22
       },
       "oracle": {
         "layers_used": [
@@ -57,9 +57,9 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 6.54,
+        "binding_compile_seconds": 6.58,
         "generated_tu_lines": 117,
-        "generated_tu_bytes": 9641
+        "generated_tu_bytes": 9650
       },
       "oracle": {
         "layers_used": [
@@ -104,11 +104,11 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.09,
-    "constexpr_binding_compile_seconds": 4.15,
-    "emit_binding_compile_seconds": 6.54,
+    "probe_seconds": 1.1,
+    "constexpr_binding_compile_seconds": 4.22,
+    "emit_binding_compile_seconds": 6.58,
     "emit_generated_tu_lines": 117,
-    "emit_generated_tu_bytes": 9641
+    "emit_generated_tu_bytes": 9650
   },
   "artifacts": {},
   "notes": "surface_diff: 0 mismatch(es), 16 top-level object(s) compared; "

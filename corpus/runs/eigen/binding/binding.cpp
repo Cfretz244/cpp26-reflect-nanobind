@@ -1,5 +1,5 @@
 // Single-stage bindings for Eigen 5.0.1 (Tier 5: the expression-template
-// stress test -- the run nb::exclude_ was built for).
+// stress test -- the run mb::exclude_ was built for).
 //
 // Vector3d (Matrix<double,3,1>) and Matrix3d (Matrix<double,3,3>) bind
 // head-on; their CRTP facade chains (PlainObjectBase -> MatrixBase ->
@@ -20,13 +20,14 @@
 //     statics assert vector shape, eigenvalues/operatorNorm assert square).
 //     No reflection query can see a body, so they are listed by their exact
 //     member reflections, computed below from members_of.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/complex.h>
 #include "binding_args.h"  // bind set + exclusion marker defined once
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(eigen_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

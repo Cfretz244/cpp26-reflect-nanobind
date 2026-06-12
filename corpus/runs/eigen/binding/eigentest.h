@@ -3,7 +3,7 @@
 // Eigen's arithmetic operators are function TEMPLATES returning expression
 // templates: intrinsically outside the binder's model (a member template binds
 // only via an all-defaulted default instantiation, and expression returns are
-// nb::exclude_'d). These free functions supply the eager-VALUE equivalents,
+// mb::exclude_'d). These free functions supply the eager-VALUE equivalents,
 // taking and returning the bound Matrix specializations by value -- so every
 // call round-trips Python -> bound Vec3/Mat3 -> Eigen kernel -> bound result,
 // exercising the registered-type caster path that the differential suite
@@ -11,6 +11,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+
 
 namespace eigentest {
 

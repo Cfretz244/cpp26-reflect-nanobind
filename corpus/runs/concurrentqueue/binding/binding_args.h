@@ -6,13 +6,15 @@
 // bind-by-value path in this run's subset and are excluded from the
 // differential on both specs (see the original finding draft).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
+
+namespace mb = mirrorbind;
 
 namespace cq_args_detail {
 
 // Collect the never-defined static const config constants of the two queue
-// specs into an nb::exclude_<...> marker so the binder skips binding them.
+// specs into an mb::exclude_<...> marker so the binder skips binding them.
 consteval std::meta::info cq_excluded_marker() {
     namespace sm = std::meta;
     std::vector<std::meta::info> args;
@@ -23,7 +25,7 @@ consteval std::meta::info cq_excluded_marker() {
                 args.push_back(sm::reflect_constant(mem));
         }
     }
-    return sm::substitute(^^nanobind::exclude_, args);
+    return sm::substitute(^^mirrorbind::exclude_, args);
 }
 
 }  // namespace cq_args_detail

@@ -49,10 +49,15 @@ cpp26-reflect-nanobind/
 │                      The clang-p2996 fork (the compiler half). Its CLAUDE.md has
 │                      build details. Built from here into ./toolchain/ (see
 │                      "Build the toolchain"), making this repo self-contained.
-├── nanobind/          submodule (url: Cfretz244/nanobind fork)   @ mk-reflect
-│                      The reflection-driven binder (the active development surface).
-│                      include/nanobind/nb_reflect*.h + tests/test_reflect*. See its
-│                      CLAUDE.md and docs/reflection.rst.
+├── nanobind/          submodule (url: Cfretz244/nanobind fork)   @ gcc16-only
+│                      The nanobind DEPENDENCY (carries the concat ADL fix; its
+│                      in-tree binder copy is historical -- the corpus builds
+│                      against mirrorbind/).
+├── mirrorbind/        submodule (url: Cfretz244/mirrorbind) @ main
+│                      THE BINDER -- extracted 2026-06 as its own library
+│                      (namespace mirrorbind, include/mirrorbind/*.h, BSD-3).
+│                      The active development surface; see its CLAUDE.md and
+│                      docs/reflection.rst.
 ├── examples/          standalone reflection demos from this prove-out:
 │                      refl.cpp           – minimal: print a struct's fields
 │                      serialize_poc.cpp  – a complete reflection-driven binary+JSON
@@ -65,15 +70,15 @@ PROVE_OUT.md's status snapshot names the pins that carried each landed fix.
 
 ## The idea, in one paragraph
 
-`nb::reflect_<^^my_namespace>(m)` (in `nanobind/include/nanobind/nb_reflect.h`) walks a C++
+`mb::reflect_<^^my_namespace>(m)` (in `mirrorbind/include/mirrorbind/reflect.h`) walks a C++
 namespace with reflection and emits ordinary `nb::class_/.def` bindings via splices inside
 `template for` loops — classes, inheritance (incl. multiple-base flattening), methods/
 operators/enums, with per-entity control via `[[=...]]` annotations
-(`nb_reflect_annotations.h`: skip / rename / doc / return-value policy / keep-alive). The
+(`mirrorbind/annotations.h`: skip / rename / doc / return-value policy / keep-alive). The
 only thing that can't be done in-language — a virtual-override **trampoline** — has a
-text-**codegen fallback** (`nb_reflect_codegen.h`) that emits trampoline source for a
-two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst` and
-`nanobind/CLAUDE.md`.
+text-**codegen fallback** (`mirrorbind/codegen.h`) that emits trampoline source for a
+two-stage build. Full feature list + limitations: `mirrorbind/docs/reflection.rst` and
+`mirrorbind/CLAUDE.md`.
 
 ## Environment (this exact laptop)
 
@@ -103,7 +108,8 @@ two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst`
 cd ~/git/cpp26-reflect-nanobind
 git submodule update --init --recursive
 ```
-Both submodule URLs are GitHub forks: `nanobind` → `Cfretz244/nanobind` (branch `mk-reflect`),
+Submodule URLs: `mirrorbind` → `Cfretz244/mirrorbind` (the binder, branch `main`),
+`nanobind` → `Cfretz244/nanobind` (branch `gcc16-only`),
 `llvm-project` → `Cfretz244/llvm-project` (branch `reflection-p2996`; the bloomberg clang-p2996
 fork plus a CLAUDE.md edit, its pinned commit `d4ae403` pushed there). So a fresh
 `--init --recursive` clones cleanly on any machine — though the llvm-project history is ~4 GB,
@@ -133,7 +139,7 @@ a fresh build from the submodule includes them — no extra flags. If you alread
 pick them up:
 
 - **Sema use-after-free under heavy reflection** (`clang/lib/Sema/SemaExpr.cpp`). Evaluating a
-  large immediate (consteval) invocation — e.g. `nb::reflect_<^^nlohmann::json>` /
+  large immediate (consteval) invocation — e.g. `mb::reflect_<^^nlohmann::json>` /
   `emit_trampolines` over `basic_json` — recursively pushes expression-evaluation contexts,
   reallocating `Sema::ExprEvalContexts` and dangling the `Rec` reference held across
   `HandleImmediateInvocations` / the tail of `PopExpressionEvaluationContext`. Manifested as a
@@ -253,7 +259,7 @@ pick them up:
   `ReflectionKind::Namespace` case profiled the raw decl pointer (unlike Template, which
   canonicalizes), so `parent_of(x) == ^^ns` silently answered false for anything declared
   after the first block. Field shape: Eigen re-opens `Eigen::internal` everywhere, so the
-  binder's namespace-level `nb::exclude_` never matched. Fix profiles the canonical decl
+  binder's namespace-level `mb::exclude_` never matched. Fix profiles the canonical decl
   (a NamespaceAliasDecl stays distinct from its target). Repro:
   `corpus/findings/repros/TC-0010/`; regression test
   `namespace-reflection-equality-reopened.pass.cpp`. Upstream draft prepared.
@@ -380,16 +386,16 @@ binding/scanning path (a class with only deleted ctors binds with no `__init__` 
 BINDER-0012), **Python-side copy construction** (`init<const T&>` for copyable non-trampolined
 classes; BINDER-0013), **deduction-guide stripping** in the namespace walks (guides are
 never bindable and pre-TC-0008 toolchains can't mangle their reflections), and **call-site
-exclusions + completeness gates** (BINDER-0014, the eigen run: `nb::exclude_<...>` makes
+exclusions + completeness gates** (BINDER-0014, the eigen run: `mb::exclude_<...>` makes
 templates/types/namespaces/individual members opaque on every path — what tames Eigen's
 divergent expression-template discovery and its lazily-ill-formed shape-asserting member
 bodies; non-completable specs are auto-skipped), and **the emit backend (Phase 4)**:
-`nb::write_bindings<Rs...>(path, module_name, preamble)` (nb_reflect_emit.h +
-nb_reflect_spell.h) renders the SAME binding decisions -- via the shared value-form
-classifiers factored into nb_reflect.h -- as ONE self-contained plain-C++17/20 nanobind
+`mb::write_bindings<Rs...>(path, module_name, preamble)` (emit.h +
+spell.h) renders the SAME binding decisions -- via the shared value-form
+classifiers factored into reflect.h -- as ONE self-contained plain-C++17/20 nanobind
 TU that a PRODUCTION compiler builds (Apple Clang + system libc++ here): P2996 is needed
 only at generation time. Trampolines are opt-in pack markers
-(`nb::trampoline_<^^Cls...>` / `nb::trampoline_all_`, inert in the constexpr lane);
+(`mb::trampoline_<^^Cls...>` / `mb::trampoline_all_`, inert in the constexpr lane);
 compiler-answered probes (static-const by-value, `__str__` streamability) are emitted
 verbatim. Corpus runs with an `[emit]` meta table validate THREE-WAY (native oracle +
 constexpr module + emit module must agree, plus a Gate 6b surface diff —
@@ -400,10 +406,10 @@ the remaining 31 follow the `AGENT_PROMPT_EMIT.md` wave protocol. And **the matc
 API + default instantiations** (2026-06, on `gcc16-only`): `nb_reflect_match.h`'s
 composable consteval matcher DSL (`named_<"glob">`, `in_namespace_`, `derived_from_`,
 `all_of_`/`any_of_`/`not_`, + raw predicate types) feeding three pack markers —
-`nb::match_<^^scope, M>` (predicate-driven inclusion), `nb::exclude_if_<M>`
+`mb::match_<^^scope, M>` (predicate-driven inclusion), `mb::exclude_if_<M>`
 (predicate-driven exclusion, congruent with the exclude_ list at every gate; the
 eigen run's thematic globs replace 33 of its 58 template listings), and
-`nb::instantiate_<Target, with_<...>/product_<set_<...>...>>` (bulk class-template
+`mb::instantiate_<Target, with_<...>/product_<set_<...>...>>` (bulk class-template
 minting with `val_<V>` NTTPs; matcher-typed targets sweep the pack's namespace
 roots; with_ failures hard-error, product_ substitution failures skip — the glm run
 mints its vec<{2,3,4}×{float,double}> grid from one rule). Everything expands to

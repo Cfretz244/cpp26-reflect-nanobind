@@ -11,12 +11,13 @@
 //
 // tftest.h is first: it pulls <bit> before <taskflow/taskflow.hpp> (v4.0.0 uses
 // std::bit_ceil/std::bit_width without including <bit>; library missing-include).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(taskflow_ext, m) {
   // tf::Taskflow inherits FlowBuilder; FlowBuilder is NOT in the bind set so it
@@ -28,5 +29,5 @@ NB_MODULE(taskflow_ext, m) {
   //   - tf::Graph / FlowBuilder (graph internals / the templated build front)
   //   - std::ostream (Taskflow::dump(ostream&) / Task::dump(ostream&) -- the no-arg
   //     dump()->string overload is bound instead)
-  nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+  mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

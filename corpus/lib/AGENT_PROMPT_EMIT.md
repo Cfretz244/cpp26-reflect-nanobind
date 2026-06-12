@@ -20,19 +20,19 @@ iterate with that reviewer until approval.
      fixture annotations on `__has_feature(annotation_attributes)`).
    - `binding_args.h` -- P2996-only: `#include "binding_includes.h"`, any
      consteval marker helpers, and `#define CORPUS_REFLECT_ARGS ...` (the
-     exact pack `binding.cpp` passed to `nb::reflect_`). If the constexpr run
-     is `two_stage` (trampolines), append `^^nb::trampoline_all_` to the pack
+     exact pack `binding.cpp` passed to `mb::reflect_`). If the constexpr run
+     is `two_stage` (trampolines), append `^^mb::trampoline_all_` to the pack
      -- the emit lane inlines the same trampolines; the constexpr lane treats
      the marker as inert configuration.
-   - `binding.cpp` shrinks to: nb_reflect.h + `binding_args.h` + its existing
+   - `binding.cpp` shrinks to: reflect.h + `binding_args.h` + its existing
      lane-specific includes (STL caster headers, a two_stage run's
-     `trampolines.gen.h`) + `NB_MODULE(<mod>, m) { nb::reflect_<CORPUS_REFLECT_ARGS>(m); }`.
+     `trampolines.gen.h`) + `NB_MODULE(<mod>, m) { mb::reflect_<CORPUS_REFLECT_ARGS>(m); }`.
    - `gen_emit.cpp` (new):
      ```cpp
-     #include <nanobind/nb_reflect_emit.h>
+     #include <mirrorbind/emit.h>
      #include "binding_args.h"
      int main(int argc, char** argv) {
-         return nanobind::write_bindings<CORPUS_REFLECT_ARGS>(
+         return mirrorbind::write_bindings<CORPUS_REFLECT_ARGS>(
              argv[1], "<module_name>",
              "#include \"binding_includes.h\"\n") ? 0 : 1;
      }
@@ -67,8 +67,8 @@ iterate with that reviewer until approval.
   when the failure is a GENERAL bug (type-spelling gap, emission pattern bug,
   missing caster include, classifier divergence). Rules:
   - The fix must live at the right layer: WHAT-to-bind logic goes in the shared
-    classifiers (nb_reflect.h), text rendering in nb_reflect_emit.h /
-    nb_reflect_spell.h. NEVER fork a decision into the emitter.
+    classifiers (reflect.h), text rendering in emit.h /
+    spell.h. NEVER fork a decision into the emitter.
   - Add/extend a unit static_assert or fixture case in nanobind/tests when the
     bug class is representable there.
   - After ANY binder edit: rebuild + rerun the nanobind reflection suite

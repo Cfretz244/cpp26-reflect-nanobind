@@ -8,11 +8,12 @@
 // is listed explicitly in the pack; the internal facade types are excluded
 // (see binding_args.h). box2d uses no STL type-casters on the bound surface,
 // so no <nanobind/stl/*.h> includes are needed.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(box2d_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

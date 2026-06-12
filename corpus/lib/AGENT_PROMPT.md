@@ -66,7 +66,7 @@ running CONCURRENTLY in this same working tree. Three deltas apply:
   NEVER edit `nanobind/`, `llvm-project/`, `corpus/lib/`, `corpus/manifest.toml`,
   other runs, or the library's source.
 - If you hit what looks like a BINDER or TOOLCHAIN bug (compiler crash/ICE, a
-  static_assert out of `nb_reflect.h`, behavior divergence traceable to the binding
+  static_assert out of `reflect.h`, behavior divergence traceable to the binding
   layer rather than your code): do NOT fix the binder or toolchain, and do NOT
   weaken the tests around it. First try a smaller legitimate subset (dropping the
   triggering entity) if a meaningful run survives; record what you dropped in

@@ -11,7 +11,7 @@
 // qualified self.::absl::...::raw_hash_map<...>::template <op><>(...) calls.
 // hmtest supplies value-setting population (put/add).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^absl::flat_hash_map<int, std::string>,                                   \

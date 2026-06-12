@@ -10,12 +10,13 @@
 // constants as free functions).
 //
 // The bind set + exclude_ pack live in binding_args.h (shared with the emit generator).
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 #include <nanobind/stl/string.h>
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(sqlitecpp_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

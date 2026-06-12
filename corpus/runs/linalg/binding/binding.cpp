@@ -3,11 +3,12 @@
 // specialization vec<float,3> (data members x/y/z, constructors, operator[] -> __getitem__).
 // The rich free-function API (dot/length/normalize/...) is *function templates*, which the
 // binder does not auto-discover; a couple are exposed explicitly as wrappers in test space.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_args.h"
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(linalg_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

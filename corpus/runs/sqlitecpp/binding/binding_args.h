@@ -18,13 +18,13 @@
 //     excluding the type skips both overloads (also right semantically -- a file-on-disk
 //     feature out of scope for the in-memory run).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                   \
     ^^SQLite::Database, ^^SQLite::Statement, ^^SQLite::Column,                \
     ^^SQLite::Transaction, ^^SQLite::Exception, ^^SQLite::TransactionBehavior,\
     ^^sqlfix,                                                                 \
-    ^^nanobind::exclude_<^^sqlite3, ^^sqlite3_stmt, ^^sqlite3_context,        \
+    ^^mirrorbind::exclude_<^^sqlite3, ^^sqlite3_stmt, ^^sqlite3_context,        \
                          ^^sqlite3_value, ^^std::basic_ostream,              \
                          ^^std::filesystem::path, ^^SQLite::Column::getBlob,  \
                          ^^SQLite::Header>

@@ -21,12 +21,12 @@
 // and std::ostream/istream (the operator<< / Load(istream) fronts -- no caster; Dump()
 // covers serialization head-on).
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^YAML::Node, ^^YAML::Mark, ^^YAML::NodeType::value,                       \
     ^^YAML::EmitterStyle::value, ^^YAML::Dump, ^^YAML::Clone, ^^yamlfix,       \
-    ^^nanobind::exclude_<^^YAML::detail::node, ^^YAML::detail::node_data,      \
+    ^^mirrorbind::exclude_<^^YAML::detail::node, ^^YAML::detail::node_data,      \
                          ^^YAML::detail::iterator_value,                       \
                          ^^YAML::detail::shared_memory_holder,                 \
                          ^^YAML::Emitter, ^^std::basic_ostream,                \

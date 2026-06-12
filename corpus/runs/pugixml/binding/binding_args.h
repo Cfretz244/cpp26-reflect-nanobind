@@ -2,7 +2,7 @@
 // The exclude_ set holds the pImpl structs (BINDER-0019's home), stream
 // types, iterator/walker internals, and the xpath surface.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS \
     ^^pugi::xml_node, \
@@ -13,7 +13,7 @@
     ^^pugi::xml_encoding, \
     ^^pugi::xml_parse_status, \
     ^^pugitest, \
-    ^^nanobind::exclude_<^^pugi::xml_writer, ^^std::basic_ostream, \
+    ^^mirrorbind::exclude_<^^pugi::xml_writer, ^^std::basic_ostream, \
     ^^std::basic_istream, \
     ^^pugi::xml_node_struct, \
     ^^pugi::xml_attribute_struct, \

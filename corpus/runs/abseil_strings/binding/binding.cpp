@@ -3,7 +3,7 @@
 // RemovePrefix/RemoveSuffix/Subcord, size/empty/Clear, Compare/StartsWith/
 // EndsWith, TryFlat -> optional<string_view>, operator<< -> __str__), plus the
 // strtest fixture wrappers over the variadic-template free-function API.
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
@@ -12,7 +12,8 @@
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 
 namespace nb = nanobind;
+namespace mb = mirrorbind;
 
 NB_MODULE(abseil_strings_ext, m) {
-    nb::reflect_<CORPUS_REFLECT_ARGS>(m);
+    mb::reflect_<CORPUS_REFLECT_ARGS>(m);
 }

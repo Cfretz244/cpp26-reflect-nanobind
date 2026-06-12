@@ -6,7 +6,7 @@
 // (status() returns const Status&), and the sotest namespace supplies the
 // ok_*/err_* factories + get_* differential accessors.
 #pragma once
-#include <nanobind/nb_reflect.h>
+#include <mirrorbind/reflect.h>
 #include "binding_includes.h"
 #define CORPUS_REFLECT_ARGS                                                    \
     ^^absl::StatusOr<int>, ^^absl::StatusOr<std::string>,                      \

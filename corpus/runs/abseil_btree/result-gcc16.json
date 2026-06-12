@@ -33,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 25.19
+        "binding_compile_seconds": 24.48
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "4 passed in 0.03s"
+        "pytest_summary": "4 passed in 0.02s"
       }
     }
   },
@@ -66,7 +66,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "4 passed in 0.03s"
+    "pytest_summary": "4 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -77,8 +77,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.51,
-    "constexpr_binding_compile_seconds": 25.19
+    "probe_seconds": 1.44,
+    "constexpr_binding_compile_seconds": 24.48
   },
   "artifacts": {},
   "notes": ""
