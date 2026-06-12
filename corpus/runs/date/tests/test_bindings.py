@@ -117,6 +117,55 @@ def test_format_differential():
     assert m.format_weekday("%a", wd) == E["fmt_wd_abbr"]
 
 
+# --- Layer 1: the indexed/last family (the match_-extended types) ---
+
+def test_last_dsl_differential():
+    # year/month/last_spec() -> year_month_day_last: the last DSL, drivable
+    # from Python because last_spec is in the match_ set.
+    ymdl = m.year(2024) / m.month(2) / m.last_spec()
+    assert isinstance(ymdl, m.year_month_day_last)
+    assert str(ymdl) == E["ymdl_str"]
+    assert int(ymdl.day()) == E["ymdl_day"]                  # leap Feb -> 29
+    assert ymdl.ok() == E["ymdl_ok"]
+    assert int((m.year(2023) / m.month(2) / m.last_spec()).day()) == E["ymdl23_day"]
+    mdl = m.month(11) / m.last_spec()
+    assert isinstance(mdl, m.month_day_last)
+    assert str(mdl) == E["mdl_str"]
+    assert mdl.ok() == E["mdl_ok"]
+
+
+def test_weekday_indexed_differential():
+    # weekday's operator[] overload pair -> ONE __getitem__: an int picks the
+    # unsigned overload (weekday_indexed), a last_spec picks the other
+    # (weekday_last).
+    wdi = m.weekday(4)[2]                                    # 2nd Thursday
+    assert isinstance(wdi, m.weekday_indexed)
+    assert str(wdi) == E["wdi_str"]
+    assert wdi.index() == E["wdi_index"]
+    assert wdi.weekday().c_encoding() == E["wdi_wd_c"]
+    mw = m.month(7) / wdi
+    assert isinstance(mw, m.month_weekday)
+    assert str(mw) == E["mw_str"]
+    wdl = m.weekday(0)[m.last_spec()]                        # last Sunday
+    assert isinstance(wdl, m.weekday_last)
+    assert str(wdl) == E["wdl_str"]
+    mwl = m.month(11) / wdl
+    assert isinstance(mwl, m.month_weekday_last)
+    assert str(mwl) == E["mwl_str"]
+
+
+def test_year_month_weekday_differential():
+    ymw = m.year(2024) / m.month(2) / m.weekday(4)[5]        # 5th Thu == Feb 29
+    assert isinstance(ymw, m.year_month_weekday)
+    assert str(ymw) == E["ymw_str"]
+    assert ymw.ok() == E["ymw_ok"]
+    assert ymw.index() == E["ymw_index"]
+    ymwl = m.year(2024) / m.month(2) / m.weekday(4)[m.last_spec()]
+    assert isinstance(ymwl, m.year_month_weekday_last)
+    assert str(ymwl) == E["ymwl_str"]
+    assert ymwl.ok() == E["ymwl_ok"]
+
+
 # --- Layer 3: invariants (the Tier-2 themes, structurally) ---
 
 def test_value_surface_bound():
@@ -129,6 +178,19 @@ def test_value_surface_bound():
     # the value types carry int conversions and rich comparison
     for dunder in ("__int__", "__eq__", "__lt__", "__str__"):
         assert hasattr(m.day, dunder), dunder
+
+
+def test_match_marker_full_family():
+    # The match_ marker selects exactly the calendrical family: the prior
+    # seven explicit listings plus the indexed/last types; nothing else from
+    # namespace date (local_t fails every glob) may surface.
+    for name in ("day", "month", "year", "weekday",
+                 "year_month", "month_day", "year_month_day",
+                 "weekday_indexed", "weekday_last", "month_day_last",
+                 "month_weekday", "month_weekday_last", "year_month_day_last",
+                 "year_month_weekday", "year_month_weekday_last", "last_spec"):
+        assert hasattr(m, name), name
+    assert not hasattr(m, "local_t")
 
 
 def test_operator_slash_yields_composites():

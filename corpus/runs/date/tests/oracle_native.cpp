@@ -103,6 +103,38 @@ int main() {
     add_s("fmt_wd_full", datefix::format_weekday("%A", wd));
     add_s("fmt_wd_abbr", datefix::format_weekday("%a", wd));
 
+    // --- the indexed/last family (the match_-extended types), driven through
+    // the same DSL the Python test uses: last_spec{} literals, weekday's
+    // operator[] overload pair, and the free operator/ overloads ---
+    year_month_day_last ymdl = year{2024} / month{2} / last_spec{};
+    add_s("ymdl_str", str_of(ymdl));
+    add_i("ymdl_day", static_cast<unsigned>(ymdl.day()));    // leap Feb -> 29
+    add_b("ymdl_ok", ymdl.ok());
+    add_i("ymdl23_day",
+          static_cast<unsigned>((year{2023} / month{2} / last_spec{}).day()));
+    month_day_last mdl = month{11} / last_spec{};
+    add_s("mdl_str", str_of(mdl));
+    add_b("mdl_ok", mdl.ok());
+
+    weekday_indexed wdi = weekday{4u}[2];                     // 2nd Thursday
+    add_s("wdi_str", str_of(wdi));
+    add_i("wdi_index", wdi.index());
+    add_i("wdi_wd_c", wdi.weekday().c_encoding());
+    month_weekday mw = month{7} / wdi;
+    add_s("mw_str", str_of(mw));
+    weekday_last wdl = weekday{0u}[last_spec{}];              // last Sunday
+    add_s("wdl_str", str_of(wdl));
+    month_weekday_last mwl = month{11} / wdl;
+    add_s("mwl_str", str_of(mwl));
+
+    year_month_weekday ymw = year{2024} / month{2} / weekday{4u}[5];
+    add_s("ymw_str", str_of(ymw));                            // 5th Thu Feb 2024 == Feb 29
+    add_b("ymw_ok", ymw.ok());
+    add_i("ymw_index", ymw.index());
+    year_month_weekday_last ymwl = year{2024} / month{2} / weekday{4u}[last_spec{}];
+    add_s("ymwl_str", str_of(ymwl));
+    add_b("ymwl_ok", ymwl.ok());
+
     std::cout << "{";
     for (size_t i = 0; i < kv.size(); ++i) {
         if (i) std::cout << ",";
