@@ -9,8 +9,8 @@ main_headers = ["glm/glm.hpp"]
 module_name  = "glm_ext"
 strategy     = "single_stage"
 
-reflect_args     = ["^^glm::vec3", "^^glm::vec4"]
-subset_rationale = "glm is entirely templates; bind concrete vec3/vec4. Components live in an anonymous union (not exposed, BINDER-0002); usable surface is constructors, operator[]->__getitem__, static length(). Free-function API is function templates (not auto-bound)."
+reflect_args     = ["^^glm::vec3", "^^glm::vec4", "^^nb::instantiate_<^^glm::vec, product_<set_<2,3,4>, set_<float,double>, set_<packed_highp>>>"]
+subset_rationale = "glm is entirely templates; bind concrete vec3/vec4 plus the instantiate_ product_ grid vec<{2,3,4} x {float,double}, packed_highp> (the default-instantiation API acceptance demo). Components live in an anonymous union (not exposed, BINDER-0002); usable surface is constructors, operator[]->__getitem__, static length(). Free-function API is function templates (not auto-bound)."
 skipped_features = ["anonymous-union components x/y/z/w (BINDER-0002)", "free-function templates (length/dot/cross/normalize)", "mat types", "operators (free function templates)"]
 
 [emit]

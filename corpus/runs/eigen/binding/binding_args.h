@@ -74,45 +74,54 @@ consteval void collect_members_named(sm::info M, std::string_view name,
                 out.push_back(m);
 }
 
+// The thematic FAMILIES of divergence engines, as one scoped matcher
+// (nb::exclude_if_, nested in the exclude_ marker below): expression/view
+// facades and solver/decomposition objects follow Eigen's naming
+// conventions, so eleven globs replace thirty-three template listings --
+// and a future Eigen's new CwiseFoo or FooSolver is excluded before anyone
+// trips over it. Scoped to in_namespace_<^^Eigen> so the predicate can
+// never touch the eigentest fixture; none of the globs collide with the
+// bound facade chain (Matrix, PlainObjectBase, MatrixBase, DenseBase,
+// DenseCoeffsBase, EigenBase).
+using eigen_machinery = nanobind::all_of_<
+    nanobind::in_namespace_<^^Eigen>,
+    nanobind::any_of_<
+        nanobind::named_<"Cwise*">,          // CwiseUnary/Binary/Nullary/TernaryOp, CwiseUnaryView
+        nanobind::named_<"*View">,           // Triangular/SelfAdjoint/Real/Sparse/IndexedView
+        nanobind::named_<"*Wrapper">,        // Array/Matrix/Diagonal/SkewSymmetric/PermutationWrapper
+        nanobind::named_<"Permutation*">,    // PermutationBase/Matrix(/Wrapper)
+        nanobind::named_<"*Solver">,         // Eigen/Generalized/SelfAdjoint/ComplexEigenSolver
+        nanobind::named_<"*SVD">,            // JacobiSVD, BDCSVD
+        nanobind::named_<"*QR">,             // Householder/ColPiv/FullPivHouseholderQR
+        nanobind::named_<"*PivLU">,          // PartialPivLU, FullPivLU
+        nanobind::named_<"*Schur">,          // RealSchur, ComplexSchur
+        nanobind::named_<"*Decomposition">,  // Hessenberg, CompleteOrthogonal
+        nanobind::named_<"Householder*">>>;  // HouseholderSequence (+ the QRs)
+
 consteval sm::info eigen_excluded_marker() {
     std::vector<sm::info> args;
     auto add = [&](sm::info e) { args.push_back(sm::reflect_constant(e)); };
 
     // -- namespaces --
     add(^^Eigen::internal);
-    // -- expression / view / plumbing templates (the divergence engines) --
+    // -- the glob-able machinery families (see eigen_machinery above) --
+    add(^^nanobind::exclude_if_<eigen_machinery>);
+    // -- expression / plumbing templates outside the naming families --
     for (sm::info t : {^^Eigen::Transpose, ^^Eigen::Diagonal, ^^Eigen::Block,
                        ^^Eigen::VectorBlock, ^^Eigen::Reverse,
                        ^^Eigen::Replicate, ^^Eigen::Reshaped,
-                       ^^Eigen::NestByValue, ^^Eigen::ArrayWrapper,
-                       ^^Eigen::MatrixWrapper, ^^Eigen::CwiseUnaryOp,
-                       ^^Eigen::CwiseBinaryOp, ^^Eigen::CwiseNullaryOp,
-                       ^^Eigen::CwiseTernaryOp, ^^Eigen::CwiseUnaryView,
+                       ^^Eigen::NestByValue,
                        ^^Eigen::Map, ^^Eigen::Ref, ^^Eigen::CommaInitializer,
                        ^^Eigen::WithFormat, ^^Eigen::Select,
                        ^^Eigen::VectorwiseOp, ^^Eigen::Homogeneous,
-                       ^^Eigen::DiagonalWrapper, ^^Eigen::Solve,
-                       ^^Eigen::Inverse, ^^Eigen::Product,
-                       ^^Eigen::PartialReduxExpr, ^^Eigen::IndexedView,
-                       ^^Eigen::TriangularView, ^^Eigen::SelfAdjointView,
-                       ^^Eigen::SkewSymmetricWrapper, ^^Eigen::RealView,
-                       ^^Eigen::ForceAlignedAccess, ^^Eigen::NoAlias,
-                       ^^Eigen::PermutationWrapper, ^^Eigen::PermutationBase,
-                       ^^Eigen::PermutationMatrix, ^^Eigen::SparseView})
+                       ^^Eigen::Solve, ^^Eigen::Inverse, ^^Eigen::Product,
+                       ^^Eigen::PartialReduxExpr,
+                       ^^Eigen::ForceAlignedAccess, ^^Eigen::NoAlias})
         add(t);
-    // -- solver / decomposition objects --
-    for (sm::info t : {^^Eigen::LLT, ^^Eigen::LDLT, ^^Eigen::PartialPivLU,
-                       ^^Eigen::FullPivLU, ^^Eigen::HouseholderQR,
-                       ^^Eigen::ColPivHouseholderQR,
-                       ^^Eigen::FullPivHouseholderQR,
-                       ^^Eigen::CompleteOrthogonalDecomposition,
-                       ^^Eigen::JacobiSVD, ^^Eigen::BDCSVD,
-                       ^^Eigen::EigenSolver, ^^Eigen::GeneralizedEigenSolver,
-                       ^^Eigen::SelfAdjointEigenSolver,
-                       ^^Eigen::HessenbergDecomposition, ^^Eigen::RealSchur,
-                       ^^Eigen::ComplexSchur, ^^Eigen::ComplexEigenSolver,
+    // -- solver-adjacent singles the families do not cover --
+    for (sm::info t : {^^Eigen::LLT, ^^Eigen::LDLT,
                        ^^Eigen::Tridiagonalization, ^^Eigen::RealQZ,
-                       ^^Eigen::HouseholderSequence, ^^Eigen::JacobiRotation})
+                       ^^Eigen::JacobiRotation})
         add(t);
 
     // -- per-member: lazily-ill-formed bodies (see file comment) --

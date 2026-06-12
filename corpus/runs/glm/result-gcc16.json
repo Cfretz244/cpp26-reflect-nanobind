@@ -7,7 +7,7 @@
   "tier": 1,
   "header_only": true,
   "toolchain_commit": "gcc-16.1.0",
-  "binder_commit": "db872b7",
+  "binder_commit": "e9da586",
   "prod_compiler": "g++ (GCC) 16.1.0",
   "outcome": "E",
   "furthest_gate": 6,
@@ -33,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 13.03
+        "binding_compile_seconds": 34.1
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "3 passed in 0.02s"
+        "pytest_summary": "4 passed in 0.02s"
       }
     },
     "emit": {
@@ -57,16 +57,16 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 8.12,
-        "generated_tu_lines": 62,
-        "generated_tu_bytes": 4082
+        "binding_compile_seconds": 21.51,
+        "generated_tu_lines": 142,
+        "generated_tu_bytes": 11511
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "3 passed in 0.02s"
+        "pytest_summary": "4 passed in 0.02s"
       }
     }
   },
@@ -77,9 +77,10 @@
   "subset": {
     "reflect_args": [
       "^^glm::vec3",
-      "^^glm::vec4"
+      "^^glm::vec4",
+      "^^nb::instantiate_<^^glm::vec, product_<set_<2,3,4>, set_<float,double>, set_<packed_highp>>>"
     ],
-    "rationale": "glm is entirely templates; bind concrete vec3/vec4. Components live in an anonymous union (not exposed, BINDER-0002); usable surface is constructors, operator[]->__getitem__, static length(). Free-function API is function templates (not auto-bound).",
+    "rationale": "glm is entirely templates; bind concrete vec3/vec4 plus the instantiate_ product_ grid vec<{2,3,4} x {float,double}, packed_highp> (the default-instantiation API acceptance demo). Components live in an anonymous union (not exposed, BINDER-0002); usable surface is constructors, operator[]->__getitem__, static length(). Free-function API is function templates (not auto-bound).",
     "skipped_features": [
       "anonymous-union components x/y/z/w (BINDER-0002)",
       "free-function templates (length/dot/cross/normalize)",
@@ -92,7 +93,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "3 passed in 0.02s"
+    "pytest_summary": "4 passed in 0.02s"
   },
   "failure": {
     "code": null,
@@ -103,12 +104,12 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.41,
-    "constexpr_binding_compile_seconds": 13.03,
-    "emit_binding_compile_seconds": 8.12,
-    "emit_generated_tu_lines": 62,
-    "emit_generated_tu_bytes": 4082
+    "probe_seconds": 0.5,
+    "constexpr_binding_compile_seconds": 34.1,
+    "emit_binding_compile_seconds": 21.51,
+    "emit_generated_tu_lines": 142,
+    "emit_generated_tu_bytes": 11511
   },
   "artifacts": {},
-  "notes": "surface_diff: 0 mismatch(es), 2 top-level object(s) compared; "
+  "notes": "surface_diff: 0 mismatch(es), 6 top-level object(s) compared; "
 }

@@ -396,10 +396,22 @@ constexpr module + emit module must agree, plus a Gate 6b surface diff —
 `corpus/lib/run_gates.py`, schema v2); the prod prerequisites are
 `corpus/lib/build_nanobind_prod.sh` (+ `--prod` archive variants for compiled libs).
 Migrated so far: the 3 fixtures, glm, json — all `constexpr=E emit=E surface=pass`;
-the remaining 31 follow the `AGENT_PROMPT_EMIT.md` wave protocol. Remaining binder
-roadmap: per-arg ownership transfer, container `__iter__`/make_iterator, member
-templates needing explicit args, trampoline hardening, friendly spec naming. The
-binder's git history on `mk-reflect` has one commit per feature;
+the remaining 31 follow the `AGENT_PROMPT_EMIT.md` wave protocol. And **the matcher
+API + default instantiations** (2026-06, on `gcc16-only`): `nb_reflect_match.h`'s
+composable consteval matcher DSL (`named_<"glob">`, `in_namespace_`, `derived_from_`,
+`all_of_`/`any_of_`/`not_`, + raw predicate types) feeding three pack markers —
+`nb::match_<^^scope, M>` (predicate-driven inclusion), `nb::exclude_if_<M>`
+(predicate-driven exclusion, congruent with the exclude_ list at every gate; the
+eigen run's thematic globs replace 33 of its 58 template listings), and
+`nb::instantiate_<Target, with_<...>/product_<set_<...>...>>` (bulk class-template
+minting with `val_<V>` NTTPs; matcher-typed targets sweep the pack's namespace
+roots; with_ failures hard-error, product_ substitution failures skip — the glm run
+mints its vec<{2,3,4}×{float,double}> grid from one rule). Everything expands to
+"effective seeds" consumed identically by all three backends. Remaining binder
+roadmap: explicit-arg member-template instantiation (the instantiate_ grammar is
+kind-agnostic, reserved for this), per-arg ownership transfer, container
+`__iter__`/make_iterator, trampoline hardening, friendly spec naming. The
+binder's git history (now on `gcc16-only`) has one commit per feature;
 `nanobind/docs/reflection.rst` is the user-facing reference.
 
 ## Gotchas (carried over; see submodule CLAUDE.md files for detail)
