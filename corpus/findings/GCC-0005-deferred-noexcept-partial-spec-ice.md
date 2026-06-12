@@ -2,8 +2,16 @@
 
 - dedup_key: `gcc16-nothrow-spec-p-deferred-noexcept`
 - compiler: g++ (GCC) 16.1.0 aarch64-linux-gnu (`gcc:16` docker image)
-- status: workaround landed in the binder (`nb_fn_type_of`); upstream report
-  planned (Phase 4 of the GCC re-home; gcc.gnu.org bugzilla, component c++)
+- status: workaround landed in the binder (`nb_fn_type_of`);
+  **RESOLVED UPSTREAM, no filing needed** — fixed on trunk by
+  `05ea83ffd54` (PR c++/124628, Patrick Palka, 2026-05-14: reflection
+  queries now mark_used the function, instantiating deferred noexcept /
+  doing return-type deduction first), bisect-verified in the devenv
+  (probe ICEs at the parent, compiles at the commit). Already
+  cherry-picked to releases/gcc-16 as `e1396e44961`
+  (releases/gcc-16.1.0-90) ⇒ ships in GCC 16.2. Retire the binder shim
+  after the container moves to 16.2 and the probe flips. Details:
+  `corpus/findings/repros/GCC-0005/UPSTREAM.md`.
 - found by: corpus run `json` (first GCC-native ICE at corpus scale)
 
 ## Symptom
