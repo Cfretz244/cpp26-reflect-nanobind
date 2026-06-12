@@ -33,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 38.02
+        "binding_compile_seconds": 36.81
       },
       "oracle": {
         "layers_used": [
@@ -76,8 +76,8 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 1.69,
-    "constexpr_binding_compile_seconds": 38.02
+    "probe_seconds": 1.67,
+    "constexpr_binding_compile_seconds": 36.81
   },
   "artifacts": {},
   "notes": ""
