@@ -1,0 +1,108 @@
+From 400daa86161318793e6b25c658e53daff973c5f8 Mon Sep 17 00:00:00 2001
+From: Chris Fretz <cfretz@icloud.com>
+Date: Fri, 12 Jun 2026 02:59:42 -0400
+Subject: [PATCH] c++/reflection: splice operands do not escalate to consteval
+
+check_out_of_consteval_use_r escalates an immediate-escalating function
+to consteval when its body contains a consteval-only expression.  It
+also walked into the operand of a dependent splice, so a lambda in a
+function template whose body splices an enclosing std::meta::info
+template parameter -- [:fn:] -- was escalated to consteval at
+definition time (the walker saw the TEMPLATE_PARM_INDEX of
+consteval-only type), and converting the lambda to a plain function
+pointer then failed with "immediate evaluation returns address of
+immediate function".
+
+The constant-expression of a splice-specifier is manifestly
+constant-evaluated, i.e. an immediate function context, so uses of
+consteval-only entities inside it never escape to runtime and must not
+escalate the enclosing function -- exactly like the if-constexpr
+condition the walker already skips.  Non-dependent splices are resolved
+at parse time and never appear here; after instantiation the splice is
+resolved to the designated entity, which is walked normally.
+
+gcc/cp/ChangeLog:
+
+	* reflect.cc (check_out_of_consteval_use_r): Do not walk into
+	SPLICE_EXPR operands.
+
+gcc/testsuite/ChangeLog:
+
+	* g++.dg/reflect/splice-no-escalation1.C: New test.
+---
+ gcc/cp/reflect.cc                             | 14 +++++++
+ .../g++.dg/reflect/splice-no-escalation1.C    | 37 +++++++++++++++++++
+ 2 files changed, 51 insertions(+)
+ create mode 100644 gcc/testsuite/g++.dg/reflect/splice-no-escalation1.C
+
+diff --git a/gcc/cp/reflect.cc b/gcc/cp/reflect.cc
+index 673b79d0bde..f18c408d4ac 100644
+--- a/gcc/cp/reflect.cc
++++ b/gcc/cp/reflect.cc
+@@ -8769,6 +8769,20 @@ check_out_of_consteval_use_r (tree *tp, int *walk_subtrees, void *pset)
+ 	return NULL_TREE;
+       }
+ 
++  /* The constant-expression of a splice-specifier is manifestly
++     constant-evaluated, i.e. an immediate function context: a
++     consteval-only entity used inside it (e.g. a std::meta::info
++     template parameter in a dependent splice in a lambda body) never
++     escapes to runtime and must not escalate the enclosing function.
++     Non-dependent splices are resolved at parse time and never appear
++     here; after instantiation the splice is resolved to the designated
++     entity, which is walked normally.  */
++  if (TREE_CODE (t) == SPLICE_EXPR)
++    {
++      *walk_subtrees = false;
++      return NULL_TREE;
++    }
++
+   if (VAR_P (t) && DECL_HAS_VALUE_EXPR_P (t))
+     {
+       tree vexpr = DECL_VALUE_EXPR (t);
+diff --git a/gcc/testsuite/g++.dg/reflect/splice-no-escalation1.C b/gcc/testsuite/g++.dg/reflect/splice-no-escalation1.C
+new file mode 100644
+index 00000000000..909e526acdc
+--- /dev/null
++++ b/gcc/testsuite/g++.dg/reflect/splice-no-escalation1.C
+@@ -0,0 +1,37 @@
++// A std::meta::info template parameter used inside a dependent splice in a
++// lambda body is manifestly constant-evaluated (an immediate function
++// context) and must not escalate the lambda to consteval; in particular the
++// lambda must still convert to a plain function pointer.
++// { dg-do run { target c++26 } }
++// { dg-additional-options "-freflection" }
++
++#include <meta>
++
++struct Ops { explicit operator bool () const { return true; } };
++
++consteval std::meta::info
++conv (std::meta::info cls)
++{
++  for (std::meta::info m
++       : std::meta::members_of (cls, std::meta::access_context::unchecked ()))
++    if (std::meta::is_conversion_function (m))
++      return m;
++  return std::meta::info{};
++}
++
++template <std::meta::info fn, typename T>
++bool
++bind (T& t)
++{
++  auto lam = [] (T& self) -> bool { return (bool) self.[:fn:] (); };
++  bool (*fp) (T&) = lam;	// Used to be rejected: _FUN escalated.
++  return fp (t);
++}
++
++int
++main ()
++{
++  Ops o;
++  if (!bind<conv (^^Ops), Ops> (o))
++    __builtin_abort ();
++}
+-- 
+2.50.1 (Apple Git-155)
+
