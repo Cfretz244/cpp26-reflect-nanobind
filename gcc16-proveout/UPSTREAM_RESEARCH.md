@@ -38,6 +38,22 @@ against trunk/16.2 snapshots before filing anything below.
   gcc16-proveout/probes/ conformance smoke (0*.cpp must pass, xfail_* may
   start passing — recheck each) and re-test GCC-0007.
 
+## Trunk verification matrix (2026-06-12, master = 17.0.0 @ 7ce3a7b1beb)
+
+Every probe re-run against a fresh trunk build (devenv/, `--enable-checking`):
+
+| probe | trunk result | filing consequence |
+|---|---|---|
+| xfail_gcc5 (deferred noexcept) | **FIXED on trunk** | do NOT file a new bug; identify the fixing commit (bisect in devenv) and request/verify a releases/gcc-16 backport instead |
+| xfail_gcc1 (implicit-member lift) | still fails (now surfaces via stl_construct.h overload error) | file |
+| xfail_gcc2 (constexpr local range) | still fails ("'indices' is not a constant expression") | file |
+| xfail_gcc3 (consteval lambda decay) | still fails | file as question |
+| xfail_gcc6 (constexpr body on lift) | still fails (same m_val error) | file |
+| xfail_gcc8 (NTTP mangling collision) | still fails — and trunk's checking build upgrades it to "Two symbols with same comdat_group are not linked by the same_comdat_group list" (symtab verify) | file with BOTH signatures (16.1 assembler error + trunk checking ICE — the latter proves it at the compiler layer) |
+| 09_discarded_splice (GCC-4 family) | still fails, NEW shape: "uncaught std::meta::exception: reflection does not represent a type" | file as question with both behaviors |
+| positive probes 01–07, 09b | all pass on trunk | — |
+| 08_ann_spec | breaks on trunk — NOT a regression: GCC 17 removed the transitional two-arg `annotations_of(r, type)` overload (P2996R13 final spells it `annotations_of_with_type`, which the binder's shim already uses) and `constexpr auto` of a `std::vector` result is correctly rejected as non-transient allocation | update the probe when the corpus moves past 16.x; no filing |
+
 ## Filing notes (Phase 4)
 
 - File on gcc.gnu.org/bugzilla, component **c++**, with `-freflection` in
