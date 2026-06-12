@@ -1,11 +1,22 @@
-# GCC-0006 — constant-evaluation memory blow-up at emit-generator scale (~20x clang)
+# GCC-0007 — constant-evaluation memory blow-up at emit-generator scale (~20x clang)
 
 - dedup_key: `gcc16-constexpr-memory-emit-generator`
 - compiler: g++ (GCC) 16.1.0 aarch64-linux-gnu (`gcc:16` docker image)
-- status: OPEN — no in-compiler workaround found; json's gcc16 emit lane is
-  disabled via `[gcc16] emit_enabled = false` with this finding as the
-  justification. Upstream report planned (Phase 4; this is a
-  performance/scalability report, not an ICE).
+- status: **MINIMIZED + ROOT-CAUSED, REPORT READY** (2026-06-12, devenv,
+  verified identical on trunk 17.0 @ 7ce3a7b1beb). No reflection needed:
+  plain consteval std::string churn reproduces it. Root cause: the
+  constexpr evaluator allocates every transient value in GC memory that
+  can never be collected mid-evaluation (no safe point; ~8 bytes of
+  garbage per op, 83% of retained memory proven unreachable by a forced
+  collect from gdb), and constexpr-heavy declaration/instantiation
+  sequences never pass the parser's function-boundary collection points
+  either (a chunked-evaluation TU peaks identically). Eager freeing
+  cannot be extended safely (the evaluator returns subtrees of stored
+  values); the fix is an evaluator-local arena — architectural, so this
+  is an upstream report, not a patch. Minimized repros + measurement
+  table + instrumentation patch + ready-to-file bugzilla material:
+  `corpus/findings/repros/GCC-0007/` (UPSTREAM.md). The three walled
+  emit lanes stay disabled for all GCC 16.x.
 - found by: corpus run `json` (the corpus's heaviest emit generator)
 
 ## Symptom

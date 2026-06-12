@@ -1,0 +1,101 @@
+diff --git a/gcc/ggc-page.cc b/gcc/ggc-page.cc
+index e3cccc9d079..508e6e4085a 100644
+--- a/gcc/ggc-page.cc
++++ b/gcc/ggc-page.cc
+@@ -1344,6 +1344,39 @@ add_finalizer (void *result, void (*f)(void *), size_t s, size_t n)
+     }
+ }
+ 
++/* TEMPORARY GCC-0007 instrumentation: per-return-address allocation
++   histogram, dumped on demand from gdb via ggc_alloc_profile_dump().  */
++static struct { void *a0; void *a1; unsigned long count; unsigned long bytes; }
++  ggc_alloc_prof[16384];
++static void
++ggc_alloc_profile_record (void *a0, void *a1, size_t size)
++{
++  size_t h = ((((uintptr_t) a0) >> 2) * 31 + (((uintptr_t) a1) >> 2)) % 16381;
++  for (int i = 0; i < 256; i++)
++    {
++      size_t j = (h + i) % 16381;
++      if ((ggc_alloc_prof[j].a0 == a0 && ggc_alloc_prof[j].a1 == a1)
++	  || !ggc_alloc_prof[j].a0)
++	{
++	  ggc_alloc_prof[j].a0 = a0;
++	  ggc_alloc_prof[j].a1 = a1;
++	  ggc_alloc_prof[j].count++;
++	  ggc_alloc_prof[j].bytes += size;
++	  return;
++	}
++    }
++}
++extern "C" void ggc_alloc_profile_dump (void);
++extern "C" void
++ggc_alloc_profile_dump (void)
++{
++  for (size_t j = 0; j < 16381; j++)
++    if (ggc_alloc_prof[j].a0)
++      fprintf (stderr, "GGCPROF %p %p %lu %lu\n", ggc_alloc_prof[j].a0,
++	       ggc_alloc_prof[j].a1, ggc_alloc_prof[j].count,
++	       ggc_alloc_prof[j].bytes);
++}
++
+ /* Allocate a chunk of memory of SIZE bytes.  Its contents are undefined.  */
+ 
+ #ifdef HAVE_ATTRIBUTE_ALIAS
+@@ -1360,6 +1393,9 @@ ggc_internal_alloc (size_t size, void (*f)(void *), size_t s, size_t n
+   struct page_entry *entry;
+   void *result;
+ 
++  ggc_alloc_profile_record (__builtin_return_address (0),
++			    __builtin_return_address (1), size);
++
+   ggc_round_alloc_size_1 (size, &order, &object_size);
+ 
+   /* If there are non-full pages for this size allocation, they are at
+diff --git a/gcc/tree.cc b/gcc/tree.cc
+index 3f0d1c60574..5c4ba0c7611 100644
+--- a/gcc/tree.cc
++++ b/gcc/tree.cc
+@@ -1322,6 +1322,24 @@ allocate_decl_uid (void)
+ 
+    Achoo!  I got a code in the node.  */
+ 
++/* TEMPORARY GCC-0007 instrumentation: per-tree-code allocation counters,
++   dumped from gdb via tree_alloc_profile_dump().  */
++static unsigned long gcc0007_make_count[MAX_TREE_CODES];
++static unsigned long gcc0007_make_bytes[MAX_TREE_CODES];
++static unsigned long gcc0007_copy_count[MAX_TREE_CODES];
++static unsigned long gcc0007_copy_bytes[MAX_TREE_CODES];
++extern "C" void tree_alloc_profile_dump (void);
++extern "C" void
++tree_alloc_profile_dump (void)
++{
++  for (int i = 0; i < MAX_TREE_CODES; i++)
++    if (gcc0007_make_count[i] || gcc0007_copy_count[i])
++      fprintf (stderr, "TREEPROF %s make %lu %lu copy %lu %lu\n",
++	       get_tree_code_name ((enum tree_code) i),
++	       gcc0007_make_count[i], gcc0007_make_bytes[i],
++	       gcc0007_copy_count[i], gcc0007_copy_bytes[i]);
++}
++
+ tree
+ make_node (enum tree_code code MEM_STAT_DECL)
+ {
+@@ -1330,6 +1348,8 @@ make_node (enum tree_code code MEM_STAT_DECL)
+   size_t length = tree_code_size (code);
+ 
+   record_node_allocation_statistics (code, length);
++  gcc0007_make_count[code]++;
++  gcc0007_make_bytes[code] += length;
+ 
+   t = ggc_alloc_cleared_tree_node_stat (length PASS_MEM_STAT);
+   TREE_SET_CODE (t, code);
+@@ -1475,6 +1495,8 @@ copy_node (tree node MEM_STAT_DECL)
+ 
+   length = tree_size (node);
+   record_node_allocation_statistics (code, length);
++  gcc0007_copy_count[code]++;
++  gcc0007_copy_bytes[code] += length;
+   t = ggc_alloc_tree_node_stat (length PASS_MEM_STAT);
+   memcpy (t, node, length);
+ 
