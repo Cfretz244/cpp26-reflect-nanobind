@@ -40,22 +40,29 @@ evaluation.
 
 ## Scope
 
-NOT json-specific: `unordered_dense` (the next-heaviest text-rendering
-fixpoint; its clang emit stage 1 takes 116 s under a
-`-fconstexpr-steps=1000000000` budget and finishes comfortably) hits the
-same OOM under g++. The correlation is with heavy consteval STRING
-RENDERING (the emit generator), not reflection walking per se — both runs'
-constexpr lanes, with the same raised budgets, compile fine under g++. If
+json is the canonical case. `unordered_dense` initially appeared affected,
+but that OOM evidence was gathered while libstdc++'s `__gnu_cxx` iterator
+specs were leaking into the bind set (fixed in `is_in_std`, wave 1); with
+the fix its emit lane PASSES — at ~28.5 GiB peak vs clang's ~2 GiB-class for
+the same 199-line generated TU (116 s). So the scope is: ONE run disabled
+outright (json), and the ~15–20x memory ratio confirmed on a second,
+passing run — strong material for the upstream performance report. The
+correlation is with heavy consteval STRING RENDERING (the emit generator),
+not reflection walking per se: both runs' constexpr lanes, with the same
+raised budgets, compile fine under g++.
+
+NOTE: json's >31 GiB evidence was ALSO gathered before the `is_in_std` fix;
+re-test before treating its disable as final (supervisor task open). If
 another run hits this wall, record it against this dedup_key and disable
-that run's gcc16 emit lane the same way. With two runs affected, the emit
-backend's chunked-evaluation design (emit_item_chunk_v) likely needs a
-GCC-specific chunking strategy — a binder change, tracked separately.
+that run's gcc16 emit lane the same way; the emit backend's
+chunked-evaluation design (emit_item_chunk_v) may need a GCC-specific
+chunking strategy — a binder change, tracked separately.
 
 ## Mitigation status
 
 - `runs/json/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane green:
-  `constexpr=E`, 37 s).
-- `runs/unordered_dense/meta.toml` `[gcc16] emit_enabled = false` (constexpr
-  lane green after the GCC-0008 fix).
+  `constexpr=E`, 37 s; pending re-test post-`is_in_std`).
+- `runs/unordered_dense`: re-ENABLED after the `is_in_std` fix; passes with
+  a thin margin (~91% of the 31 GiB container — run its emit lane solo).
 - Possible future binder-side mitigation: render per-class chunks in even
   smaller independent constant evaluations under GCC.

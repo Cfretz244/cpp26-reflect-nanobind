@@ -94,6 +94,27 @@ Known clang-p2996 <-> GCC 16 divergences, from the spike + seed runs
 10. **GCC constant-evaluation budget**: default ~33M ops. The translated
    budgets have been enough so far; if you hit "constexpr evaluation
    operation count exceeds limit", raise via `[gcc16] extra_cflags`.
+11. **GCC-6** (probe xfail_gcc6, finding GCC-0006): lifting a CONSTEXPR
+   member's reflection into define_static_array instantiates its body —
+   lazily-ill-formed constexpr bodies hard-error on lift.
+   `liftable_class_members` already filters never-bound members on GCC; if
+   a BOUND member's constexpr body is lazily ill-formed for the reflected
+   spec, that is run-local (exclude it via nb::exclude_, like Eigen).
+12. **GCC-7 memory wall** (finding GCC-0007): a heavy emit GENERATOR
+   (consteval string rendering at json/unordered_dense scale) can OOM-kill
+   cc1plus at >31 GB where clang renders the same TU in ~1-2 GB. If your
+   emit stage-1 compile dies with "Killed signal terminated program
+   cc1plus" (NOT an error message), do not chase flags — it is the known
+   wall. Record `[gcc16] emit_enabled = false` in meta.toml with a comment
+   citing GCC-0007 (constexpr lane must still be green), add the run to
+   GCC-0007's Scope/Mitigation lists, and note it prominently in your
+   report. This is sanctioned ONLY for this OOM signature.
+13. **GCC-8** (probe xfail_gcc8, finding GCC-0008): same-named
+   member-template reflection NTTPs mangle identically ("symbol ... is
+   already defined" at ASSEMBLY time). Fixed binder-wide via
+   `member_tmpl_mangle_hint`; if you see the same assembler signature
+   through a DIFFERENT dispatcher, apply the same defaulted-spec-NTTP
+   pattern and extend the finding.
 
 ## Fix discipline
 

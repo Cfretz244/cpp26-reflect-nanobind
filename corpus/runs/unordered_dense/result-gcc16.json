@@ -7,8 +7,8 @@
   "tier": 3,
   "header_only": true,
   "toolchain_commit": "gcc-16.1.0",
-  "binder_commit": "58543ff",
-  "prod_compiler": "",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
   "outcome": "E",
   "furthest_gate": 6,
   "gate_results": {
@@ -33,7 +33,33 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 7.44
+        "binding_compile_seconds": 7.23
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "6 passed in 0.02s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 188.32,
+        "generated_tu_lines": 199,
+        "generated_tu_bytes": 79090
       },
       "oracle": {
         "layers_used": [
@@ -45,7 +71,7 @@
     }
   },
   "surface_diff": {
-    "status": "skip",
+    "status": "pass",
     "mismatches": []
   },
   "subset": {
@@ -79,9 +105,12 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.47,
-    "constexpr_binding_compile_seconds": 7.44
+    "probe_seconds": 0.46,
+    "constexpr_binding_compile_seconds": 7.23,
+    "emit_binding_compile_seconds": 188.32,
+    "emit_generated_tu_lines": 199,
+    "emit_generated_tu_bytes": 79090
   },
   "artifacts": {},
-  "notes": ""
+  "notes": "surface_diff: 0 mismatch(es), 6 top-level object(s) compared; "
 }

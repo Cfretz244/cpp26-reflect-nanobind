@@ -47,5 +47,10 @@ Declaration-kind reflection, mangled by signature) folded into
 sibling instantiations distinct on both compilers. A
 non-default-instantiable sibling contributes `^^void`; it can only collide
 with another uninstantiable same-named sibling, whose instantiations are
-both empty (route == skip). Unit regression: `HetMap::hat` const/non-const
-pair in the shared fixture. Both suites 129/129 on both compilers.
+both empty (route == skip). CAVEAT (from the unordered_dense worker): two
+such empty instantiations still share one mangled name — at -O2 they inline
+away (proven green in the field run), but at -O0 the duplicate-symbol
+assembler error is latent. If a debug-build consumer ever hits it, replace
+the `^^void` arm with a per-sibling token. Unit regression: `HetMap::hat`
+const/non-const pair in the shared fixture. Both suites 129/129 on both
+compilers.
