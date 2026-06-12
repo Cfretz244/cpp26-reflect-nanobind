@@ -19,28 +19,29 @@ reflect_args     = [
   "^^pugi::xml_node",
   "^^pugi::xml_attribute",
   "^^pugi::xml_document",
+  "^^pugi::xml_text",
   "^^pugi::xml_parse_result",
   "^^pugi::xml_node_type",
   "^^pugi::xml_encoding",
   "^^pugi::xml_parse_status",
   "^^pugitest",
-  # exclude_ makes the types the binder cannot represent opaque on every path so
-  # methods mentioning them are skipped (BINDER-0014): the writer/stream serialization
-  # fronts (xml_writer, std::basic_ostream/istream -- no caster, and we don't want them
-  # in the bind set; serialization is surfaced via the pugitest fixture instead), the
-  # iterator/range traversal fronts (xml_node_iterator/xml_attribute_iterator/
-  # xml_named_node_iterator/xml_object_range -- begin/end/children/attributes; Python
-  # traversal goes through first_child/next_sibling head-on), the xml_text accessor,
-  # the xml_tree_walker visitor (traverse), and the whole XPath surface (xpath_node/
-  # xpath_node_set/xpath_query/xpath_variable_set -- unbound user types returned/taken
-  # by select_node/select_nodes).
-  "^^nb::exclude_<^^pugi::xml_writer, ^^std::basic_ostream, ^^std::basic_istream, ^^pugi::xml_node_struct, ^^pugi::xml_attribute_struct, ^^pugi::xml_node_iterator, ^^pugi::xml_attribute_iterator, ^^pugi::xml_named_node_iterator, ^^pugi::xml_object_range, ^^pugi::xml_text, ^^pugi::xml_tree_walker, ^^pugi::xpath_node, ^^pugi::xpath_node_set, ^^pugi::xpath_query, ^^pugi::xpath_variable_set>",
+  # exclude_if_ makes the types the binder cannot represent opaque on every path so
+  # methods mentioning them are skipped (BINDER-0014) -- the predicate-driven form
+  # of the hand-written exclude_ list this run carried before, the glob families
+  # covering it 1:1: the writer/stream serialization fronts (xml_writer*,
+  # basic_?stream -- no caster; serialization is surfaced via the pugitest fixture
+  # instead), the iterator/range traversal fronts (*_iterator/xml_object_range --
+  # begin/end/children/attributes; Python traversal goes through first_child/
+  # next_sibling head-on), the pImpl structs (*_struct), the xml_tree_walker visitor
+  # (traverse), and the whole XPath surface (xpath_* -- unbound user types returned/
+  # taken by select_node/select_nodes). The globs also cover same-family strays the
+  # old list never named (xml_writer_file/_stream, xpath_exception, xpath_variable).
+  "^^nb::exclude_if_<any_of_<named_<xpath_*>, named_<*_iterator>, named_<*_struct>, named_<xml_writer*>, named_<xml_object_range>, named_<xml_tree_walker>, named_<basic_?stream>>>",
 ]
-subset_rationale = "pugixml's DOM handle objects are bound head-on: xml_document (the DOM root, parsed via load_string) inheriting xml_node publicly (the inheritance theme -- xml_node is in the bind set so it is the real Python base, not flattened), xml_node (the lightweight node handle -- type/name/value/child/attribute/child_value/first_child/last_child/next_sibling/previous_sibling/parent/empty + comparison dunders + the bool/append/set mutators), xml_attribute (the attribute handle -- name/value/as_int/as_uint/as_double/as_bool/empty/next_attribute + comparisons), and xml_parse_result (the parse-status struct -- status/offset/encoding data members + description()). The three enums (xml_node_type, xml_encoding, xml_parse_status) are bound with all values and differentially checked. The pugitest fixture supplies ONLY serialization (to_xml: node.print into an ostringstream -> std::string), which pugixml exposes only through an xml_writer/std::ostream front Python cannot drive. Differential: the native oracle parses a fixed XML document and emits node names, attribute values, child-traversal order, typed attribute conversions, parse status, and the serialized output; the Python test parses the same string through the binding and asserts equality on all of it."
+subset_rationale = "pugixml's DOM handle objects are bound head-on: xml_document (the DOM root, parsed via load_string) inheriting xml_node publicly (the inheritance theme -- xml_node is in the bind set so it is the real Python base, not flattened), xml_node (the lightweight node handle -- type/name/value/child/attribute/child_value/first_child/last_child/next_sibling/previous_sibling/parent/empty + comparison dunders + the bool/append/set mutators), xml_attribute (the attribute handle -- name/value/as_int/as_uint/as_double/as_bool/empty/next_attribute + comparisons), xml_text (the typed text handle -- get/as_*/the set() overload family; its xml_node_struct* internals are auto-skipped through the *_struct exclusion), and xml_parse_result (the parse-status struct -- status/offset/encoding data members + description()). The three enums (xml_node_type, xml_encoding, xml_parse_status) are bound with all values and differentially checked. The unbindable machinery is made opaque by ONE exclude_if_ predicate (glob families: xpath_*, *_iterator, *_struct, xml_writer*, xml_object_range, xml_tree_walker, basic_?stream) replacing the prior 15-entry hand-written exclude_ list 1:1 -- the unchanged legacy test suite is the equivalence proof. The pugitest fixture supplies ONLY serialization (to_xml: node.print into an ostringstream -> std::string), which pugixml exposes only through an xml_writer/std::ostream front Python cannot drive. Differential: the native oracle parses a fixed XML document and emits node names, attribute values, child-traversal order, typed attribute conversions, text-handle reads/writes with serialization round-trip, parse status, and the serialized output; the Python test parses the same string through the binding and asserts equality on all of it."
 skipped_features = [
   "serialization via xml_writer / std::basic_ostream (print/save) -- no ostream caster; surfaced as a string through the pugitest.to_xml fixture instead",
   "iterator/range traversal (begin/end/children/attributes -> xml_node_iterator/xml_attribute_iterator/xml_named_node_iterator/xml_object_range) -- excluded; first_child/next_sibling cover traversal head-on",
-  "xml_text accessor (xml_node::text() -> xml_text) -- excluded; child_value() covers text access head-on",
   "xml_tree_walker visitor (xml_node::traverse) -- needs a Python-implemented virtual (two-stage); excluded",
   "the whole XPath surface (select_node/select_nodes -> xpath_node/xpath_node_set, xpath_query, xpath_variable_set) -- unbound user types; excluded",
   "unspecified_bool_type conversion operator -- returns a function-pointer type with no numeric dunder; the binder's reflect_bind_conversion skips it (no __bool__ -- that needs a bool-returning conversion)",

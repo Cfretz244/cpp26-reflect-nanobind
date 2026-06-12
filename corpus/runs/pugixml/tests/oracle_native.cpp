@@ -138,6 +138,26 @@ int main() {
     add_i("bad_status", static_cast<std::int64_t>(bres.status));
     add_i("status_end_mismatch_value", static_cast<std::int64_t>(pugi::status_end_element_mismatch));
 
+    // --- xml_text: the typed text handle (reads, defaults, mutation + round-trip).
+    // A separate small document so the mutation never perturbs the kDoc observables.
+    {
+        pugi::xml_document tdoc;
+        pugi::xml_parse_result tres = tdoc.load_string("<n><v>42</v><s>hi</s></n>");
+        add_b("text_parse_ok", static_cast<bool>(tres));
+        pugi::xml_node n = tdoc.document_element();
+        pugi::xml_text vt = n.child("v").text();
+        add_b("text_v_empty", vt.empty());
+        add_s("text_get", vt.get());
+        add_i("text_as_int", vt.as_int());
+        kv.emplace_back("text_as_double", std::to_string(vt.as_double()));
+        add_i("text_s_as_int_default", n.child("s").text().as_int(-5));
+        add_s("text_s_string", n.child("s").text().as_string());
+        add_b("text_missing_empty", n.child("missing").text().empty());
+        add_b("text_set_ok", n.child("s").text().set("bye"));
+        add_b("text_set_int_ok", n.child("v").text().set(7));
+        add_s("text_after_set_raw", pugitest::to_xml_raw(n));
+    }
+
     std::cout << "{";
     for (size_t i = 0; i < kv.size(); ++i) {
         if (i) std::cout << ",";

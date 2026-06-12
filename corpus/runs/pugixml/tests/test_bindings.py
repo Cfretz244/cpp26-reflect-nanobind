@@ -168,6 +168,29 @@ def test_parse_failure_differential():
     assert bres.status.value == E["status_end_mismatch_value"]
 
 
+def test_text_handle_differential():
+    # xml_text bound head-on (previously excluded): typed reads, explicit
+    # defaults (the P3096 default-value gap, as everywhere in this suite),
+    # mutation through the set() overload family, and a serialization
+    # round-trip. A separate small document so the mutation never perturbs
+    # the shared fixture's observables.
+    d = m.xml_document()
+    r = d.load_string("<n><v>42</v><s>hi</s></n>", PARSE_DEFAULT)
+    assert bool(r) is bool(E["text_parse_ok"])
+    n = d.document_element()
+    vt = n.child("v").text()
+    assert vt.empty() is bool(E["text_v_empty"])
+    assert vt.get() == E["text_get"]
+    assert vt.as_int(0) == E["text_as_int"]
+    assert vt.as_double(0.0) == pytest.approx(E["text_as_double"])
+    assert n.child("s").text().as_int(-5) == E["text_s_as_int_default"]
+    assert n.child("s").text().as_string("") == E["text_s_string"]
+    assert n.child("missing").text().empty() is bool(E["text_missing_empty"])
+    assert n.child("s").text().set("bye") is bool(E["text_set_ok"])
+    assert n.child("v").text().set(7) is bool(E["text_set_int_ok"])
+    assert m.to_xml_raw(n) == E["text_after_set_raw"]
+
+
 # --- Layer 3: structural invariants ---
 
 def test_inheritance_is_real_base():
@@ -189,6 +212,18 @@ def test_surface_present():
         assert hasattr(m.xml_document, meth), meth
     for attr in ("status", "offset", "encoding", "description"):
         assert hasattr(m.xml_parse_result, attr), attr
+    for meth in ("empty", "get", "as_string", "as_int", "as_double", "as_bool", "set"):
+        assert hasattr(m.xml_text, meth), meth
+
+
+def test_exclude_if_gate_held():
+    # The glob predicate keeps the same machinery opaque the hand-written
+    # exclude_ list did: nothing from the iterator/walker/xpath/writer
+    # families may appear in the module.
+    for absent in ("xpath_query", "xpath_node", "xpath_node_set",
+                   "xml_node_iterator", "xml_attribute_iterator",
+                   "xml_named_node_iterator", "xml_tree_walker", "xml_writer"):
+        assert not hasattr(m, absent), absent
 
 
 def test_parse_result_bool_dunder():
