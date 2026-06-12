@@ -10,9 +10,9 @@ module_name  = "linalg_ext"
 strategy     = "single_stage"
 
 # Gate 2 record.
-reflect_args     = ["^^linalg::vec<float,3>"]
-subset_rationale = "linalg is entirely templates; vec<float,3> is the only concrete auto-bindable surface (data x/y/z, ctors, operator[]). Free-function API is function templates (not auto-bound)."
-skipped_features = ["free-function templates (dot/length/normalize/...)", "mat<> types"]
+reflect_args     = ["^^linalg::vec<float,3>", "^^nb::match_<^^linalg, named_<identity_t>>", "^^nb::instantiate_<^^named_<vec>, product_<set_<^^float, ^^double, ^^int>, set_<val_<2>, val_<3>, val_<4>>>>", "^^nb::instantiate_<^^linalg::mat, product_<set_<^^float>, set_<val_<2>, val_<3>, val_<4>>, set_<val_<2>, val_<3>, val_<4>>>>"]
+subset_rationale = "linalg is entirely templates, so the bindable surface is exactly what instantiate_ mints -- this run is the corpus's instantiate_ showcase, exercising BOTH target forms. The matcher-targeted form (instantiate_<^^named_<vec>, product_<...>>) sweeps the pack's namespace roots for class templates named vec -- the match_<^^linalg, named_<identity_t>> marker supplies ^^linalg as that root (and binds identity_t, real API: explicit identity_t(int)) -- and mints the vec<{float,double,int},{2,3,4}> grid (9 specs; M is a plain int NTTP, bare val_<N> exactly typed): data members x/y/z/w, component + scalar + vec(N-1)+last ctors, operator[] -> __getitem__, xy()/xyz() truncation views. The direct class-template form mints the float mat grid mat<float,{2,3,4},{2,3,4}> (9 specs): column data members (vec<float,M>), column/scalar/pointer ctors, operator[] -> column, row(i) -> vec<float,N>; the grids are discovery-closed (every column/row/truncation type is itself in the vec grid). The deliberate trap dodged: linalg::aliases' ~110 typedefs all DEALIAS to vec/mat under matcher normalization, so the match_ matcher is the exact name identity_t -- a broad is_class_ matcher would detonate the bind set into the full 64-mat alias surface."
+skipped_features = ["free-function templates (dot/length/normalize/cross/mul/...) -- function templates are not auto-bound; the member surface (components, indexing, rows/columns) is the differential target", "double/int mats and the M-or-N=1 specs (grid kept to float 2..4 x 2..4 for constant-eval budget; vec<T,1>/mat<T,M,1> are degenerate)", "vec/mat converting ctor templates and converter-driven conversions (member templates with non-defaulted parameters)"]
 
 [emit]
 enabled = true
