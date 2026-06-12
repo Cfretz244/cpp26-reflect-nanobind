@@ -1,8 +1,9 @@
 """Differential test for the Abseil InlinedVector binding (Layer-1 differential + Layer-3 invariants).
 
-The binder reflects two specializations of absl::InlinedVector directly — InlinedVectorInt4
-(<int,4>) and InlinedVectorDouble2 (<double,2>) — fully-specialized concrete data structures from
-the real, non-header-only Abseil library (no fixture wrappers). The absl runtime symbol
+The binder mints three specializations of absl::InlinedVector through one instantiate_ rule with
+explicit with_ tuples — InlinedVectorInt4 (<int,4>), InlinedVectorDouble2 (<double,2>), and
+InlinedVectorString4 (<std::string,4>) — fully-specialized concrete data structures from the
+real, non-header-only Abseil library (no fixture wrappers). The absl runtime symbol
 ThrowStdOutOfRange (referenced by at()) is linked in from throw_delegate.cc via meta.extra_sources.
 
 Layer 1 (differential): oracle_native.cpp drives the SAME operations through absl::InlinedVector
@@ -53,6 +54,27 @@ def test_double_vector_specialization():
     assert d.capacity() == E["dv_cap"]                          # inline buffer == 2
 
 
+def test_string_vector_differential():
+    # The with_-minted <std::string,4> spec: a non-trivially-copyable element
+    # type through the same surface, incl. the spill past the inline buffer.
+    s = m.InlinedVectorString4()
+    for w in ("alpha", "beta", "gamma", "delta", "epsilon"):
+        s.push_back(w)
+    assert s.size() == E["sv_size"]
+    assert s[0] == E["sv0"]
+    assert s.at(2) == E["sv2"]
+    assert s.front() == E["sv_front"]
+    assert s.back() == E["sv_back"]
+    assert s.capacity() == E["sv_cap"]                          # heap-grown
+    s.pop_back()
+    assert s.back() == E["sv_pop_back"]
+    s.resize(2)
+    assert s.size() == E["sv_resized"]
+    assert s.back() == E["sv_resized_back"]
+    with pytest.raises(IndexError):
+        s.at(99)
+
+
 # --- Layer 3: structural invariants (independent of the oracle) ---
 
 def test_inlined_vector_invariants():
@@ -74,8 +96,11 @@ def test_at_bounds_check_raises():
         v.at(5)
 
 
-def test_two_specializations_bound():
-    # Distinct template specializations bind to distinct, CamelCase-named Python types.
+def test_specializations_bound():
+    # Distinct with_-minted specializations bind to distinct, CamelCase-named
+    # Python types -- identical to what explicit pack listings produce.
     assert hasattr(m, "InlinedVectorInt4")
     assert hasattr(m, "InlinedVectorDouble2")
+    assert hasattr(m, "InlinedVectorString4")
     assert m.InlinedVectorInt4 is not m.InlinedVectorDouble2
+    assert m.InlinedVectorString4 is not m.InlinedVectorInt4

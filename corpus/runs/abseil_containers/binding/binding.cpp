@@ -16,6 +16,7 @@
 // absl::int128's free operator<<(std::ostream&, ...) which the binder tries to bind as a dunder,
 // instantiating an incomplete std::ostream caster (BINDER-0007).
 #include <mirrorbind/reflect.h>
+#include <nanobind/stl/string.h>  // InlinedVector<std::string,4>'s element caster
 
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 

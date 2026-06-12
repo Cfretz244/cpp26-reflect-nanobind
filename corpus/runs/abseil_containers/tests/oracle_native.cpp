@@ -49,6 +49,27 @@ int main() {
     add_d("dv1", d[1]);
     add_i("dv_cap", static_cast<std::int64_t>(d.capacity()));   // == 2 (inline)
 
+    // <std::string,4>: the with_-minted spec with a non-trivially-copyable
+    // element type; the same spill-past-the-inline-buffer sequence. (Values
+    // are plain ASCII, so bare quoting is valid JSON.)
+    auto add_s = [&](const char* k, const std::string& v) {
+        kv.emplace_back(k, "\"" + v + "\"");
+    };
+    absl::InlinedVector<std::string, 4> s;
+    for (const char* w : {"alpha", "beta", "gamma", "delta", "epsilon"})
+        s.push_back(w);                                         // spills past 4
+    add_i("sv_size", static_cast<std::int64_t>(s.size()));
+    add_s("sv0", s[0]);
+    add_s("sv2", s[2]);
+    add_s("sv_front", s.front());
+    add_s("sv_back", s.back());
+    add_i("sv_cap", static_cast<std::int64_t>(s.capacity()));   // heap-grown
+    s.pop_back();
+    add_s("sv_pop_back", s.back());
+    s.resize(2);
+    add_i("sv_resized", static_cast<std::int64_t>(s.size()));
+    add_s("sv_resized_back", s.back());
+
     std::cout << "{";
     for (size_t i = 0; i < kv.size(); ++i) {
         if (i) std::cout << ",";
