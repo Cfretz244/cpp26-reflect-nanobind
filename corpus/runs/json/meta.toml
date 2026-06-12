@@ -29,5 +29,5 @@ enabled = true
 # constant-evaluation memory (cc1plus OOM-killed at >31 GB; clang-p2996
 # renders the same TU in 1.69 GB peak RSS). Resource wall, not a correctness
 # gap -- the constexpr lane is fully green under g++ (37 s). See
-# corpus/findings/GCC-0006-emit-generator-constexpr-memory.md.
+# corpus/findings/GCC-0007-emit-generator-constexpr-memory.md.
 emit_enabled = false

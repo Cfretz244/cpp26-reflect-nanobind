@@ -22,3 +22,12 @@ skipped_features = [
 
 [emit]
 enabled = true
+
+[gcc16]
+# The emit GENERATOR (consteval text rendering over the detail::table
+# fixpoint) exhausts g++ 16.1's constant-evaluation memory (cc1plus
+# OOM-killed at >31 GB; the clang lane renders the same TU in 116 s).
+# Resource wall, not a correctness gap -- the constexpr lane is fully green
+# under g++ (incl. the GCC-0008 same-named-member-template mangling fix).
+# See corpus/findings/GCC-0007-emit-generator-constexpr-memory.md.
+emit_enabled = false

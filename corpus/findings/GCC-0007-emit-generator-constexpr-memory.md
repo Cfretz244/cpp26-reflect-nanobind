@@ -40,15 +40,22 @@ evaluation.
 
 ## Scope
 
-json is the corpus's heaviest emit generator by an order of magnitude. If
+NOT json-specific: `unordered_dense` (the next-heaviest text-rendering
+fixpoint; its clang emit stage 1 takes 116 s under a
+`-fconstexpr-steps=1000000000` budget and finishes comfortably) hits the
+same OOM under g++. The correlation is with heavy consteval STRING
+RENDERING (the emit generator), not reflection walking per se — both runs'
+constexpr lanes, with the same raised budgets, compile fine under g++. If
 another run hits this wall, record it against this dedup_key and disable
-that run's gcc16 emit lane the same way; if SEVERAL hit it, the emit
-backend's chunked-evaluation design (emit_item_chunk_v) may need smaller
-chunks on GCC — a binder change, tracked separately.
+that run's gcc16 emit lane the same way. With two runs affected, the emit
+backend's chunked-evaluation design (emit_item_chunk_v) likely needs a
+GCC-specific chunking strategy — a binder change, tracked separately.
 
 ## Mitigation status
 
 - `runs/json/meta.toml` `[gcc16] emit_enabled = false` (constexpr lane green:
   `constexpr=E`, 37 s).
+- `runs/unordered_dense/meta.toml` `[gcc16] emit_enabled = false` (constexpr
+  lane green after the GCC-0008 fix).
 - Possible future binder-side mitigation: render per-class chunks in even
   smaller independent constant evaluations under GCC.
