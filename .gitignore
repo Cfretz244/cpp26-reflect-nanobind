@@ -34,3 +34,9 @@ corpus/runs/*/.pytest_cache/
 
 # compiled finding repros (corpus/findings/repros/*/repro.cpp builds)
 corpus/findings/repros/*/repro
+
+# GCC dev environment scratch (gcc16-proveout/devenv/README.md)
+gcc16-proveout/devenv/gcc/
+gcc16-proveout/devenv/build-*/
+gcc16-proveout/devenv/install-*/
+gcc16-proveout/devenv/.ccache/
