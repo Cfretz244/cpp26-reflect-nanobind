@@ -7,7 +7,7 @@
   "tier": 1,
   "header_only": true,
   "toolchain_commit": "gcc-16.1.0",
-  "binder_commit": "58543ff",
+  "binder_commit": "db872b7",
   "prod_compiler": "",
   "outcome": "E",
   "furthest_gate": 6,
@@ -33,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 36.2
+        "binding_compile_seconds": 38.02
       },
       "oracle": {
         "layers_used": [
@@ -77,7 +77,7 @@
   },
   "metrics": {
     "probe_seconds": 1.69,
-    "constexpr_binding_compile_seconds": 36.2
+    "constexpr_binding_compile_seconds": 38.02
   },
   "artifacts": {},
   "notes": ""

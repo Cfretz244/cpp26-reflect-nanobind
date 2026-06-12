@@ -7,7 +7,7 @@
   "tier": 4,
   "header_only": true,
   "toolchain_commit": "gcc-16.1.0",
-  "binder_commit": "11ae176",
+  "binder_commit": "db872b7",
   "prod_compiler": "g++ (GCC) 16.1.0",
   "outcome": "E",
   "furthest_gate": 6,
@@ -33,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 2.46
+        "binding_compile_seconds": 2.72
       },
       "oracle": {
         "layers_used": [
@@ -57,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 2.65,
+        "binding_compile_seconds": 2.89,
         "generated_tu_lines": 70,
         "generated_tu_bytes": 3553
       },
@@ -97,9 +97,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.25,
-    "constexpr_binding_compile_seconds": 2.46,
-    "emit_binding_compile_seconds": 2.65,
+    "probe_seconds": 0.28,
+    "constexpr_binding_compile_seconds": 2.72,
+    "emit_binding_compile_seconds": 2.89,
     "emit_generated_tu_lines": 70,
     "emit_generated_tu_bytes": 3553
   },

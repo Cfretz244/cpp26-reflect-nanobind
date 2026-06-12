@@ -6,6 +6,38 @@ ongoing, **this-laptop** investigation: using **C++26 static reflection (WG21 P2
 reflection-driven demos. It is a prove-out, not a product. Paths below are deliberately
 specific to this machine (a macOS / Apple Silicon laptop).
 
+## TWO TOOLCHAINS — GCC 16 is PRIMARY (since the 2026-06 re-home)
+
+**GCC 16.1** (a released compiler implementing the C++26-adopted reflection
+set under `-std=c++26 -freflection`) is the **primary toolchain**. It runs on
+Linux inside the `gcc16-reflect` docker container (built from
+`gcc16-proveout/Dockerfile`; the repo mounts at `/work`). The corpus is
+**36/36 green** on it (three runs' emit lanes are resource-walled by a GCC
+constant-evaluation memory bug, GCC-0007 — their constexpr lanes are green).
+The **clang-p2996 fork** (`./toolchain`, described below) is retained as the
+**secondary/differential** implementation — it catches real bugs by defining
+correct behavior the other compiler can be diffed against, and its emit lanes
+cover the three GCC-walled runs. The entity-proxy feature
+(`-fentity-proxy-reflection`, private-base `using` re-export binding) was
+REMOVED with the re-home (P3687R1 deferred it past C++26); mentions of it in
+the sections below are historical.
+
+- GCC lane quickstart: `gcc16-proveout/HANDOFF.md` (build/test commands),
+  `corpus/lib/gcc16_run.sh` (container wrapper; `CORPUS_TOOLCHAIN=gcc16`),
+  per-run results in `corpus/runs/*/result-gcc16.json` (clang records stay
+  in `result.json`).
+- GCC findings + upstream campaign: `corpus/findings/GCC-000*.md`,
+  `gcc16-proveout/probes/` (xfail repros double as a conformance smoke for
+  new GCC releases — recheck on every GCC upgrade),
+  `gcc16-proveout/UPSTREAM_RESEARCH.md` (bugzilla research + trunk
+  verification matrix), `gcc16-proveout/devenv/` (dockerized
+  GCC-from-source dev environment for minimizing/filing/fixing; its README
+  carries the handoff state).
+- The binder carries small GCC/clang divergence shims (`nb_fn_type_of`,
+  `nb_annotations_of_type`, `liftable_class_members`,
+  `member_tmpl_mangle_hint`, `exclude_member_`); the divergence catalog
+  lives in `corpus/lib/AGENT_PROMPT_GCC16.md` and `gcc16-proveout/HANDOFF.md`.
+
 ## Layout
 
 This repo pins the two pieces as git submodules (GitHub fork URLs — see `.gitmodules`)
@@ -52,12 +84,12 @@ two-stage build. Full feature list + limitations: `nanobind/docs/reflection.rst`
   anymore. Both `toolchain/` and `toolchain-build/` are git-ignored; rebuild instructions
   are below. (`~/llvm-toolchain` is the same compiler built earlier and may still exist, but
   is no longer required.) Native target AArch64.
-- **Reflection flags**: `-std=c++26 -freflection-latest -fentity-proxy-reflection
-  -stdlib=libc++`, plus (mandatory on macOS) `-isysroot "$(xcrun --show-sdk-path)"`. A
-  from-source clang does not bake in the SDK path. `-freflection-latest` is the umbrella flag
-  enabling P2996 + parameter reflection + expansion statements + annotations (P3394) + the
-  rest — but NOT entity-proxy reflection (`using`-shadow enumeration), which the binder
-  requires and must be passed explicitly.
+- **Reflection flags (clang lane)**: `-std=c++26 -freflection-latest -stdlib=libc++`, plus
+  (mandatory on macOS) `-isysroot "$(xcrun --show-sdk-path)"`. A from-source clang does not
+  bake in the SDK path. `-freflection-latest` is the umbrella flag enabling P2996 + parameter
+  reflection + expansion statements + annotations (P3394) + the rest.
+  (`-fentity-proxy-reflection` is no longer passed anywhere — the entity-proxy feature was
+  removed with the GCC re-home.) GCC lane: `-std=c++26 -freflection`.
 - **Python**: Homebrew **`python3.12`** (`/opt/homebrew/bin/python3.12`). The system
   `/usr/bin/python3` lacks dev headers — do not use it.
 - **Build state lives inside this repo** (both git-ignored, recreate from scratch any time):
@@ -341,9 +373,9 @@ templates (class-template *specializations* auto-discovered from public-member s
 a fixpoint — a spec's own template args do NOT qualify — + listed explicitly in the
 `reflect_<...>` pack; CamelCase Python names like `Box<int>`→`BoxInt`), **member function
 templates** with all-defaulted parameters (default instantiation under the template's name —
-hash/btree heterogeneous query APIs incl. `operator[]`→`__getitem__`), and
-**using-redeclarations** via entity proxies (incl. from PRIVATE bases, e.g. StatusOr's
-`value()`; needs `-fentity-proxy-reflection`), **deleted-function filtering** on every
+hash/btree heterogeneous query APIs incl. `operator[]`→`__getitem__`; using-redeclarations
+from PRIVATE bases no longer bind — the entity-proxy feature was REMOVED, P3687R1),
+**deleted-function filtering** on every
 binding/scanning path (a class with only deleted ctors binds with no `__init__` → TypeError;
 BINDER-0012), **Python-side copy construction** (`init<const T&>` for copyable non-trampolined
 classes; BINDER-0013), **deduction-guide stripping** in the namespace walks (guides are

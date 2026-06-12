@@ -7,7 +7,7 @@
   "tier": 1,
   "header_only": true,
   "toolchain_commit": "a015a30",
-  "binder_commit": "11ae176",
+  "binder_commit": "db872b7",
   "prod_compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
   "outcome": "E",
   "furthest_gate": 6,
@@ -33,7 +33,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 2.71
+        "binding_compile_seconds": 2.27
       },
       "oracle": {
         "layers_used": [
@@ -57,7 +57,7 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 6.51,
+        "binding_compile_seconds": 5.45,
         "generated_tu_lines": 62,
         "generated_tu_bytes": 4118
       },
@@ -103,9 +103,9 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.43,
-    "constexpr_binding_compile_seconds": 2.71,
-    "emit_binding_compile_seconds": 6.51,
+    "probe_seconds": 0.31,
+    "constexpr_binding_compile_seconds": 2.27,
+    "emit_binding_compile_seconds": 5.45,
     "emit_generated_tu_lines": 62,
     "emit_generated_tu_bytes": 4118
   },

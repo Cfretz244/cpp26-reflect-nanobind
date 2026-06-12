@@ -1,5 +1,18 @@
 # HANDOFF — re-homing the reflection binder onto GCC 16
 
+> **STATUS 2026-06-12: EXECUTED.** Phases 0–2 are complete: the spike is
+> merged, the entity-proxy feature is removed, the corpus machinery is
+> dual-backend, and the corpus is 36/36 green on GCC 16.1 (three emit lanes
+> resource-walled by GCC-0007; constexpr lanes green). Phase 3's call: the
+> clang fork is KEPT as the secondary/differential implementation (it
+> repeatedly defined correct behavior during the re-home, and its emit lanes
+> cover the GCC-0007-walled runs). Phase 4 (upstream filing) is prepared:
+> see UPSTREAM_RESEARCH.md (bugzilla research + trunk matrix) and devenv/
+> (the GCC-from-source dev environment; its README is the Phase-4 handoff).
+> The umbrella CLAUDE.md's "TWO TOOLCHAINS" section is now the live summary;
+> the divergence catalog below remains accurate (extended by GCC-5..8 in
+> corpus/findings/ and corpus/lib/AGENT_PROMPT_GCC16.md items 11–13).
+
 Written 2026-06-11 at the end of the GCC 16 prove-out session. Audience: the
 next agent, starting the actual migration. Read `FINDINGS.md` (same
 directory) for the determination narrative; this file is the operational
