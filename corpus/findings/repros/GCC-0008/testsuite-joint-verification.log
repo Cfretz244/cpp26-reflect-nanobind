@@ -1,0 +1,235 @@
+make: Entering directory '/work/gcc16-proveout/devenv/build-master/gcc'
+Making a new config file...
+echo "set tmpdir /work/gcc16-proveout/devenv/build-master/gcc/testsuite" >> ./site.tmp
+rm -rf testsuite/g++-parallel
+make[1]: Entering directory '/work/gcc16-proveout/devenv/build-master/gcc'
+(rootme=`${PWDCMD-pwd}`; export rootme; \
+srcdir=`cd ../../gcc/gcc; ${PWDCMD-pwd}` ; export srcdir ; \
+if [ -n "" ] \
+   && [ -n "$GCC_RUNTEST_PARALLELIZE_DIR" ] \
+   && [ -f testsuite/g++-parallel/finished ]; then \
+  rm -rf testsuite/g++; \
+else \
+  cd testsuite/g++; \
+  rm -f tmp-site.exp; \
+  sed '/set tmpdir/ s|testsuite$|testsuite/g++|' \
+	< ../../site.exp > tmp-site.exp; \
+  /bin/bash ${srcdir}/../move-if-change tmp-site.exp site.exp; \
+  EXPECT=expect ; export EXPECT ; \
+  if [ -f ${rootme}/../expect/expect ] ; then  \
+    TCL_LIBRARY=`cd .. ; cd ${srcdir}/../tcl/library ; ${PWDCMD-pwd}` ; \
+    export TCL_LIBRARY ; \
+  fi ; \
+  `if [ -f ${srcdir}/../dejagnu/runtest ] ; then echo ${srcdir}/../dejagnu/runtest ; else echo runtest; fi` --tool g++ dg.exp='reflect/* cpp26/reflection* cpp26/annotations* cpp26/splice* cpp26/expansion-stmt* cpp26/consteval-prop* cpp26/constexpr-* cpp2a/consteval*'; \
+  if [ -n "$GCC_RUNTEST_PARALLELIZE_DIR" ] ; then \
+    touch ${rootme}/testsuite/g++-parallel/finished; \
+  fi ; \
+fi )
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Test run by root on Fri Jun 12 06:58:41 2026
+Native configuration is aarch64-unknown-linux-gnu
+
+		=== g++ tests ===
+
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Schedule of variations:
+    unix
+
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/lib/g++.exp as tool init file.
+Running target unix
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Test run by root on Fri Jun 12 06:58:41 2026
+Native configuration is aarch64-unknown-linux-gnu
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+
+		=== g++ tests ===
+
+Test run by root on Fri Jun 12 06:58:41 2026
+Test run by root on Fri Jun 12 06:58:41 2026
+Native configuration is aarch64-unknown-linux-gnu
+Native configuration is aarch64-unknown-linux-gnu
+
+		=== g++ tests ===
+
+
+		=== g++ tests ===
+
+Schedule of variations:
+Schedule of variations:
+    unix
+    unix
+
+
+Running target unix
+Running target unix
+Schedule of variations:
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Test run by root on Fri Jun 12 06:58:41 2026
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+    unix
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Native configuration is aarch64-unknown-linux-gnu
+Test run by root on Fri Jun 12 06:58:41 2026
+Test run by root on Fri Jun 12 06:58:41 2026
+
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+
+		=== g++ tests ===
+
+Native configuration is aarch64-unknown-linux-gnu
+Native configuration is aarch64-unknown-linux-gnu
+Schedule of variations:
+
+		=== g++ tests ===
+
+
+		=== g++ tests ===
+
+    unix
+Running target unix
+Schedule of variations:
+Test run by root on Fri Jun 12 06:58:41 2026
+
+    unix
+Native configuration is aarch64-unknown-linux-gnu
+Running target unix
+
+
+		=== g++ tests ===
+
+Running target unix
+Test run by root on Fri Jun 12 06:58:41 2026
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Native configuration is aarch64-unknown-linux-gnu
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Schedule of variations:
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+
+		=== g++ tests ===
+
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+    unix
+Schedule of variations:
+Schedule of variations:
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+    unix
+
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+Test run by root on Fri Jun 12 06:58:41 2026
+    unix
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+Running target unix
+
+Native configuration is aarch64-unknown-linux-gnu
+
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Running target unix
+
+		=== g++ tests ===
+
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Running target unix
+Schedule of variations:
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+    unix
+
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Running target unix
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Using /usr/share/dejagnu/baseboards/unix.exp as board description file for target.
+Using /usr/share/dejagnu/config/unix.exp as generic interface file for target.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+Using /work/gcc16-proveout/devenv/gcc/gcc/testsuite/config/default.exp as tool-and-target-specific interface file.
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+Running /work/gcc16-proveout/devenv/gcc/gcc/testsuite/g++.dg/dg.exp ...
+
+		=== g++ Summary ===
+
+# of expected passes		269
+
+		=== g++ Summary ===
+
+# of expected passes		474
+
+		=== g++ Summary ===
+
+# of expected passes		1366
+# of expected failures		1
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		421
+# of expected failures		1
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		256
+# of expected failures		1
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		382
+# of expected failures		1
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		458
+# of expected failures		3
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		449
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		426
+# of expected failures		3
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+
+		=== g++ Summary ===
+
+# of expected passes		315
+/work/gcc16-proveout/devenv/build-master/gcc/xg++  version 17.0.0 20260612 (experimental) (GCC) 
+
+make[1]: Leaving directory '/work/gcc16-proveout/devenv/build-master/gcc'
+make: Leaving directory '/work/gcc16-proveout/devenv/build-master/gcc'

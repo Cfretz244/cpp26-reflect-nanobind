@@ -1,8 +1,21 @@
 # GCC development environment (Phase 4: minimize + file + fix upstream)
 
-## State as of 2026-06-12 (handoff)
+## State as of 2026-06-12 (Phase 4 COMPLETE)
 
-Everything below is DONE and on disk; a fresh agent can start at "The loop".
+The minimize/root-cause/fix pass over every GCC finding is DONE — final
+per-finding dispositions in `../UPSTREAM_RESEARCH.md` ("FINAL DISPOSITION"
+section). Summary: GCC-1/6, GCC-3, GCC-8 have verified fix patches on this
+checkout's **`proveout-fixes` branch** (base master `7ce3a7b1beb`; the
+built `build-master/` cc1plus has them); GCC-5 was fixed upstream
+(PR 124628, backport already on releases/gcc-16 ⇒ 16.2); GCC-2 and
+GCC-4/probe-09 reclassified as CONFORMING GCC behavior (do not file);
+GCC-7 is root-caused (architectural — uncollectable constant-evaluation
+garbage) with a report-ready write-up. Patches, repros, and ready-to-file
+bugzilla material live in `corpus/findings/repros/GCC-000N/UPSTREAM.md`.
+Nothing filed yet — filing is the user's call. The remaining devenv use is
+filing support and 16.2 re-verification.
+
+## Environment state (still true)
 
 - **Image**: `gcc-devenv` is built locally (gcc:16 base + build prereqs +
   DejaGnu + gdb + ccache). Rebuild anytime: `docker build -t gcc-devenv
@@ -19,23 +32,20 @@ Everything below is DONE and on disk; a fresh agent can start at "The loop".
   testsuite runner, which wires its own paths).
 - **No gcc-16 tree yet**: `scripts/configure.sh gcc-16 && scripts/build.sh
   gcc-16` when a release-branch build is needed (backport verification).
-- **Probe matrix vs trunk is recorded** in ../UPSTREAM_RESEARCH.md
-  ("Trunk verification matrix"): GCC-5 FIXED on trunk (next action =
-  bisect the fixing commit here, then check releases/gcc-16 for it);
-  GCC-1/2/6 reproduce (file); GCC-8 reproduces and trunk's checking
-  build upgrades it to a same_comdat_group symtab verify (file with both
-  signatures); GCC-3 + GCC-4-family = file as behavior questions;
+- **Probe matrix vs trunk + final dispositions are recorded** in
+  ../UPSTREAM_RESEARCH.md ("Trunk verification matrix" + "FINAL
+  DISPOSITION"). The GCC-5 bisect is DONE (PR 124628, trunk
+  `05ea83ffd54`, backport `e1396e44961` on releases/gcc-16);
   08_ann_spec's trunk break is GCC 17 API finalization, not a bug.
-- **Suggested first task for the next agent**: `git bisect` the GCC-5 fix
-  on master (good = 16.1 release tag `releases/gcc-16.1.0`, bad...
-  inverted: ICE present at 16.1, gone at trunk — bisect with
-  `gcc16-proveout/probes/xfail_gcc5_deferred_noexcept_partial_spec.cpp`
-  as the test, rebuilding cc1plus only per step:
-  `make -C build-master/gcc cc1plus` is the cycle), then check whether
-  that commit is on `releases/gcc-16`; if not, comment on the relevant
-  PR asking for backport. Then file GCC-8 (strongest case), then
-  GCC-1+6 together, then the GCC-2/3/4 questions — citations and CC
-  list in ../UPSTREAM_RESEARCH.md.
+- **Suggested next task**: FILE the prepared reports, strongest first:
+  GCC-8 (wrong-code mangling, patch ready), GCC-1+6 together (patch
+  ready), GCC-3 (patch ready), GCC-7 (performance/memory report) —
+  material in each `corpus/findings/repros/GCC-000N/UPSTREAM.md`,
+  citations + CC list in ../UPSTREAM_RESEARCH.md. After filing, follow
+  gcc-patches submission for the three patches (DCO sign-off; ChangeLogs
+  are in the patch files). On the 16.2 container bump: re-run the probe
+  smoke (xfail_gcc5 should flip; retire the binder's nb_fn_type_of shim)
+  and re-test the three GCC-0007-walled emit lanes.
 
 A dockerized GCC-from-source dev setup for working the reflection findings
 (corpus/findings/GCC-000*.md, probes in ../probes/) into upstream bug

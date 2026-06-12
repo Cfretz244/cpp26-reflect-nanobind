@@ -54,6 +54,24 @@ Every probe re-run against a fresh trunk build (devenv/, `--enable-checking`):
 | positive probes 01–07, 09b | all pass on trunk | — |
 | 08_ann_spec | breaks on trunk — NOT a regression: GCC 17 removed the transitional two-arg `annotations_of(r, type)` overload (P2996R13 final spells it `annotations_of_with_type`, which the binder's shim already uses) and `constexpr auto` of a `std::vector` result is correctly rejected as non-transient allocation | update the probe when the corpus moves past 16.x; no filing |
 
+## FINAL DISPOSITION (2026-06-12 — minimize/root-cause/fix pass complete)
+
+Every finding worked to a terminal state in the devenv (fix commits live on
+the devenv checkout's `proveout-fixes` branch, base master `7ce3a7b1beb`;
+patches + per-finding UPSTREAM.md with ready-to-file material in
+`corpus/findings/repros/GCC-000N/`). Nothing has been filed — filing is the
+user's call.
+
+| ours | disposition |
+|---|---|
+| GCC-1 + GCC-6 | **PATCH READY** (one fix, `a2b10c8601f`): the P0859 pre-pass walked into REFLECT_EXPR operands, instantiating/synthesizing every reflected member on a lift. Both probes flip to passing; testsuite slices 3939/0. File as ONE bug. |
+| GCC-2 | **RECLASSIFIED, conforming — do not file**: [stmt.expand]/5.2 binds a constexpr REFERENCE to the parenthesized range; a non-static constexpr local has no constant address. GCC's fix-it (`static`) verified. clang accepts-invalid. |
+| GCC-3 | **PATCH READY** (`400daa86161`): splice operands are manifestly constant-evaluated and must not consteval-escalate the enclosing lambda. Probe flips; regression test added. |
+| GCC-4 / probe 09 | **RECLASSIFIED, conforming — do not file**: [meta.reflection.traits] predicates THROW for non-type reflections (clang's false-return is the divergence); the "discarded branch checking" was cascade from the failed classify — an is_type-gated hybrid passes on 16.1 and trunk. |
+| GCC-5 | **RESOLVED UPSTREAM — do not file**: fixed by trunk `05ea83ffd54` (PR c++/124628, Palka), bisect-verified; already on releases/gcc-16 as `e1396e44961` (16.1.0-90) ⇒ in 16.2. Retire the binder's `nb_fn_type_of` shim at 16.2. |
+| GCC-7 | **REPORT READY, no patch (architectural)**: constexpr evaluation retains ~8 bytes/op of uncollectable GC garbage (83% proven unreachable via forced collect; per-tree-code histogram uniform); no collection point is reachable from constexpr-heavy declaration/instantiation contexts. File as performance/memory report with the four stress repros + instrumentation patch. |
+| GCC-8 | **PATCH READY** (`be4033289d7`): Template-kind reflection NTTPs mangled by scope+name only; function templates overload. `ft` encoding extended with template head + pattern function type + constraints. Probe flips; mangle8.C added; 3939/0. The strongest filing (wrong-code/silent comdat fold). |
+
 ## Filing notes (Phase 4)
 
 - File on gcc.gnu.org/bugzilla, component **c++**, with `-freflection` in
