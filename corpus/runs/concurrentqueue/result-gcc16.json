@@ -1,0 +1,118 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "concurrentqueue",
+  "url": "https://github.com/cameron314/concurrentqueue",
+  "pinned_commit": "v1.0.5",
+  "tier": 3,
+  "header_only": true,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 3.4
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "7 passed in 0.03s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 10.56,
+        "generated_tu_lines": 81,
+        "generated_tu_bytes": 13059
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "7 passed in 0.03s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^moodycamel::ConcurrentQueue<int>",
+      "^^moodycamel::ConcurrentQueue<std::string>",
+      "^^cqtest"
+    ],
+    "rationale": "moodycamel::ConcurrentQueue<T> is the library's central class, bound head-on for two element types (int, std::string) as explicit specs in the reflect_ pack. Its non-template producer/observer surface binds directly: the two value-capacity constructors (ConcurrentQueue(size_t capacity) and ConcurrentQueue(minCapacity, maxExplicitProducers, maxImplicitProducers)), enqueue(T const&)/enqueue(T&&) and try_enqueue(T const&)/try_enqueue(T&&) (the producer theme), size_approx() (the size theme), and the static is_lock_free(). The dequeue side -- try_dequeue(U& item) -- is a MEMBER TEMPLATE (binder skips member templates) whose result comes back through an OUT-PARAMETER reference with no Python representation; the cqtest namespace supplies the ONLY fixture, a thin optional<T>-returning adapter over the real queue's try_dequeue (the dequeue-from-empty-returns-nullopt path and every dequeued value still come from the real bound queue). The differential drives a single-threaded enqueue/dequeue sequence through both the bound module and the native oracle and compares: FIFO ordering of dequeued ints from a single (implicit) producer, the dequeued value sequence, size_approx() after enqueues and after partial drain, try_enqueue success, dequeue-from-empty returning nullopt, and is_lock_free().",
+    "skipped_features": [
+      "ConcurrentQueue's seven static const config constants (BLOCK_SIZE, MAX_SUBQUEUE_SIZE, EXPLICIT_INITIAL_INDEX_SIZE, IMPLICIT_INITIAL_INDEX_SIZE, INITIAL_IMPLICIT_PRODUCER_HASH_SIZE, EXPLICIT_BLOCK_EMPTY_COUNTER_THRESHOLD, EXPLICIT_CONSUMER_CONSUMPTION_QUOTA_BEFORE_ROTATE) -- in-class-initialized static const with no out-of-line definition; the binder binds static data members BY ADDRESS, which ODR-uses them -> undefined symbol at link. Excluded via a programmatic nb::exclude_ marker (cq_excluded_marker() in binding.cpp). Suspected binder bug, see findings_draft/binder-static-const-member-address-odr-use.md",
+      "try_dequeue(U& item) bound head-on -- member template + out-parameter reference; re-expressed as cqtest.try_dequeue_int/_str returning optional<T> (the real queue's try_dequeue still does the work)",
+      "ProducerToken / ConsumerToken -- their only constructors are templates taking ConcurrentQueue<T,Traits>& (member/constructor templates, BINDER-0001), so no bindable ctor exists; the token-based enqueue/dequeue overloads are consequently dropped (the token-less overloads cover the single-producer differential)",
+      "enqueue_bulk / try_enqueue_bulk / try_dequeue_bulk -- iterator-template fronts (It itemFirst, size_t count); no Python representation of a raw iterator pair",
+      "try_dequeue_from_producer / try_dequeue_bulk_from_producer -- require a producer_token_t (unconstructable, see above)",
+      "swap (free function + member swap_internal) and the move constructor -- move-only/by-ref-self plumbing, not part of the producer/consumer differential",
+      "BlockingConcurrentQueue -- its wait_dequeue blocks a thread; single-threaded differential uses the non-blocking ConcurrentQueue (blocking header still compiles in the Gate-1 probe)"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "7 passed in 0.03s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 0.94,
+    "constexpr_binding_compile_seconds": 3.4,
+    "emit_binding_compile_seconds": 10.56,
+    "emit_generated_tu_lines": 81,
+    "emit_generated_tu_bytes": 13059
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 4 top-level object(s) compared; "
+}

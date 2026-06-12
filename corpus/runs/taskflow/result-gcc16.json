@@ -1,0 +1,122 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "taskflow",
+  "url": "https://github.com/taskflow/taskflow",
+  "pinned_commit": "v4.0.0",
+  "tier": 4,
+  "header_only": true,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 14.32
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "13 passed in 0.04s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 13.78,
+        "generated_tu_lines": 136,
+        "generated_tu_bytes": 10488
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "13 passed in 0.03s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^tf::Taskflow",
+      "^^tf::Task",
+      "^^tf::Executor",
+      "^^tftest",
+      "^^nb::exclude_<^^tf::Future, ^^tf::WorkerInterface, ^^tf::Graph, ^^tf::FlowBuilder, ^^std::basic_ostream>"
+    ],
+    "rationale": "Taskflow's three core classes are bound head-on: tf::Taskflow (the task-graph container -- num_tasks/empty/name/dump()->string/clear), tf::Task (the lightweight task handle -- name/num_successors/num_predecessors/num_strong_dependencies/num_weak_dependencies/empty/has_work/hash_value + == / != dunders), and tf::Executor (the work-stealing scheduler -- num_workers from an explicit worker-count ctor arg, plus num_topologies/num_taskflows/num_observers). The graph-construction front (FlowBuilder::emplace / Task::precede / succeed) is entirely templated over C++ callables and variadic Task packs and cannot be driven from Python, so the tftest.Diamond fixture builds a FIXED diamond graph (A -> {B,C} -> D) whose task bodies append their names to an execution-order log and bump an atomic counter; it hands out the REAL tf::Taskflow + tf::Task handles (queried head-on for shape) and drives a REAL tf::Executor::run().wait() for execution. tftest.Engine owns a tf::Executor constructed with an EXPLICIT worker count and hands out the real tf::Executor (its sole ctor's move-only 2nd param leaves it unconstructable from Python directly). Both fixtures return the real classes by POINTER, not reference: a method returning T& to a registered class currently defaults to rv_policy::copy and aborts on these move-only types (see findings_draft/lvalue-ref-class-return-copy-policy.md); a raw class-pointer return is borrowed correctly. Differential: the native oracle builds the identical diamond through the same fixture, then emits graph-shape numbers (num_tasks; per-task num_successors/num_predecessors/strong/weak for A/B/C/D), the executor worker count from an explicit ctor arg, the post-run task-body count, and order-constraint booleans; the Python test asserts equality on all shape numbers + worker count + counter and the dependency ORDER CONSTRAINTS (A first, D last, B and C both after A and before D) rather than exact interleavings.",
+    "skipped_features": [
+      "FlowBuilder::emplace / Task::precede / succeed -- variadic templates over C++ callables and Task packs; not Python-expressible (the whole graph-construction front). Graph wiring is done in the tftest.Diamond fixture; the resulting REAL Task handles are queried head-on.",
+      "tf::Executor::run / corun and the algorithm fronts (for_each/transform/reduce/sort/pipeline) -- all templated over callables; run is driven through the fixture and returns tf::Future<void> (inherits std::future<void>, no caster, excluded).",
+      "tf::Executor's SOLE constructor Executor(size_t N, std::unique_ptr<WorkerInterface> = nullptr) -- the move-only/excluded 2nd param means the binder binds NO __init__ for Executor (it imports with 'no constructor defined'), so Python cannot construct one directly. The tftest.Engine fixture constructs it with N workers and hands out the real tf::Executor; num_workers() is checked against the N passed. (Not a bug -- the only ctor genuinely isn't Python-expressible; just noting Executor is fixture-constructed.)",
+      "lvalue-reference returns of registered classes (tf::Taskflow& / tf::Executor&) -- the binder defaults T& returns to rv_policy::copy, which aborts at runtime on these move-only types (findings_draft/lvalue-ref-class-return-copy-policy.md). The fixture returns tf::Taskflow*/tf::Executor* (borrowed) instead; no real taskflow method returning T& is bound head-on in this run.",
+      "library: taskflow v4.0.0 uses std::bit_ceil/std::bit_width (core/wsq.hpp, core/executor.hpp) but never #includes <bit>; on this from-source libc++ <bit> is not pulled in transitively, so <taskflow/taskflow.hpp> fails to compile. Worked around by #include <bit> before the umbrella header in the fixture/binding (findings_draft/taskflow-missing-bit-include.md -- library-side missing-include).",
+      "Taskflow::dump(std::ostream&) / Task::dump(std::ostream&) -- ostream& param, no caster; the no-arg Taskflow::dump()->std::string overload is bound and exercised (DOT output is non-deterministic across hash-ordered traversal so its TEXT is not asserted, only that it is non-empty and mentions every task name).",
+      "Task::for_each_successor / for_each_predecessor / for_each_subflow_task -- template visitor params; successor/predecessor COUNTS are checked head-on via num_successors/num_predecessors instead.",
+      "tf::Future<void> (Executor::run result), tf::Graph, tf::FlowBuilder, tf::WorkerInterface -- excluded; internal / templated / non-bindable types surfaced through the fixture's run() instead.",
+      "default-argument VALUES (Executor's N = hardware_concurrency()) are a C++26 reflection gap; the fixture/tests pass an explicit worker count so both sides drive identical ctors."
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "13 passed in 0.04s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 4.4,
+    "constexpr_binding_compile_seconds": 14.32,
+    "emit_binding_compile_seconds": 13.78,
+    "emit_generated_tu_lines": 136,
+    "emit_generated_tu_bytes": 10488
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 5 top-level object(s) compared; "
+}

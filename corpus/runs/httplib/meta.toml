@@ -41,6 +41,17 @@ skipped_features = [
   "default-argument VALUES (def='' / id=0 on get_header_value etc., status=Found_302 on set_redirect) are a C++26 reflection gap; the tests pass defaulted args explicitly, matching the native oracle's C++ defaults",
 ]
 
+[gcc16]
+# GCC constant-evaluation budget (divergence-catalog item 10). The clang
+# constexpr-steps budget (33554432) translates to the same GCC ops-limit, which
+# is enough for the constexpr lane but NOT for the emit-generator's consteval
+# string rendering of the Client overload surface (the generator exhausts it in
+# bits/char_traits.h while spelling emit_class_def_text for httplib::Client).
+# Raise the ops-limit; the constexpr lane is unaffected (it finished well under
+# the old budget). 1e9 matches build_module_emit.sh's own default and renders
+# the generator with room to spare.
+extra_cflags = ["-fconstexpr-ops-limit=1000000000"]
+
 [emit]
 enabled = true
 # stage-2 (production compile) extra_cflags default to the constexpr lane's

@@ -1,0 +1,123 @@
+{
+  "schema_version": 2,
+  "backend": "gcc16",
+  "slug": "httplib",
+  "url": "https://github.com/yhirose/cpp-httplib",
+  "pinned_commit": "v0.47.0",
+  "tier": 4,
+  "header_only": true,
+  "toolchain_commit": "gcc-16.1.0",
+  "binder_commit": "93254c1",
+  "prod_compiler": "g++ (GCC) 16.1.0",
+  "outcome": "E",
+  "furthest_gate": 6,
+  "gate_results": {
+    "3_strategy": "single_stage",
+    "1_probe": "pass",
+    "4_compile": "pass",
+    "5_import": "pass",
+    "6_correct": "pass"
+  },
+  "lanes": {
+    "constexpr": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 29.23
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "15 passed in 0.03s"
+      }
+    },
+    "emit": {
+      "outcome": "E",
+      "furthest_gate": 6,
+      "gate_results": {
+        "4_compile": "pass",
+        "5_import": "pass",
+        "6_correct": "pass"
+      },
+      "failure": {
+        "code": null,
+        "first_diagnostics": [],
+        "signal": null
+      },
+      "metrics": {
+        "binding_compile_seconds": 65.1,
+        "generated_tu_lines": 358,
+        "generated_tu_bytes": 64579
+      },
+      "oracle": {
+        "layers_used": [
+          "L1_differential"
+        ],
+        "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+        "pytest_summary": "15 passed in 0.03s"
+      }
+    }
+  },
+  "surface_diff": {
+    "status": "pass",
+    "mismatches": []
+  },
+  "subset": {
+    "reflect_args": [
+      "^^httplib::Request",
+      "^^httplib::Response",
+      "^^httplib::Result",
+      "^^httplib::Client",
+      "^^httplib::Error",
+      "^^httplib::StatusCode",
+      "^^httptest",
+      "^^nb::exclude_<^^std::multimap, ^^std::unordered_multimap, ^^std::chrono::time_point, ^^httplib::MultipartFormData, ^^httplib::UploadFormData, ^^httplib::FormDataProvider, ^^httplib::DataSink, ^^httplib::ContentReader, ^^httplib::Stream, ^^httplib::UserData, ^^httplib::ClientImpl, ^^httplib::Range>"
+    ],
+    "rationale": "cpp-httplib's client + value types are bound head-on and driven over real loopback (127.0.0.1, ephemeral port). httplib::Client is the REAL client: its string-path/body/content-type Get/Post/Put/Delete overloads bind, and Python drives them against a real httplib::Server. EVERY Get/Delete overload takes a DownloadProgress (std::function) parameter, so <nanobind/stl/function.h> is included and std::function is bound; the no-callback overloads still need the progress arg passed explicitly (a real always-continue lambda; None is not an empty std::function, and the default nullptr is a C++26-unbindable default VALUE), and the native oracle passes the identical callback so both sides drive the same call. httplib::Request/Response are the value types -- method/path/body/status/reason data members plus the has_header/get_header_value/get_param_value/set_header/set_content accessor methods (headers are round-tripped through these string accessors since Headers is an unordered_multimap with no caster). httplib::Result is the Get/Post return type: error()->Error, value()/operator*->Response&, operator bool, request-header accessors. httplib::Error + httplib::StatusCode are the enums, differentially checked. The httptest::EchoServer fixture owns ONLY what httplib forces into C++: a background-thread accept loop (bind_to_any_port + listen_after_bind + wait_until_ready + stop) and std::function echo handlers registered in C++ that reflect request method/path/body/headers back into the response. The differential: the native oracle drives the IDENTICAL client calls against the SAME fixture server and emits status codes, response bodies, content types, echoed headers, and the Error enum on a closed-port connect; the Python test drives the bound client the same way and asserts equality.",
+    "skipped_features": [
+      "Server bound only via the fixture (its Get/Post/... handler registration takes std::function Handler values that run on the server thread -- not Python callables; the EchoServer fixture registers them in C++). The thread lifecycle (listen_after_bind on a background std::thread) is likewise not Python-expressible.",
+      "std::function-typed handler/provider params other than progress (ContentReceiver/ResponseHandler/ContentProvider overloads expose httplib::DataSink as an opaque param type and run code on the C++ side -- bound but not exercised; the body/content-type + progress overloads are the driven surface)",
+      "Headers (unordered_multimap, custom case-insensitive hash/equal) + Params (multimap) parameters/members -- no nanobind multimap caster; the Get/Post overloads taking them skip, and headers/params are exercised through the string get_header_value/set_header/get_param_value accessors",
+      "multipart form-data surface (MultipartFormData/UploadFormData/FormDataProvider, the *FormDataItems vectors) -- unbound user types; the multipart Post/Put overloads skip",
+      "streaming surface (Result's StreamHandle ctor, open_stream, the ContentReader/DataSink/Stream-based reads, the second free-function Result class) -- unbound internal-impl types; excluded",
+      "char-pointer-and-length Post/Put/Patch overloads (const char* body, size_t content_length) -- the std::string-body overloads cover the same behavior bindably",
+      "default-argument VALUES (def='' / id=0 on get_header_value etc., status=Found_302 on set_redirect) are a C++26 reflection gap; the tests pass defaulted args explicitly, matching the native oracle's C++ defaults"
+    ]
+  },
+  "oracle": {
+    "layers_used": [
+      "L1_differential"
+    ],
+    "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
+    "pytest_summary": "15 passed in 0.03s"
+  },
+  "failure": {
+    "code": null,
+    "first_diagnostics": [],
+    "signal": null
+  },
+  "toolchain_bug": {
+    "status": "none"
+  },
+  "metrics": {
+    "probe_seconds": 5.75,
+    "constexpr_binding_compile_seconds": 29.23,
+    "emit_binding_compile_seconds": 65.1,
+    "emit_generated_tu_lines": 358,
+    "emit_generated_tu_bytes": 64579
+  },
+  "artifacts": {},
+  "notes": "surface_diff: 0 mismatch(es), 7 top-level object(s) compared; "
+}
