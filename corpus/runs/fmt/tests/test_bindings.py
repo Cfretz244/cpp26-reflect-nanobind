@@ -81,6 +81,32 @@ def test_real_fmt_enum_values():
     assert m.emphasis.italic.value == E["emph_italic"]
 
 
+def test_matched_enum_values():
+    # The enums the is_enum_ match_ marker discovers beyond the explicit
+    # three: format-spec grammar enums (base.h) + range_format (ranges.h),
+    # each differentially checked against the native enumerator value.
+    assert m.align.center.value == E["align_center"]
+    assert m.sign.plus.value == E["sign_plus"]
+    assert m.arg_id_kind.name.value == E["arg_id_name"]
+    assert m.range_format.map.value == E["range_fmt_map"]
+    assert m.presentation_type.hexfloat.value == E["pt_hexfloat"]
+    # presentation_type reuses VALUES across domains (dec == pointer == 3,
+    # debug == exp == 1): both members bind and compare equal by value;
+    # reverse value->member lookup is unspecified, so it is never asserted.
+    assert m.presentation_type.dec.value == E["pt_dec"]
+    assert m.presentation_type.pointer.value == E["pt_pointer"]
+    assert m.presentation_type.dec.value == m.presentation_type.pointer.value
+
+
+def test_detail_gate_held():
+    # not_<in_namespace_<^^fmt::detail>> fences the internals: none of the
+    # detail enums may surface, and the anonymous inline_buffer_size enum in
+    # fmt proper is gracefully skipped (no identifier -> no Python name).
+    for absent in ("type", "state", "dragon", "int128_opt", "uint128_opt",
+                   "to_utf8_error_policy"):
+        assert not hasattr(m, absent), absent
+
+
 # --- Layer 3: structural invariants (independent of the oracle) ---
 
 def test_kwargs_bound():

@@ -33,14 +33,14 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 5.43
+        "binding_compile_seconds": 5.82
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "10 passed in 0.02s"
+        "pytest_summary": "12 passed in 0.04s"
       }
     },
     "emit": {
@@ -57,16 +57,16 @@
         "signal": null
       },
       "metrics": {
-        "binding_compile_seconds": 9.63,
-        "generated_tu_lines": 269,
-        "generated_tu_bytes": 18914
+        "binding_compile_seconds": 10.45,
+        "generated_tu_lines": 345,
+        "generated_tu_bytes": 22914
       },
       "oracle": {
         "layers_used": [
           "L1_differential"
         ],
         "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-        "pytest_summary": "10 passed in 0.02s"
+        "pytest_summary": "12 passed in 0.02s"
       }
     }
   },
@@ -76,20 +76,20 @@
   },
   "subset": {
     "reflect_args": [
-      "^^fmt::color",
-      "^^fmt::terminal_color",
-      "^^fmt::emphasis",
+      "^^nb::match_<^^fmt, all_of_<is_enum_, not_<in_namespace_<^^fmt::detail>>>>",
       "^^fmt::format_int",
       "^^fmt::to_string<int>",
       "^^fmt::to_string<double>",
       "^^fmt::to_string<long long>",
       "^^fmttest"
     ],
-    "rationale": "Four layers of REAL fmt surface, all differentially checked vs native fmt. (1) fmt's enums color (~140 CSS-color enumerators)/terminal_color/emphasis, reflected directly. (2) fmt's real concrete class fmt::format_int (its fast int->string formatter): ctor overloads + str()/c_str()/data()/size() bind, private member templates skipped. (3) fmt's real FORMATTING API bound DIRECTLY from its own function-template instantiations fmt::to_string<int/double/long long> (the binder binds fmt's own symbol, not a wrapper). fmt's format()/print() front-ends take a CONSTEVAL format_string<Args...> first parameter not constructible at runtime from Python, so they are intrinsically not directly bindable; to_string<T>/format_int are the directly-bindable formatting entry points. (4) A fixture namespace fmttest of concrete wrappers over the runtime fmt::format engine that drives the remaining Tier-2 themes: keyword arguments (P3096 names -> nb::arg), std::string/std::vector casters incl. fmt::join, and the member-function-template gap (Formatter::apply<T> skipped while ordinary members bind).",
+    "rationale": "Four layers of REAL fmt surface, all differentially checked vs native fmt. (1) every namespace-level enum in fmt proper via ONE match_<^^fmt, all_of_<is_enum_, not_<in_namespace_<^^fmt::detail>>>> marker: the prior explicit three -- color (~140 CSS-color enumerators)/terminal_color/emphasis, the unchanged legacy enum tests proving match_ == explicit listing -- plus presentation_type/align/sign/arg_id_kind (base.h) and range_format (ranges.h); fmt::detail's enums (type/state/dragon/int128_opt/...) are fenced out by the predicate, and the anonymous `enum { inline_buffer_size }` in fmt proper is matcher-accepted then gracefully skipped by the binder (no identifier). presentation_type carries duplicated enumerator VALUES (dec==pointer, debug==exp) -- they bind fine; reverse value->member lookup is unspecified for the duplicated values, so tests compare .value only. (2) fmt's real concrete class fmt::format_int (its fast int->string formatter): ctor overloads + str()/c_str()/data()/size() bind, private member templates skipped. (3) fmt's real FORMATTING API bound DIRECTLY from its own function-template instantiations fmt::to_string<int/double/long long> (the binder binds fmt's own symbol, not a wrapper). fmt's format()/print() front-ends take a CONSTEVAL format_string<Args...> first parameter not constructible at runtime from Python, so they are intrinsically not directly bindable; to_string<T>/format_int are the directly-bindable formatting entry points. (4) A fixture namespace fmttest of concrete wrappers over the runtime fmt::format engine that drives the remaining Tier-2 themes: keyword arguments (P3096 names -> nb::arg), std::string/std::vector casters incl. fmt::join, and the member-function-template gap (Formatter::apply<T> skipped while ordinary members bind).",
     "skipped_features": [
       "fmt::format/format_to/print/println front-ends: intrinsically not directly bindable (consteval format_string<Args...> first param); runtime path exercised via fmttest wrappers",
       "fmt::format_int private member templates format_signed/format_unsigned (binder skips member templates)",
-      "Formatter::apply<T> member function template (binder gracefully skips member templates)"
+      "Formatter::apply<T> member function template (binder gracefully skips member templates)",
+      "fmt::detail enums (type/state/dragon/int128_opt/uint128_opt/to_utf8_error_policy/...) -- internals, fenced out of the enum match_ by not_<in_namespace_<^^fmt::detail>>",
+      "the anonymous `enum { inline_buffer_size = 500 }` in fmt proper -- matcher-accepted, gracefully skipped by reflect_enum (anonymous enums have no Python name)"
     ]
   },
   "oracle": {
@@ -97,7 +97,7 @@
       "L1_differential"
     ],
     "ground_truth_source": "native C++ oracle (oracle_native.cpp)",
-    "pytest_summary": "10 passed in 0.02s"
+    "pytest_summary": "12 passed in 0.04s"
   },
   "failure": {
     "code": null,
@@ -108,12 +108,12 @@
     "status": "none"
   },
   "metrics": {
-    "probe_seconds": 0.59,
-    "constexpr_binding_compile_seconds": 5.43,
-    "emit_binding_compile_seconds": 9.63,
-    "emit_generated_tu_lines": 269,
-    "emit_generated_tu_bytes": 18914
+    "probe_seconds": 0.6,
+    "constexpr_binding_compile_seconds": 5.82,
+    "emit_binding_compile_seconds": 10.45,
+    "emit_generated_tu_lines": 345,
+    "emit_generated_tu_bytes": 22914
   },
   "artifacts": {},
-  "notes": "surface_diff: 0 mismatch(es), 16 top-level object(s) compared; "
+  "notes": "surface_diff: 0 mismatch(es), 21 top-level object(s) compared; "
 }

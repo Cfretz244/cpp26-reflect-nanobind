@@ -60,6 +60,16 @@ int main() {
     add_i("emph_bold",       static_cast<std::int64_t>(fmt::emphasis::bold));
     add_i("emph_italic",     static_cast<std::int64_t>(fmt::emphasis::italic));
 
+    // the enums the is_enum_ match_ marker picks up beyond the explicit three
+    // (spec-grammar enums from base.h, range_format from ranges.h)
+    add_i("align_center",    static_cast<std::int64_t>(fmt::align::center));
+    add_i("sign_plus",       static_cast<std::int64_t>(fmt::sign::plus));
+    add_i("arg_id_name",     static_cast<std::int64_t>(fmt::arg_id_kind::name));
+    add_i("range_fmt_map",   static_cast<std::int64_t>(fmt::range_format::map));
+    add_i("pt_hexfloat",     static_cast<std::int64_t>(fmt::presentation_type::hexfloat));
+    add_i("pt_dec",          static_cast<std::int64_t>(fmt::presentation_type::dec));
+    add_i("pt_pointer",      static_cast<std::int64_t>(fmt::presentation_type::pointer));
+
     std::cout << "{";
     for (size_t i = 0; i < kv.size(); ++i) {
         if (i) std::cout << ",";
