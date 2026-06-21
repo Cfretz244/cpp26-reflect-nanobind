@@ -4,6 +4,7 @@
 // (Duration/Time have no public integer constructors). Links the prebuilt absl static lib.
 #include <mirrorbind/reflect.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/chrono.h>   // cctz::time_zone methods surface std::chrono::time_point (discovered via TimeZone)
 
 #include "binding_args.h"  // bind set defined once (shared with the emit generator)
 

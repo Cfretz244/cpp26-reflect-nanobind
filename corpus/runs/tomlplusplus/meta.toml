@@ -12,7 +12,7 @@ strategy     = "single_stage"
 # Raised for the binder's completeness-aware signature gates over the value-struct +
 # date/time bind set; -Wno-deprecated-declarations silences toml++'s `operator"" _x`
 # (pre-C++23 literal-operator spelling) and is_trivial_v deprecations.
-extra_cflags = ["-fconstexpr-steps=100000000", "-Wno-deprecated-declarations"]
+extra_cflags = ["-fconstexpr-steps=314572800", "-Wno-deprecated-declarations"]  # raised for plain-class discovery
 
 reflect_args = [
   "^^toml::node_type", "^^toml::date", "^^toml::time", "^^toml::time_offset",

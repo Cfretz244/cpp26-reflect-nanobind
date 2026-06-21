@@ -9,6 +9,7 @@
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/unique_ptr.h>   // formatter::clone() returns std::unique_ptr<formatter> (discovered)
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/chrono.h>
 

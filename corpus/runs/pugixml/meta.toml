@@ -13,7 +13,7 @@ extra_sources = ["../../libs/pugixml/src/pugixml.cpp"]
 # many with const char_t* / string_view_t pairs); the binder's discovery + caster + bind
 # fixpoint over them exceeds the default constexpr step budget. Raised here for the binding
 # (Gate 4) compile, exactly as the json/abseil_hash/abseil_btree heavy runs do.
-extra_cflags = ["-fconstexpr-steps=33554432"]
+extra_cflags = ["-fconstexpr-steps=134217728"]  # raised: plain-class discovery surfaces more reachable types; emit gen needs the headroom
 
 reflect_args     = [
   "^^pugi::xml_node",

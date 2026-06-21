@@ -20,5 +20,7 @@ skipped_features = [
   "ansicolor ctor default (color_mode::automatic) and the base ansicolor_sink(FILE*, color_mode) ctor -- the default VALUE is the P3096 gap (tests pass color_mode explicitly); base ctors are not inherited, so FILE* appears in no bound signature",
 ]
 
+extra_cflags = ["-fconstexpr-steps=134217728"]  # raised for plain-class discovery (more reachable types)
+
 [emit]
 enabled = true
